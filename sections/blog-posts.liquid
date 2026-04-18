@@ -1,0 +1,240 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign blog = section.settings.blog
+  assign number_of_rows = section.settings.number_of_rows
+  assign articles_per_row = section.settings.articles_per_row
+  assign button_label = section.settings.button_label
+  assign button_style = section.settings.button_style
+  assign images_loading_type = section.settings.images_loading_type
+
+  assign blog = blogs[blog]
+  assign limit = number_of_rows | times: articles_per_row
+  assign empty_state = false
+
+  if blog.articles_count == 0 or blog == blank
+    assign empty_state = true
+  endif
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  capture block_width
+    render 'section-block-width', section: section, type: 'article'
+  endcapture
+-%}
+
+{%- paginate blog.articles by limit -%}
+  <div class="section section--{{ section_style }} {{ visibility_class }}">
+    <div class="{{ container_size }}">
+      {%- render 'section-header', heading: heading, subheading: subheading -%}
+
+      <div class="row gy-4">
+        {%- liquid
+          if empty_state
+            for i in (1..limit)
+              capture current
+                cycle 1, 2
+              endcapture
+
+              render 'article-grid-item', empty_state: empty_state, width: block_width, current: current, number_of_rows: number_of_rows
+            endfor
+          else
+            for article in blog.articles
+              render 'article-grid-item', article: article, blog: blog, width: block_width, number_of_rows: number_of_rows, images_loading_type: images_loading_type
+            endfor
+          endif
+        -%}
+      </div>
+
+      {%- if button_label != blank -%}
+        <div class="mt-4 mt-lg-5 text-center">
+          <a href="{{ blog.url }}" class="btn {{ button_style }}">{{ button_label }}</a>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endpaginate -%}
+
+{% schema %}
+{
+  "name": "t:sections.blog_posts.name",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Featured blog"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "id": "blog",
+      "type": "blog",
+      "label": "t:sections.blog_posts.settings.blog.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.blog_posts.settings.header__1.content"
+    },
+    {
+      "type": "select",
+      "id": "number_of_rows",
+      "label": "t:sections.blog_posts.settings.number_of_rows.label",
+      "default": "1",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "articles_per_row",
+      "label": "t:sections.blog_posts.settings.articles_per_row.label",
+      "default": "2",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.blog_posts.settings.header__2.content"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:general.settings.button_label.label",
+      "default": "View all"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:general.settings.button_style.label",
+      "default": "btn--primary",
+      "options": [
+        {
+          "value": "",
+          "label": "t:general.settings.button_style.options__1.label"
+        },
+        {
+          "value": "btn--primary",
+          "label": "t:general.settings.button_style.options__2.label"
+        },
+        {
+          "value": "btn--outline-primary",
+          "label": "t:general.settings.button_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.images_loading.header.content"
+    },
+    {
+      "type": "select",
+      "id": "images_loading_type",
+      "label": "t:general.settings.images_loading.images_loading_type.label",
+      "default": "lazy",
+      "options": [
+        {
+          "value": "lazy",
+          "label": "t:general.settings.images_loading.images_loading_type.options__1.label"
+        },
+        {
+          "value": "eager",
+          "label": "t:general.settings.images_loading.images_loading_type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.blog_posts.presets.name",
+      "category": "t:sections.blog_posts.presets.category",
+      "settings": {
+        "blog": "News"
+      }
+    }
+  ]
+}
+{% endschema %}

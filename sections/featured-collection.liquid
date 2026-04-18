@@ -1,0 +1,357 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign collection = collections[section.settings.collection]
+  assign number_of_rows = section.settings.number_of_rows
+  assign products_per_row_desktop = section.settings.products_per_row_desktop
+  assign products_per_row_mobile = section.settings.products_per_row_mobile
+  assign show_button = section.settings.show_button
+  assign button_label = section.settings.button_label
+  assign button_link = section.settings.button_link | default: collection.url
+  assign button_style = section.settings.button_style
+  assign enable_slider = section.settings.enable_slider
+  assign show_arrows = section.settings.show_arrows
+  assign show_dots = section.settings.show_dots
+  assign enable_autoplay = section.settings.enable_autoplay
+  assign autoplay_speed = section.settings.autoplay_speed | times: 1000
+  assign images_loading_type = section.settings.images_loading_type
+
+  assign products_limit = number_of_rows | times: products_per_row_desktop
+  assign products_limit_on_mobile = number_of_rows | times: products_per_row_mobile
+
+  assign gift_wrap_product = settings.dbtfy_gift_wrap_product
+
+  assign empty_state = false
+
+  if collection == blank or collection.products_count == 0
+    assign empty_state = true
+  endif
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  capture block_width
+    render 'section-block-width', section: section, type: 'product'
+  endcapture
+-%}
+
+{%- capture section_settings -%}
+  {
+    "enableSlider": {{ enable_slider | json }},
+    "showArrows": {{ show_arrows | json }},
+    "showDots": {{ show_dots | json }},
+    "enableAutoplay": {{ enable_autoplay | json }},
+    "autoplaySpeed": {{ autoplay_speed | json }},
+    "slidesToShow": {{ products_per_row_desktop | times: 1 | json }}
+  }
+{%- endcapture -%}
+
+<div class="section section--{{ section_style }} {{ visibility_class }}" data-section-type="featured-collection" data-section-id="{{ section.id }}" data-section-settings='{{ section_settings }}'>
+  <div class="{{ container_size }}">
+    {%- render 'section-header', heading: heading, subheading: subheading -%}
+
+    <div class="row{% if enable_slider %} slick js-slider{% else %} gy-4{% endif %}">
+      {%- liquid
+        if empty_state
+          for i in (1..products_limit)
+            capture current
+              cycle 1, 2, 3, 4, 5, 6
+            endcapture
+
+            assign product_class = ''
+
+            if enable_slider == false and forloop.index > products_limit_on_mobile
+              assign product_class = 'd-none d-md-block'
+            endif
+
+            render 'product-grid-item', empty_state: empty_state, block_width: block_width, current: current, class: product_class
+          endfor
+        else
+          for product in collection.products limit: products_limit
+            capture product_item
+              capture current
+                cycle 1, 2, 3, 4, 5, 6
+              endcapture
+
+              assign product_class = ''
+
+              if enable_slider == false and forloop.index > products_limit_on_mobile
+                assign product_class = 'd-none d-md-block'
+              endif
+
+              render 'product-grid-item', product: product, block_width: block_width, current: current, products_per_row_desktop: products_per_row_desktop, products_per_row_mobile: products_per_row_mobile, images_loading_type: images_loading_type, class: product_class
+            endcapture
+
+            if product.id != gift_wrap_product.id
+              echo product_item
+            endif
+          endfor
+        endif
+      -%}
+    </div>
+
+    {%- if show_button and button_label != blank and button_link != blank -%}
+      <div class="mt-4 text-center">
+        <a href="{{ button_link }}" class="btn {{ button_style }}">{{ button_label }}</a>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.featured_collection.name",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Featured collection"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "t:sections.featured_collection.settings.collection.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.featured_collection.settings.header__1.content"
+    },
+    {
+      "type": "select",
+      "id": "number_of_rows",
+      "label": "t:sections.featured_collection.settings.number_of_rows.label",
+      "default": "2",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        },
+        {
+          "value": "5",
+          "label": "5"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "products_per_row_desktop",
+      "label": "t:sections.featured_collection.settings.products_per_row_desktop.label",
+      "default": "4",
+      "options": [
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "products_per_row_mobile",
+      "label": "t:sections.featured_collection.settings.products_per_row_mobile.label",
+      "info": "Will only work if slider is not enabled.",
+      "default": "2",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.featured_collection.settings.header__2.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button",
+      "label": "t:sections.featured_collection.settings.show_button.label",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:general.settings.button_label.label",
+      "default": "View all"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "t:general.settings.button_link.label",
+      "info": "t:sections.featured_collection.settings.button_link.info"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:general.settings.button_style.label",
+      "default": "btn--primary",
+      "options": [
+        {
+          "value": "",
+          "label": "t:general.settings.button_style.options__1.label"
+        },
+        {
+          "value": "btn--primary",
+          "label": "t:general.settings.button_style.options__2.label"
+        },
+        {
+          "value": "btn--outline-primary",
+          "label": "t:general.settings.button_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.featured_collection.settings.header__3.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "t:sections.featured_collection.settings.enable_slider.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "t:sections.featured_collection.settings.show_arrows.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "t:sections.featured_collection.settings.show_dots.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_autoplay",
+      "label": "t:sections.featured_collection.settings.enable_autoplay.label",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "min": 3,
+      "max": 10,
+      "label": "t:sections.featured_collection.settings.autoplay_speed.label",
+      "default": 5,
+      "unit": "s"
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.images_loading.header.content"
+    },
+    {
+      "type": "select",
+      "id": "images_loading_type",
+      "label": "t:general.settings.images_loading.images_loading_type.label",
+      "default": "lazy",
+      "options": [
+        {
+          "value": "lazy",
+          "label": "t:general.settings.images_loading.images_loading_type.options__1.label"
+        },
+        {
+          "value": "eager",
+          "label": "t:general.settings.images_loading.images_loading_type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.featured_collection.presets.name",
+      "category": "t:sections.featured_collection.presets.category"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,379 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign collection_height = section.settings.collection_height
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign show_button = section.settings.show_button
+  assign button_label = section.settings.button_label
+  assign button_link = section.settings.button_link | default: collection.url
+  assign button_style = section.settings.button_style
+  assign enable_slider = section.settings.enable_slider
+  assign show_dots = section.settings.show_dots
+  assign enable_autoplay = section.settings.enable_autoplay
+  assign autoplay_speed = section.settings.autoplay_speed | times: 1000
+  assign images_loading_type = section.settings.images_loading_type
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  assign show_top_spacing = true
+  assign show_bottom_spacing = true
+
+  if container_size == 'container-full'
+    if show_button
+      if button_label == blank
+        assign show_bottom_spacing = false
+      endif
+    else
+      assign show_bottom_spacing = false
+    endif
+
+    if heading == blank and subheading == blank
+      assign show_top_spacing = false
+    endif
+  endif
+
+  assign collections_count = 0
+  assign collections_limit = section.blocks.size | plus: 1
+
+  for collection in section.blocks limit: collections_limit
+    assign collections_count = collections_count | plus: 1
+  endfor
+-%}
+
+{%- capture section_settings -%}
+  {
+    "enableSlider": {{ enable_slider | json }},
+    "showDots": {{ show_dots | json }},
+    "enableAutoplay": {{ enable_autoplay | json }},
+    "autoplaySpeed": {{ autoplay_speed | json }}
+  }
+{%- endcapture -%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="collections-list section section--{{ section_style }}{% unless show_top_spacing %} section--no-top-spacing{% endunless %}{% unless show_bottom_spacing %} section--no-bottom-spacing{% endunless %} {{ visibility_class }}" data-section-type="collections-list" data-section-id="{{ section.id }}" data-section-settings='{{ section_settings }}'>
+    <div class="{{ container_size }}">
+      {%- render 'section-header', heading: heading, subheading: subheading, container: container_size -%}
+
+      <div class="collections-list__slider row{% if container_size == 'container-full' %} slick--full gx-0{% else %} gy-4{% endif %}{% if section.blocks.size > 1 and enable_slider %} slick js-slider{% endif %}" data-slides-count="{{ section.blocks.size }}">
+        {%- for block in section.blocks limit: collections_limit -%}
+          {%- liquid
+            assign collection = collections[block.settings.collection]
+            assign collection_title = block.settings.collection_title
+            assign collection_image = block.settings.collection_image
+            assign collection_image_alignment = block.settings.collection_image_alignment
+
+            capture current
+              cycle 1, 2, 3, 4, 5, 6
+            endcapture
+
+            render 'collection-grid-item', collection: collection, block: block, current: current, section_height: collection_height, images_loading_type: images_loading_type, collection_title: collection_title, collection_image: collection_image, collection_image_alignment: collection_image_alignment, container_size: container_size, collections_count: collections_count
+          -%}
+        {%- endfor -%}
+      </div>
+
+      {%- if show_button and button_label != blank and button_link != blank -%}
+        <div class="mt-4 text-center">
+          <a href="{{ button_link }}" class="btn {{ button_style }}">{{ button_label }}</a>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.collections_list.name",
+  "max_blocks": 9,
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        },
+        {
+          "value": "container-full",
+          "label": "t:general.settings.container_size.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "collection_height",
+      "label": "t:sections.collections_list.settings.collection_height.label",
+      "default": "sm",
+      "options": [
+        {
+          "value": "xs",
+          "label": "t:sections.collections_list.settings.collection_height.options__1.label"
+        },
+        {
+          "value": "sm",
+          "label": "t:sections.collections_list.settings.collection_height.options__2.label"
+        },
+        {
+          "value": "md",
+          "label": "t:sections.collections_list.settings.collection_height.options__3.label"
+        },
+        {
+          "value": "lg",
+          "label": "t:sections.collections_list.settings.collection_height.options__4.label"
+        },
+        {
+          "value": "xl",
+          "label": "t:sections.collections_list.settings.collection_height.options__5.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Collections list"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.collections_list.settings.header__1.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button",
+      "label": "t:sections.collections_list.settings.show_button.label",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:general.settings.button_label.label",
+      "default": "View all"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "t:general.settings.button_link.label",
+      "info": "t:sections.collections_list.settings.button_link.info",
+      "default": "/collections"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:general.settings.button_style.label",
+      "default": "btn--primary",
+      "options": [
+        {
+          "value": "",
+          "label": "t:general.settings.button_style.options__1.label"
+        },
+        {
+          "value": "btn--primary",
+          "label": "t:general.settings.button_style.options__2.label"
+        },
+        {
+          "value": "btn--outline-primary",
+          "label": "t:general.settings.button_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.collections_list.settings.header__2.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "t:sections.collections_list.settings.enable_slider.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "t:sections.collections_list.settings.show_dots.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_autoplay",
+      "label": "t:sections.collections_list.settings.enable_autoplay.label",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "min": 3,
+      "max": 10,
+      "label": "t:sections.collections_list.settings.autoplay_speed.label",
+      "default": 5,
+      "unit": "s"
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.images_loading.header.content"
+    },
+    {
+      "type": "select",
+      "id": "images_loading_type",
+      "label": "t:general.settings.images_loading.images_loading_type.label",
+      "default": "lazy",
+      "options": [
+        {
+          "value": "lazy",
+          "label": "t:general.settings.images_loading.images_loading_type.options__1.label"
+        },
+        {
+          "value": "eager",
+          "label": "t:general.settings.images_loading.images_loading_type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "t:sections.collections_list.blocks.collection.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "id": "collection",
+          "type": "collection",
+          "label": "t:sections.collections_list.blocks.collection.settings.collection.label"
+        },
+        {
+          "type": "text",
+          "id": "collection_title",
+          "label": "t:sections.collections_list.blocks.collection.settings.collection_title.label",
+          "info": "t:sections.collections_list.blocks.collection.settings.collection_title.info"
+        },
+        {
+          "type": "image_picker",
+          "id": "collection_image",
+          "label": "t:sections.collections_list.blocks.collection.settings.collection_image.label",
+          "info": "t:sections.collections_list.blocks.collection.settings.collection_image.info"
+        },
+        {
+          "type": "select",
+          "id": "collection_image_alignment",
+          "label": "t:sections.collections_list.blocks.collection.settings.collection_image_alignment.label",
+          "default": "center-center",
+          "options": [
+            {
+              "label": "t:general.settings.position.options__1.label",
+              "value": "top-left"
+            },
+            {
+              "label": "t:general.settings.position.options__2.label",
+              "value": "top-center"
+            },
+            {
+              "label": "t:general.settings.position.options__3.label",
+              "value": "top-right"
+            },
+            {
+              "label": "t:general.settings.position.options__4.label",
+              "value": "center-left"
+            },
+            {
+              "label": "t:general.settings.position.options__5.label",
+              "value": "center-center"
+            },
+            {
+              "label": "t:general.settings.position.options__6.label",
+              "value": "center-right"
+            },
+            {
+              "label": "t:general.settings.position.options__7.label",
+              "value": "bottom-left"
+            },
+            {
+              "label": "t:general.settings.position.options__8.label",
+              "value": "bottom-center"
+            },
+            {
+              "label": "t:general.settings.position.options__9.label",
+              "value": "bottom-right"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.collections_list.presets.name",
+      "category": "t:sections.collections_list.presets.category",
+      "blocks": [
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

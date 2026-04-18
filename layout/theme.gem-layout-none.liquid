@@ -1,0 +1,96 @@
+{% comment %}
+	GEMPAGES BUILDER (https://apps.shopify.com/gempages)
+
+	You SHOULD NOT modify source code in this file because
+	It is automatically generated from GEMPAGES BUILDER
+	Try to edit page with the live editor.
+{% endcomment %}
+<!doctype html>
+
+<html class="no-js" lang="{{ request.locale.iso_code }}" dir="{% render 'direction' %}">
+  <head>
+    <!-- Basic page needs -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,height=device-height,minimum-scale=1.0,maximum-scale=2.0">
+    <meta name="theme-color" content="{{ settings.page_button_background }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="author" content="Debutify">
+
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    <!-- Preconnect external resources -->
+    <link rel="preconnect" href="https://cdn.shopify.com">
+    <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+    <link rel="preconnect" href="https://monorail-edge.shopifysvc.com">
+    <link rel="dns-prefetch" href="https://productreviews.shopifycdn.com">
+    <link rel="preconnect" href="https://debutify.com">
+
+    <!-- Preload assets -->
+    {%- unless settings.heading_font.system? -%}
+      <link rel="preload" href="{{ settings.heading_font | font_url }}" as="font" type="font/woff2" crossorigin>
+    {%- endunless -%}
+
+    {%- unless settings.text_font.system? -%}
+      <link rel="preload" href="{{ settings.text_font | font_url }}" as="font" type="font/woff2" crossorigin>
+    {%- endunless -%}
+
+    {%- unless settings.accent_font.system? -%}
+      <link rel="preload" href="{{ settings.accent_font | font_url }}" as="font" type="font/woff2" crossorigin>
+    {%- endunless -%}
+
+    <link rel="preload" href="{{ settings.icon | append: '.woff2' | asset_url }}" as="font" type="font/woff2" crossorigin>
+    <link rel="modulepreload" href="{{ 'theme.min.js' | asset_url }}" as="script">
+
+    <!-- Favicon -->
+    {%- liquid
+      assign favicon_url = settings.favicon | image_url: width: 96, crop: 'center'
+      assign apple_favicon_url = settings.favicon | image_url: width: 180, crop: 'center'
+
+      if settings.favicon == blank
+        assign favicon_url = 'data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII='
+        assign apple_favicon_url = 'data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII='
+      endif
+    -%}
+
+    <link rel="shortcut icon" href="{{ favicon_url }}" class="favicon">
+    <link rel="apple-touch-icon" href="{{ apple_favicon_url }}" class="favicon">
+
+    <!-- Title and description -->
+    <title>
+      {{ page_title }}{% if current_tags %}{%- assign meta_tags = current_tags | join: ", " -%} &ndash; {{ 'general.meta.tags' | t: tags: meta_tags }}{% endif %}{% if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif %}{% unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless %}
+    </title>
+
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+
+    <!-- Social meta -->
+    {%- render 'social-meta-tags' -%}
+
+    <!-- Microdata -->
+    {%- render 'microdata-schema' -%}
+
+    <!-- Variables -->
+    {%- render 'css-variables' -%}
+    {%- render 'js-variables' -%}
+
+    <!-- CSS -->
+    {{- '_url | stylesheet_tag: preload: true -}}
+
+    <!-- JS -->
+    <script type="module" src="{{ 'theme.min.js' | asset_url }}" defer></script>
+
+    {%- if request.page_type contains 'customers/' -%}
+      <script src="{{ 'shopify_common.js' | asset_url }}" defer></script>
+    {%- endif -%}
+
+    <!-- Header hook for plugins -->
+    {{ content_for_header }}
+  </head>
+
+  <body>
+<div class="gem-container">
+	{{ content_for_layout }}
+</div><!-- end .gem-container --></body>
+</html>

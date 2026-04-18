@@ -1,0 +1,402 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign button_position = section.settings.button_position
+  assign make_images_square = section.settings.make_images_square
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  capture block_width
+    render 'section-block-width', section: section, type: 'block'
+  endcapture
+-%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="section section--{{ section_style }} {{ visibility_class }}">
+    <div class="{{ container_size }}">
+      {%- render 'section-header', heading: heading, subheading: subheading -%}
+
+      <div class="row gy-5">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign background = block.settings.background
+            assign image = block.settings.image
+            assign badge_text = block.settings.badge_text
+            assign icon = block.settings.icon
+            assign heading = block.settings.title
+            assign description = block.settings.description
+            assign price = block.settings.price
+            assign price_note = block.settings.price_note
+            assign button_label = block.settings.button_label
+            assign button_link = block.settings.button_link
+            assign button_style = block.settings.button_style
+            assign button_note = block.settings.button_note
+            assign content = block.settings.content
+            assign content_list_icon = block.settings.content_list_icon
+          -%}
+
+          <div class="{{ block_width }}" {{ block.shopify_attributes }}>
+            <div class="card dbtfy-pricing-table-item dbtfy-pricing-table-item--{{ background }}{% if image != blank %} dbtfy-pricing-table-item--has-image{% endif %}">
+              {%- if heading != blank -%}
+                <div class="card__header justify-content-center">
+                  <h3 class="h3 dbtfy-pricing-table-item__title">{{ heading }}</h3>
+
+                  {%- if badge_text != blank -%}
+                    <div class="badge">{{ badge_text }}</div>
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+
+              {%- if image != blank -%}
+                {%- liquid
+                  assign height_ratio = 100 | divided_by: section.blocks.size
+                  assign width_ratio = 100.0 | divided_by: height_ratio
+                  assign maximum_image_width = settings.page_container_width | divided_by: width_ratio
+                  assign ratio_percentage = 1 | divided_by: image.aspect_ratio | times: 100
+
+                  if make_images_square
+                    assign ratio_percentage = 100
+                  endif
+                -%}
+
+                {%- capture sizes -%}(max-width: 768px) 100vw, min({{ maximum_image_width | ceil }}px, {{ height_ratio }}vw){% endcapture %}
+
+                <div class="card__image media-wrapper{% if make_images_square %} media-wrapper--cover media-wrapper--center-center{% endif %}" style="padding-top: {{ ratio_percentage }}%;">
+                  {{- image | image_url: width: image.width | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+                </div>
+              {%- endif -%}
+
+              <div class="card__body card__body--lg text-center">
+                <div class="row gy-3">
+                  {%- if icon != blank -%}
+                    <div>
+                      <span class="{{ settings.icon }} icon icon--xl me-0" translate="no">{{ icon }}</span>
+                    </div>
+                  {%- endif -%}
+
+                  {%- if description != blank -%}
+                    <div class="rte">{{ description }}</div>
+                  {%- endif -%}
+
+                  {%- if price != blank -%}
+                    <div>
+                      <h3 class="h3 dbtfy-pricing-table-item__price">{{ price }}</h3>
+
+                      {%- if price_note != blank -%}
+                        <div class="text-sm mt-1 text-break-all">
+                          {{ price_note }}
+                        </div>
+                      {%- endif -%}
+                    </div>
+                  {%- endif -%}
+
+                  {%- if button_position == 'middle' -%}
+                    <div>
+                      {%- if button_label != blank and button_link != blank -%}
+                        <a href="{{ button_link }}"
+                           class="btn {{ button_style }}">
+                          {{ button_label }}
+                        </a>
+                      {%- endif -%}
+
+                      {%- if button_note != blank -%}
+                        <p class="text-sm mt-1 text-break-all">{{ button_note }}</p>
+                      {%- endif -%}
+                    </div>
+                  {%- endif -%}
+
+                  {%- if content != blank -%}
+                    {%- capture content_replace -%}
+                      <li><span class="{{ settings.icon }} icon icon--width text-secondary" translate="no">{{ content_list_icon }}</span>
+                    {%- endcapture -%}
+
+                    {%- assign content = content | replace: '<li>', content_replace -%}
+
+                    <div class="rte dbtfy-pricing-table-item__content">
+                      {{ content }}
+                    </div>
+                  {%- endif -%}
+
+                  {%- if button_position == 'bottom' -%}
+                    <div>
+                      {%- if button_label != blank and button_link != blank -%}
+                        <a href="{{ button_link }}"
+                           class="btn {{ button_style }}">
+                          {{ button_label }}
+                        </a>
+                      {%- endif -%}
+
+                      {%- if button_note != blank -%}
+                        <p class="text-sm mt-1 text-break-all">{{ button_note }}</p>
+                      {%- endif -%}
+                    </div>
+                  {%- endif -%}
+                </div>
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.pricing_table.name",
+  "class": "dbtfy-pricing-table",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.pricing_table.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Pricing table"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "type": "select",
+      "id": "button_position",
+      "label": "t:sections.addons.pricing_table.settings.button_position.label",
+      "default": "middle",
+      "options": [
+        {
+          "value": "middle",
+          "label": "t:sections.addons.pricing_table.settings.button_position.options__1.label"
+        },
+        {
+          "value": "bottom",
+          "label": "t:sections.addons.pricing_table.settings.button_position.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "make_images_square",
+      "label": "t:sections.addons.pricing_table.settings.make_images_square.label",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "plan",
+      "name": "t:sections.addons.pricing_table.blocks.plan.name",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.pricing_table.blocks.plan.settings.header__1.content"
+        },
+        {
+          "type": "select",
+          "id": "background",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.background.label",
+          "default": "default",
+          "options": [
+            {
+              "value": "default",
+              "label": "t:sections.addons.pricing_table.blocks.plan.settings.background.options__1.label"
+            },
+            {
+              "value": "accent",
+              "label": "t:sections.addons.pricing_table.blocks.plan.settings.background.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:general.settings.image.label"
+        },
+        {
+          "type": "text",
+          "id": "badge_text",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.badge_text.label",
+          "default": "Most popular"
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "default": "local_offer",
+          "info": "t:general.settings.icon.info"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "default": "Title"
+        },
+        {
+          "type": "richtext",
+          "id": "description",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.description.label"
+        },
+        {
+          "type": "text",
+          "id": "price",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.price.label",
+          "default": "$19.99"
+        },
+        {
+          "type": "text",
+          "id": "price_note",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.price_note.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "t:general.settings.button_label.label",
+          "default": "Get started"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "t:general.settings.button_link.label"
+        },
+        {
+          "type": "select",
+          "id": "button_style",
+          "label": "t:general.settings.button_style.label",
+          "default": "btn--primary",
+          "options": [
+            {
+              "value": "",
+              "label": "t:general.settings.button_style.options__1.label"
+            },
+            {
+              "value": "btn--primary",
+              "label": "t:general.settings.button_style.options__2.label"
+            },
+            {
+              "value": "btn--outline-primary",
+              "label": "t:general.settings.button_style.options__3.label"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "button_note",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.button_note.label"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.content.label",
+          "default": "<ul><li>point 1</li><li>point 2</li><li>point 3</li></ul>"
+        },
+        {
+          "type": "text",
+          "id": "content_list_icon",
+          "label": "t:sections.addons.pricing_table.blocks.plan.settings.content_list_icon.label",
+          "default": "check_circle",
+          "info": "t:general.settings.icon.info"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.addons.pricing_table.presets.name",
+      "category": "t:sections.addons.pricing_table.presets.category",
+      "blocks": [
+        {
+          "type": "plan"
+        },
+        {
+          "type": "plan"
+        },
+        {
+          "type": "plan"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

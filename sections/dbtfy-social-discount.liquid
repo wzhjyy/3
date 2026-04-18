@@ -1,0 +1,198 @@
+{%- liquid
+  assign button_icon = section.settings.icon
+  assign popup_width = section.settings.width
+  assign discount_name = section.settings.discount_name
+  assign discount_amount = section.settings.discount_amount
+  assign discount_type = section.settings.discount_type
+
+  assign button_label = 'add-ons.social_discount.button_label' | t
+  assign popup_title = 'add-ons.social_discount.popup_title' | t
+  assign popup_text = 'add-ons.social_discount.popup_text' | t
+  assign popup_success_title = 'add-ons.social_discount.popup_success_title' | t
+  assign popup_success_text = 'add-ons.social_discount.popup_success_text' | t
+  assign popup_button_label = 'add-ons.social_discount.popup_button_label' | t
+-%}
+
+{%- capture section_settings -%}
+  {
+    "discountName": {{ discount_name | json }},
+    "discountAmount": {{ discount_amount | json }},
+    "discountType": {{ discount_type | json }}
+  }
+{%- endcapture -%}
+
+<div class="dbtfy-social-discount" data-section-settings='{{ section_settings }}'>
+  {%- if button_label != blank -%}
+    <div class="dbtfy-social-discount__button-wrapper" hidden>
+      <button type="button" class="btn btn--outline-primary btn--sm" data-modal-open="#social-discount-popup">
+        {%- if button_icon != blank -%}
+          <span class="{{ settings.icon }} icon icon--width" translate="no">{{ button_icon }}</span>
+        {%- endif -%}
+
+        {{ button_label }}
+      </button>
+    </div>
+  {%- endif -%}
+
+  <div id="social-discount-popup" class="modal modal--{{ popup_width }} stacked-on-top-of-content" role="dialog">
+    <div class="modal__dialog">
+      <div class="modal__content overlay-content" aria-hidden="true" tabindex="-1">
+        <div class="modal__header">
+          {%- if popup_title != blank -%}
+            <h4 class="h4 modal__title">{{ popup_title }}</h4>
+          {%- endif -%}
+
+          <button type="button"
+                  class="btn btn--square-sm modal__close"
+                  title="{{ 'general.password_page.close' | t }}"
+                  aria-label="{{ 'general.password_page.close' | t }}"
+                  data-modal-close="#social-discount-popup">
+            <span class="{{ settings.icon }}" translate="no">close</span>
+          </button>
+        </div>
+
+        <div class="modal__body text-center">
+          <div class="dbtfy-social-discount__body">
+            <div class="row gy-3">
+              {%- if popup_text != blank -%}
+                <p>{{ popup_text }}</p>
+              {%- endif -%}
+
+              {%- render 'social-sharing', show_icon: true, show_label: true, classes: 'justify-content-center' -%}
+            </div>
+          </div>
+
+          <span class="dbtfy-social-discount__loading icon icon--spin text-secondary" hidden></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-modal overlay-backdrop"></div>
+
+  <div id="social-discount-reward-popup" class="modal modal--{{ popup_width }} stacked-on-top-of-content" role="dialog">
+    <div class="modal__dialog">
+      <div class="modal__content overlay-content" aria-hidden="true" tabindex="-1">
+        <div class="modal__header">
+          {%- if popup_success_title != blank -%}
+            <h4 class="h4 modal__title">{{ popup_success_title }}</h4>
+          {%- endif -%}
+
+          <button type="button" class="btn btn--square-sm modal__close" data-modal-close="#social-discount-reward-popup">
+            <span class="{{ settings.icon }}" translate="no">close</span>
+          </button>
+        </div>
+
+        <div class="modal__body">
+          {%- if popup_success_text != blank -%}
+            <div class="rte text-center">
+              <p>{{ popup_success_text }}</p>
+            </div>
+          {%- endif -%}
+
+          {%- if discount_name != blank -%}
+            <div class="copy-box mt-3" tabindex="0">
+              {{ discount_name }}
+            </div>
+          {%- endif -%}
+
+          {%- if popup_button_label != blank -%}
+            <button type="button" class="btn btn--primary btn--full mt-3 dbtfy-social-discount__reward-button" data-modal-close="#social-discount-reward-popup">
+              {{ popup_button_label }}
+            </button>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-modal overlay-backdrop"></div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.social_discount.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.social_discount.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "text",
+      "id": "icon",
+      "label": "t:general.settings.icon.label",
+      "default": "share",
+      "info": "t:general.settings.icon.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.social_discount.settings.header__1.content"
+    },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "t:sections.addons.social_discount.settings.width.label",
+      "default": "md",
+      "options": [
+        {
+          "label": "t:sections.addons.social_discount.settings.width.options__1.label",
+          "value": "sm"
+        },
+        {
+          "label": "t:sections.addons.social_discount.settings.width.options__2.label",
+          "value": "md"
+        },
+        {
+          "label": "t:sections.addons.social_discount.settings.width.options__3.label",
+          "value": "lg"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.discount.header.content",
+      "info": "t:general.settings.discount.header.info"
+    },
+    {
+      "type": "text",
+      "id": "discount_name",
+      "label": "t:general.settings.discount.name.label",
+      "placeholder": "20OFF"
+    },
+    {
+      "type": "text",
+      "id": "discount_amount",
+      "label": "t:general.settings.discount.amount.label",
+      "placeholder": "20"
+    },
+    {
+      "type": "select",
+      "id": "discount_type",
+      "label": "t:general.settings.discount.type.label",
+      "default": "%",
+      "options": [
+        {
+          "value": "%",
+          "label": "t:general.settings.discount.type.options__1.label"
+        },
+        {
+          "value": "$",
+          "label": "t:general.settings.discount.type.options__2.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

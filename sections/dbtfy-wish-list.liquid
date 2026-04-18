@@ -1,0 +1,21 @@
+<div class="section">
+  <div class="container mb-5">
+    {%- render 'section-header', heading: page.title, enlarge: true -%}
+
+    {%- if page.content != blank -%}
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="rte">
+            {{ page.content }}
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="container">
+    <div class="row">
+      {%- render 'dbtfy-wish-list', type: 'page' -%}
+    </div>
+  </div>
+</div>

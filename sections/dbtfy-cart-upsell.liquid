@@ -1,0 +1,786 @@
+{%- liquid
+  assign button_style = section.settings.button_style
+-%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="dbtfy-cart-upsell" hidden>
+    {%- for block in section.blocks -%}
+      {%- case block.type -%}
+        {%- when 'general' -%}
+          {%- for index in (1..10) -%}
+            {%- liquid
+              assign general_title_key = 'upsell_title_' | append: index
+              assign general_product_offer_key = 'upsell_product_offer_' | append: index
+              assign general_button_label_key = 'upsell_button_label_' | append: index
+
+              assign general_title = block.settings[general_title_key]
+              assign general_product_offer = block.settings[general_product_offer_key]
+              assign general_button_label = block.settings[general_button_label_key]
+
+              unless general_product_offer.available
+                continue
+              endunless
+
+              capture general_product_offer_collections
+                for collection in general_product_offer.collections
+                  echo collection.handle
+
+                  unless forloop.last
+                    echo ','
+                  endunless
+                endfor
+              endcapture
+            -%}
+
+            {%- capture general_block_settings -%}
+              {
+                "productId": {{ general_product_offer.id | json }}
+              }
+            {%- endcapture -%}
+
+            <div class="card dbtfy-cart-upsell-item dbtfy-cart-upsell-item--general"
+                 data-product-id="{{ general_product_offer.id }}"
+                 data-product-collections="{{ general_product_offer_collections }}"
+                 data-block-settings='{{ general_block_settings }}'>
+
+              {%- if general_title != blank -%}
+                <div class="card__header">
+                  <span>
+                    {{ general_title }}&nbsp;
+                  </span>
+
+                  <h6 class="h6"> {% comment %}display-inline cu-product-name{% endcomment %}
+                    <a href="{{ general_product_offer.url }}">
+                      {{ general_product_offer.title }}
+                    </a>
+                  </h6>
+                </div>
+              {%- endif -%}
+
+              <div class="card__body card__body--xs">
+                {%- form 'product', general_product_offer, class: 'dbtfy-cart-upsell-item__form' -%}
+                  <div class="dbtfy-cart-upsell-item__image-wrapper">
+                    {%- assign media = general_product_offer.media.first -%}
+
+                    {%- capture sizes -%}100px{% endcapture %}
+
+                    <a href="{{ general_product_offer.url | within: collections.all }}"
+                       class="d-block media-wrapper media-wrapper--cover media-wrapper--center-center"
+                       style="padding-top: 100%;">
+
+                      {%- if media != blank -%}
+                        {{- media | image_url: width: 100 | image_tag: loading: 'lazy', sizes: sizes, widths: '100,200', class: 'media dbtfy-cart-upsell-item__image' -}}
+                      {%- else -%}
+                        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg media' }}
+                      {%- endif -%}
+                    </a>
+                  </div>
+
+                  <div class="dbtfy-cart-upsell-item__variants-wrapper">
+                    <select class="select select--sm select--full dbtfy-cart-upsell-item__variants"
+                            name="id">
+
+                      {%- for variant in general_product_offer.variants -%}
+                        {%- if variant.available -%}
+                          {%- liquid
+                            assign variant_title = variant.title | escape
+
+                            if general_product_offer.has_only_default_variant
+                              assign variant_title = general_product_offer.title | escape
+                            endif
+                          -%}
+
+                          {%- capture general_select_settings -%}
+                            {
+                              "url": {{ variant.url | json }},
+                              "title": {{ variant_title | json }},
+                              "price": {{ variant.price | json }}
+                              {% if variant.image.src %}
+                                ,"imageSrc": {{ variant.image | image_url: width: 100, height: 100, crop: 'center' | json }}
+                              {% endif %}
+                            }
+                          {%- endcapture -%}
+
+                          <option {% if variant == general_product_offer.selected_or_first_available_variant %}selected="selected"{% endif %}
+                                  value="{{ variant.id }}"
+                                  data-block-settings='{{ general_select_settings }}'>
+                              {{ variant_title }} - {{ variant.price | money }}
+                          </option>
+                        {%- endif -%}
+                      {%- endfor -%}
+                    </select>
+
+                    <input type="hidden"
+                           class="dbtfy-cart-upsell-item__quantity"
+                           name="quantity"
+                           value="1"
+                           min="1">
+                  </div>
+
+                  <div class="dbtfy-cart-upsell-item__button-wrapper">
+                    <button type="submit"
+                            name="add"
+                            class="btn btn--sm btn--full {{ button_style }} text-ellipsis dbtfy-cart-upsell-item__button"
+                            tabindex="0">
+
+                      <span class="btn__text">
+                        {%- if general_button_label != blank -%}
+                          {{ general_button_label }}
+                        {%- else -%}
+                          {{ 'products.product.add_to_cart' | t }}
+                        {%- endif -%}
+                      </span>
+                    </button>
+                  </div>
+                {%- endform -%}
+              </div>
+            </div>
+          {%- endfor -%}
+
+        {%- when 'specific' -%}
+          {%- for index in (1..10) -%}
+            {%- liquid
+              assign specific_adding_type_key = 'upsell_adding_type_' | append: index
+              assign specific_title_key = 'upsell_title_' | append: index
+              assign specific_product_trigger_key = 'upsell_product_trigger_' | append: index
+              assign specific_product_offer_key = 'upsell_product_offer_' | append: index
+              assign specific_button_label_key = 'upsell_button_label_' | append: index
+
+              assign specific_adding_type = block.settings[specific_adding_type_key]
+              assign specific_title = block.settings[specific_title_key]
+              assign specific_product_trigger = block.settings[specific_product_trigger_key]
+              assign specific_product_offer = block.settings[specific_product_offer_key]
+              assign specific_button_label = block.settings[specific_button_label_key]
+
+              unless specific_product_trigger and specific_product_offer and specific_product_offer.available
+                continue
+              endunless
+
+              capture specific_product_offer_collections
+                for collection in specific_product_offer.collections
+                  echo collection.handle
+
+                  unless forloop.last
+                    echo ','
+                  endunless
+                endfor
+              endcapture
+            -%}
+
+            {%- capture specific_block_settings -%}
+              {
+                "productTriggerId": {{ specific_product_trigger.id | json }},
+                "productTriggerHandle": {{ specific_product_trigger.handle | json }},
+                "productOfferId": {{ specific_product_offer.id | json }},
+                "productOfferHandle": {{ specific_product_offer.handle | json }},
+                "productOfferURL": {{ specific_product_offer.url | json }}
+              }
+            {%- endcapture -%}
+
+            <div class="card dbtfy-cart-upsell-item dbtfy-cart-upsell-item--specific dbtfy-cart-upsell-item--{{ specific_adding_type }}"
+                 data-product-id="{{ specific_product_offer.id }}"
+                 data-product-collections="{{ specific_product_offer_collections }}"
+                 data-block-settings='{{ specific_block_settings }}'>
+
+              {%- if specific_title != blank -%}
+                <div class="card__header">
+                  <span>
+                    {{ specific_title }}&nbsp;
+                  </span>
+
+                  <h6 class="h6">
+                    <a href="{{ specific_product_offer.url }}">
+                      {{ specific_product_offer.title }}
+                    </a>
+                  </h6>
+                </div>
+              {%- endif -%}
+
+              <div class="card__body card__body--xs">
+                {%- form 'product', specific_product_offer, class: 'dbtfy-cart-upsell-item__form' -%}
+                  <div class="dbtfy-cart-upsell-item__image-wrapper">
+                    {%- assign media = specific_product_offer.media.first -%}
+
+                    {%- capture sizes -%}100px{% endcapture %}
+
+                    <a href="{{ specific_product_offer.url | within: collections.all }}"
+                       class="d-block media-wrapper media-wrapper--cover media-wrapper--center-center"
+                       style="padding-top: 100%;">
+
+                      {%- if media != blank -%}
+                        {{- media | image_url: width: 100 | image_tag: loading: 'lazy', sizes: sizes, widths: '100,200', class: 'media dbtfy-cart-upsell-item__image' -}}
+                      {%- else -%}
+                        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg media' }}
+                      {%- endif -%}
+                    </a>
+                  </div>
+
+                  <div class="dbtfy-cart-upsell-item__variants-wrapper">
+                    <select class="select select--sm select--full dbtfy-cart-upsell-item__variants"
+                            name="id">
+
+                      {%- for variant in specific_product_offer.variants -%}
+                        {%- if variant.available -%}
+                          {%- liquid
+                            assign variant_title = variant.title | escape
+                            assign variant_quantity = 99999
+
+                            if specific_product_offer.has_only_default_variant
+                              assign variant_title = specific_product_offer.title | escape
+                            endif
+
+                            if variant.inventory_management == 'shopify' and variant.inventory_quantity > 0
+                              assign variant_quantity = variant.inventory_quantity
+                            endif
+                          -%}
+
+                          {%- capture specific_select_settings -%}
+                            {
+                              "url": {{ variant.url | json }},
+                              "title": {{ variant_title | json }},
+                              "price": {{ variant.price | json }},
+                              "quantity": {{ variant_quantity }}
+                              {% if variant.image.src %}
+                                ,"imageSrc": {{ variant.image | image_url: width: 100, height: 100, crop: 'center' | json }}
+                              {% endif %}
+                            }
+                          {%- endcapture -%}
+
+                          <option {% if variant == specific_product_offer.selected_or_first_available_variant %}selected="selected"{% endif %}
+                                  value="{{ variant.id }}"
+                                  data-block-settings='{{ specific_select_settings }}'>
+                            {{ variant_title }} - {{ variant.price | money }}
+                          </option>
+                        {%- else -%}
+                          <option disabled="disabled">
+                            {{ variant.title | escape }} - {{ 'products.product.sold_out' | t }}
+                          </option>
+                        {%- endif -%}
+                      {%- endfor -%}
+                    </select>
+
+                    <input type="hidden"
+                           class="dbtfy-cart-upsell-item__quantity"
+                           name="quantity"
+                           value="1"
+                           min="1">
+                  </div>
+
+                  <div class="dbtfy-cart-upsell-item__button-wrapper">
+                    <button type="submit"
+                            name="add"
+                            class="btn btn--sm btn--full {{ button_style }} text-ellipsis dbtfy-cart-upsell-item__button"
+                            tabindex="0">
+
+                      <span class="btn__text">
+                        {%- if specific_button_label != blank -%}
+                          {{ specific_button_label }}
+                        {%- else -%}
+                          {%- if specific_adding_type == 'replace' -%}
+                            {{ 'products.product.replace' | t }}
+                          {%- else -%}
+                            {{ 'products.product.add_to_cart' | t }}
+                          {%- endif -%}
+                        {%- endif -%}
+                      </span>
+                    </button>
+                  </div>
+                {%- endform -%}
+              </div>
+            </div>
+          {%- endfor -%}
+      {%- endcase -%}
+    {%- endfor -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.cart_upsell.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.cart_upsell.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:general.settings.button_style.label",
+      "default": "btn--primary",
+      "options": [
+        {
+          "value": "",
+          "label": "t:general.settings.button_style.options__1.label"
+        },
+        {
+          "value": "btn--primary",
+          "label": "t:general.settings.button_style.options__2.label"
+        },
+        {
+          "value": "btn--outline-primary",
+          "label": "t:general.settings.button_style.options__3.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "general",
+      "name": "t:sections.addons.cart_upsell.blocks.general.name",
+      "limit": 5,
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_1",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_1",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_1",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__2.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_2",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_2",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_2",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__3.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_3",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_3",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_3",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__4.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_4",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_4",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_4",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__5.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_5",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_5",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_5",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__6.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_6",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_6",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_6",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__7.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_7",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_7",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_7",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__8.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_8",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_8",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_8",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__9.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_9",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_9",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_9",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.general.settings.header__10.content"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_10",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_10",
+          "label": "t:sections.addons.cart_upsell.blocks.general.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_10",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        }
+      ]
+    },
+    {
+      "type": "specific",
+      "name": "t:sections.addons.cart_upsell.blocks.specific.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.specific.settings.header__1.content"
+        },
+        {
+          "type": "radio",
+          "id": "upsell_adding_type_1",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.label",
+          "options": [
+            {
+              "value": "add",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__1.label"
+            },
+            {
+              "value": "replace",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__2.label"
+            }
+          ],
+          "default": "add"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_1",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_trigger_1",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_1",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_1",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.specific.settings.header__2.content"
+        },
+        {
+          "type": "radio",
+          "id": "upsell_adding_type_2",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.label",
+          "options": [
+            {
+              "value": "add",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__1.label"
+            },
+            {
+              "value": "replace",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__2.label"
+            }
+          ],
+          "default": "add"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_2",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_trigger_2",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_2",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_2",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.specific.settings.header__3.content"
+        },
+        {
+          "type": "radio",
+          "id": "upsell_adding_type_3",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.label",
+          "options": [
+            {
+              "value": "add",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__1.label"
+            },
+            {
+              "value": "replace",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__2.label"
+            }
+          ],
+          "default": "add"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_3",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_trigger_3",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_3",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_3",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.specific.settings.header__4.content"
+        },
+        {
+          "type": "radio",
+          "id": "upsell_adding_type_4",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.label",
+          "options": [
+            {
+              "value": "add",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__1.label"
+            },
+            {
+              "value": "replace",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__2.label"
+            }
+          ],
+          "default": "add"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_4",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_trigger_4",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_4",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_4",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_upsell.blocks.specific.settings.header__5.content"
+        },
+        {
+          "type": "radio",
+          "id": "upsell_adding_type_5",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.label",
+          "options": [
+            {
+              "value": "add",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__1.label"
+            },
+            {
+              "value": "replace",
+              "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_adding_type.options__2.label"
+            }
+          ],
+          "default": "add"
+        },
+        {
+          "type": "text",
+          "id": "upsell_title_5",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_title.label",
+          "default": "You might also like:"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_trigger_5",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "upsell_product_offer_5",
+          "label": "t:sections.addons.cart_upsell.blocks.specific.settings.upsell_product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "upsell_button_label_5",
+          "label": "t:general.settings.button_label.label",
+          "default": "Add to Cart"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,445 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign show_search = section.settings.show_search
+  assign search_placeholder = section.settings.search_placeholder
+  assign answer_text_alignment = section.settings.answer_text_alignment
+  assign answer_text_alignment_mobile = section.settings.answer_text_alignment_mobile
+  assign show_banner = section.settings.show_banner
+  assign banner_icon = section.settings.banner_icon
+  assign banner_heading = section.settings.banner_heading
+  assign banner_subheading = section.settings.banner_subheading
+  assign banner_button_label = section.settings.banner_button_label
+  assign banner_button_url = section.settings.banner_button_url
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+-%}
+
+<div class="section section--{{ section_style }} {{ visibility_class }}">
+  {%- if template == 'page.faq' -%}
+    <div class="container mb-5">
+      {%- render 'section-header', heading: page.title, enlarge: true -%}
+
+      {%- if page.content != blank -%}
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <div class="rte">
+              {{ page.content }}
+            </div>
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+
+  <div class="{{ container_size }}">
+    {%- if template != 'page.faq' -%}
+      {%- render 'section-header', heading: heading, subheading: subheading -%}
+    {%- endif -%}
+
+    {%- if show_search -%}
+      <div class="row">
+        <div class="col-md-4 offset-md-4 text-center">
+          <input type="search" class="input input--full mb-3 js-faq-search" placeholder="{{ search_placeholder }}">
+        </div>
+      </div>
+    {%- endif -%}
+
+    <div class="row">
+      <div class="col-md-8 offset-md-2">
+        {%- assign in_card_group = false -%}
+
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'category' -%}
+            {%- liquid
+              assign heading = block.settings.title
+              assign icon = block.settings.icon
+            -%}
+
+            {%- if in_card_group -%}
+              </div>
+            {%- endif -%}
+
+            {%- assign in_card_group = false -%}
+
+            {%- if heading != blank -%}
+              <h3 class="h3 mt-4 mb-3">
+                {%- if icon != blank -%}
+                  <span class="{{ settings.icon }} icon icon--width" translate="no">{{ icon }}</span>
+                {%- endif -%}
+
+                {{ heading }}
+              </h3>
+            {%- endif -%}
+          {%- endif -%}
+
+          {%- if block.type == 'question' -%}
+            {%- liquid
+              assign open_by_default = block.settings.open_by_default
+              assign icon = block.settings.icon
+              assign question = block.settings.title
+              assign answer = block.settings.answer
+            -%}
+
+            {%- unless in_card_group -%}
+              <div class="card-group" {{ block.shopify_attributes }}>
+            {%- endunless -%}
+
+            {%- assign in_card_group = true -%}
+
+            {%- if question != blank -%}
+              <div class="card tab js-faq-tab" data-question="{{ question | escape }}" {{ block.shopify_attributes }}>
+                <button type="button"
+                        class="card__header tab__header tab__header--{{ block.id }}{% if open_by_default %} active{% endif %}"
+                        role="tab"
+                        aria-controls="tab-content-{{ forloop.index }}{{ block.id }}"
+                        {% if open_by_default %} aria-selected="true"{% else %} aria-selected="false"{% endif %}>
+
+                  {%- if icon != blank -%}
+                    <span class="{{ settings.icon }} icon icon--width text-secondary" translate="no">{{ icon }}</span>
+                  {%- endif -%}
+
+                  <span class="tab__header-title">{{ question }}</span>
+                </button>
+
+                <div class="card__body tab__body {{ answer_text_alignment }} {{ answer_text_alignment_mobile }}" aria-labelledby="tab-button-{{ forloop.index }}{{ block.id }}" role="tabpanel">
+                  <div class="tab__content rte">
+                    {{ answer }}
+                  </div>
+                </div>
+              </div>
+            {%- endif -%}
+
+            {%- if forloop.last and in_card_group -%}
+              </div>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- if show_banner -%}
+          <div class="mt-5">
+            <div class="card text-center">
+              <div class="card__body">
+                <div class="row gy-3">
+                  {%- if banner_icon != blank -%}
+                    <p>
+                    <span class="{{ settings.icon }} icon icon--xl icon--image text-secondary" translate="no">
+                      {{ banner_icon }}
+                    </span>
+                    </p>
+                  {%- endif -%}
+
+                  {%- if banner_heading != blank -%}
+                    <h4 class="h4">{{ banner_heading }}</h4>
+                  {%- endif -%}
+
+                  {%- if banner_subheading != blank -%}
+                    <p>{{ banner_subheading }}</p>
+                  {%- endif -%}
+
+                  {%- if banner_button_label != blank and banner_button_url != blank -%}
+                    <div>
+                      <a class="btn btn--outline-primary" href="{{ banner_button_url }}">
+                        {{ banner_button_label }}
+                      </a>
+                    </div>
+                  {%- endif -%}
+                </div>
+              </div>
+            </div>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.faq.name",
+  "class": "dbtfy-faq",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.faq.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "FAQ"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.faq.settings.header__1.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "t:sections.addons.faq.settings.show_search.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "search_placeholder",
+      "label": "t:sections.addons.faq.settings.search_placeholder.label",
+      "default": "Search questions..."
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.faq.settings.header__2.content"
+    },
+    {
+      "type": "select",
+      "id": "answer_text_alignment",
+      "label": "t:general.settings.text_alignment_desktop.label",
+      "default": "sm:text-center",
+      "options": [
+        {
+          "value": "sm:text-start",
+          "label": "t:general.settings.text_alignment.options__1.label"
+        },
+        {
+          "value": "sm:text-center",
+          "label": "t:general.settings.text_alignment.options__2.label"
+        },
+        {
+          "value": "sm:text-end",
+          "label": "t:general.settings.text_alignment.options__3.label"
+        },
+        {
+          "value": "sm:text-justify",
+          "label": "t:general.settings.text_alignment.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "answer_text_alignment_mobile",
+      "label": "t:general.settings.text_alignment_mobile.label",
+      "default": "text-center",
+      "options": [
+        {
+          "value": "text-start",
+          "label": "t:general.settings.text_alignment.options__1.label"
+        },
+        {
+          "value": "text-center",
+          "label": "t:general.settings.text_alignment.options__2.label"
+        },
+        {
+          "value": "text-end",
+          "label": "t:general.settings.text_alignment.options__3.label"
+        },
+        {
+          "value": "text-justify",
+          "label": "t:general.settings.text_alignment.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.faq.settings.header__3.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_banner",
+      "label": "t:sections.addons.faq.settings.show_banner.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "banner_icon",
+      "label": "t:sections.addons.faq.settings.banner_icon.label",
+      "info": "t:general.settings.icon.info",
+      "default": "live_help"
+    },
+    {
+      "type": "text",
+      "id": "banner_heading",
+      "label": "t:sections.addons.faq.settings.banner_heading.label",
+      "default": "Didn't find your answer?"
+    },
+    {
+      "type": "textarea",
+      "id": "banner_subheading",
+      "label": "t:sections.addons.faq.settings.banner_subheading.label",
+      "default": "Our customer service will be happy to help you."
+    },
+    {
+      "type": "text",
+      "id": "banner_button_label",
+      "label": "t:general.settings.button_label.label",
+      "default": "Get in Touch"
+    },
+    {
+      "type": "url",
+      "id": "banner_button_url",
+      "label": "t:general.settings.button_link.label"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "t:sections.addons.faq.blocks.category.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.faq.blocks.category.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "default": "Category"
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "support"
+        }
+      ]
+    },
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.faq.blocks.question.settings.header__1.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "label": "t:sections.addons.faq.blocks.question.settings.open_by_default.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "info": "t:general.settings.icon.info"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.addons.faq.blocks.question.settings.question.label",
+          "default": "Question"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "t:sections.addons.faq.blocks.question.settings.answer.label",
+          "default": "<p>This is your answer.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.addons.faq.presets.name",
+      "category": "t:sections.addons.faq.presets.category",
+      "blocks": [
+        {
+          "type": "category"
+        },
+        {
+          "type": "question"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

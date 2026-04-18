@@ -1,0 +1,553 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign enable_gray_images = section.settings.enable_gray_images
+  assign show_overlay = section.settings.show_overlay
+
+  assign images_loading_type = section.settings.images_loading_type
+
+  assign default_scrolling_speed = 15
+  assign scrolling_speed_multiplier = section.settings.scrolling_speed | divided_by: 100.0
+
+  if scrolling_speed_multiplier > 1
+    assign calculated_scrolling_speed = default_scrolling_speed | times: 1.0 | divided_by: scrolling_speed_multiplier
+  else
+    assign calculated_scrolling_speed = 2 | minus: scrolling_speed_multiplier | times: default_scrolling_speed
+  endif
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+-%}
+
+<style>
+    [data-section-id="{{ section.id }}"] {
+        padding: {{ section.settings.vertical_spacing_on_mobile }}px 0;
+    }
+
+    [data-section-id="{{ section.id }}"] ul {
+        --speed: {{ section.settings.scrolling_speed }}s;
+        --direction: {{ section.settings.scrolling_direction }};
+    }
+
+    {% if section.settings.scrolling_pause_on_hover %}
+    [data-section-id="{{ section.id }}"]:hover ul {
+        --play-state: paused;
+    }
+
+    {% endif %}
+
+    [data-section-id="{{ section.id }}"] li {
+        margin: 0 calc({{ section.settings.spacing_between_blocks_on_mobile }}px / 2);
+    }
+
+    @media screen and (min-width: 720px) {
+        [data-section-id="{{ section.id }}"] {
+            padding: {{ section.settings.vertical_spacing_on_desktop }}px 0;
+        }
+
+        [data-section-id="{{ section.id }}"] li {
+            margin: 0 calc({{ section.settings.spacing_between_blocks_on_desktop }}px / 2);
+        }
+    }
+</style>
+
+{%- if section.blocks.size > 0 -%}
+  <div class="dbtfy-scrolling-banner__wrapper relative overflow-hidden {{ visibility_class }}"
+       data-section-id="{{ section.id }}">
+
+    <scrolling-banner class="d-flex relative z-30 color-text">
+      {%- for i in (1..10) -%}
+        <ul class="d-flex align-items-center flex-shrink-0 animate-marquee">
+          {%- for block in section.blocks -%}
+            {%- case block.type -%}
+              {%- when 'text' -%}
+                {%- liquid
+                  assign text = block.settings.text
+
+                  if block.settings.text_to_show_as_stroked != blank
+                    assign words = block.settings.text_to_show_as_stroked | split: ','
+
+                    for word in words
+                      if text contains word
+                        assign new_text = '<span class="text-stroke">' | append: word | append: '</span>'
+                        assign text = text | replace: word, new_text
+                      endif
+                    endfor
+                  endif
+                -%}
+
+                {%- if text != blank -%}
+                  <li class="flex-shrink-0" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>
+                    <style>
+                        [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .heading,
+                        [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .text {
+                            font-size: {{ block.settings.text_size_on_mobile }}px;
+                        }
+
+                        @media screen and (min-width: 720px) {
+                            [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .heading,
+                            [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .text {
+                                font-size: {{ block.settings.text_size_on_desktop }}px;
+                            }
+                        }
+                    </style>
+
+                    <div{% if block.settings.show_all_text_stroked %} class="text-stroke"{% endif %}
+                        data-block-id="{{ block.id }}">
+                    {%- if block.settings.text_link != blank -%}
+                      <a href="{{ block.settings.text_link }}" class="block no-underline">
+                        {%- endif -%}
+
+                        {%- if block.settings.text_font == 'heading' -%}
+                          <h4 class="h4 heading">
+                            {{- text -}}
+                          </h4>
+                        {%- else -%}
+                          <div class="text">
+                            {{- text -}}
+                          </div>
+                        {%- endif -%}
+
+                        {%- if block.settings.text_link != blank -%}
+                      </a>
+                      {%- endif -%}
+                    </div>
+                  </li>
+                {%- endif -%}
+
+              {%- when 'icon' -%}
+                {%- assign icon = block.settings.icon -%}
+
+                {%- if icon != blank -%}
+                  <li class="flex-shrink-0" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>
+                    <style>
+                        [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .icon {
+                            font-size: {{ block.settings.icon_height_on_mobile }}px !important;
+                            font-size: {{ block.settings.icon_height_on_mobile }}px !important;
+                        }
+
+                        @media screen and (min-width: 720px) {
+                            [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .icon {
+                                font-size: {{ block.settings.icon_height_on_desktop }}px !important;
+                                font-size: {{ block.settings.icon_height_on_desktop }}px !important;
+                            }
+                        }
+                    </style>
+
+                    <span class="{{ settings.icon }} icon" translate="no">{{ icon }}</span>
+                  </li>
+                {%- endif -%}
+
+              {%- when 'image' -%}
+                {%- liquid
+                  assign image = block.settings.image
+                  assign image_link = block.settings.image_link
+                  assign maximum_height_on_desktop = block.settings.maximum_height_on_desktop
+                  assign maximum_height_on_mobile = block.settings.maximum_height_on_mobile
+
+                  assign maximum_width_on_desktop = maximum_height_on_desktop | times: image.aspect_ratio | ceil
+                  assign maximum_width_on_mobile = maximum_height_on_mobile | times: image.aspect_ratio | ceil
+
+                  if image == blank
+                    assign maximum_width_on_desktop = maximum_height_on_desktop
+                    assign maximum_width_on_mobile = maximum_height_on_mobile
+                  endif
+
+                  assign image_class = 'image'
+
+                  if enable_gray_images
+                    assign image_class = image_class | append: ' image--gray'
+                  endif
+                -%}
+
+                <li class="flex-shrink-0" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>
+                  <style>
+                      [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .scrolling-banner-image img,
+                      [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .scrolling-banner-image .placeholder-svg {
+                          width: {{ maximum_width_on_mobile }}px;
+                          height: {{ maximum_height_on_mobile }}px;
+                      }
+
+                      @media screen and (min-width: 720px) {
+                          [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .scrolling-banner-image img,
+                          [data-section-id="{{ section.id }}"] [data-block-id="{{ block.id }}"] .scrolling-banner-image .placeholder-svg {
+                              width: {{ maximum_width_on_desktop }}px;
+                              height: {{ maximum_height_on_desktop }}px;
+                          }
+                      }
+                  </style>
+
+                  <{% if image_link != blank %}a href="{{ image_link }}" {% else %}span{% endif %}
+                      class="block overflow-hidden rounded-xxs relative scrolling-banner-image{% if image_link != blank %} no-underline{% endif %}">
+                    {%- if image != blank -%}
+                      {%- capture image_sizes_attribute -%}(max-width: 720px) min({{ maximum_width_on_mobile }}px, 100vw), min({{ maximum_width_on_desktop }}px, 100vw){%- endcapture -%}
+
+                      {{- image | image_url: width: image.width | image_tag: loading: 'lazy', sizes: image_sizes_attribute, widths: '48,72,96,120,144,168,200,232,264', class: image_class -}}
+                    {%- else -%}
+                      {%- unless hide_placeholders -%}
+                        <div class="mx-auto d-flex justify-content-center align-items-center">
+                          {{- 'image' | placeholder_svg_tag: 'placeholder-svg' -}}
+                        </div>
+                      {%- endunless -%}
+                    {%- endif -%}
+                    </{% if image_link != blank %}a{% else %}span{% endif %}>
+                </li>
+
+              {%- when 'button' -%}
+                {%- liquid
+                  assign button_label = block.settings.button_label
+                  assign button_link = block.settings.button_link
+                  assign button_style = block.settings.button_style
+                -%}
+
+                <li class="flex-shrink-0" data-block-id="{{ block.id }}" {{ block.shopify_attributes }}>
+                  {%- if button_label != blank and button_link != blank -%}
+                    <div>
+                      <a href="{{ button_link }}" class="btn {{ button_style }}">{{ button_label }}</a>
+                    </div>
+                  {%- endif -%}
+                </li>
+            {%- endcase -%}
+          {%- endfor -%}
+        </ul>
+      {%- endfor -%}
+    </scrolling-banner>
+
+    {%- if section.settings.background_image != blank -%}
+      {%- capture image_sizes_attribute -%}100vw{%- endcapture -%}
+
+      <div class="media-wrapper media-wrapper--cover media-wrapper--center-center {% if show_overlay %} overlay{% endif %} h-100 w-100 absolute">
+        {{- section.settings.background_image | image_url: width: section.settings.background_image.width | image_tag: loading: 'lazy', sizes: image_sizes_attribute, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+      </div>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Scrolling banner",
+  "class": "dbtfy-scrolling-banner",
+  "max_blocks": 10,
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.newsletter_popup.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_overlay",
+      "label": "t:sections.slideshow.blocks.slide.settings.show_overlay.label",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Auto-scrolling"
+    },
+    {
+      "type": "select",
+      "id": "scrolling_direction",
+      "options": [
+        {
+          "value": "normal",
+          "label": "Left"
+        },
+        {
+          "value": "reverse",
+          "label": "Right"
+        }
+      ],
+      "default": "normal",
+      "label": "Direction"
+    },
+    {
+      "type": "range",
+      "id": "scrolling_speed",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "unit": "s",
+      "label": "Scrolling speed",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "spacing_between_blocks_on_desktop",
+      "min": 30,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "label": "Spacing between blocks on desktop",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "spacing_between_blocks_on_mobile",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Spacing between blocks on mobile",
+      "default": 50
+    },
+    {
+      "type": "checkbox",
+      "id": "scrolling_pause_on_hover",
+      "label": "Pause on hover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_gray_images",
+      "label": "Enable gray images",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Section settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "Show on desktop",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "Show on mobile",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "vertical_spacing_on_desktop",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Vertical spacing on desktop",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "vertical_spacing_on_mobile",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "label": "Vertical spacing on mobile",
+      "default": 10
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Scrolling text"
+        },
+        {
+          "type": "url",
+          "id": "text_link",
+          "label": "Text link"
+        },
+        {
+          "type": "select",
+          "id": "text_font",
+          "options": [
+            {
+              "value": "heading",
+              "label": "Heading"
+            },
+            {
+              "value": "body",
+              "label": "Body"
+            }
+          ],
+          "default": "heading",
+          "label": "Text font"
+        },
+        {
+          "type": "range",
+          "id": "text_size_on_desktop",
+          "min": 12,
+          "max": 64,
+          "step": 2,
+          "unit": "px",
+          "label": "Text size on desktop",
+          "default": 40
+        },
+        {
+          "type": "range",
+          "id": "text_size_on_mobile",
+          "min": 12,
+          "max": 64,
+          "step": 2,
+          "unit": "px",
+          "label": "Text size on mobile",
+          "default": 24
+        },
+        {
+          "type": "header",
+          "content": "Stroked text"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_all_text_stroked",
+          "label": "Show all text as stroked",
+          "info": "All text will be displayed as stroked.",
+          "default": false
+        },
+        {
+          "type": "textarea",
+          "id": "text_to_show_as_stroked",
+          "label": "Text to show as stroked",
+          "info": "Type words from the text field above that should be stroked. Use comma as separator.",
+          "default": "shipping,returns"
+        }
+      ]
+    },
+    {
+      "type": "icon",
+      "name": "Icon",
+      "settings": [
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "local_shipping"
+        },
+        {
+          "type": "range",
+          "id": "icon_height_on_desktop",
+          "min": 16,
+          "max": 100,
+          "step": 4,
+          "unit": "px",
+          "label": "Icon height on desktop",
+          "default": 36
+        },
+        {
+          "type": "range",
+          "id": "icon_height_on_mobile",
+          "min": 16,
+          "max": 100,
+          "step": 4,
+          "unit": "px",
+          "label": "Icon height on mobile",
+          "default": 24
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "url",
+          "id": "image_link",
+          "label": "Image link"
+        },
+        {
+          "type": "range",
+          "id": "maximum_height_on_desktop",
+          "min": 24,
+          "max": 200,
+          "step": 4,
+          "unit": "px",
+          "label": "Image height on desktop",
+          "default": 36
+        },
+        {
+          "type": "range",
+          "id": "maximum_height_on_mobile",
+          "min": 24,
+          "max": 100,
+          "step": 4,
+          "unit": "px",
+          "label": "Image height on mobile",
+          "default": 24
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Button",
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "t:general.settings.button_label.label",
+          "default": "Button"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "t:general.settings.button_link.label"
+        },
+        {
+          "type": "select",
+          "id": "button_style",
+          "label": "t:general.settings.button_style.label",
+          "default": "btn--primary",
+          "options": [
+            {
+              "value": "",
+              "label": "t:general.settings.button_style.options__1.label"
+            },
+            {
+              "value": "btn--primary",
+              "label": "t:general.settings.button_style.options__2.label"
+            },
+            {
+              "value": "btn--outline-primary",
+              "label": "t:general.settings.button_style.options__3.label"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Scrolling banner",
+      "blocks": [
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+      

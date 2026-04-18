@@ -1,0 +1,983 @@
+{%- liquid
+  assign gift_wrap_product_id = settings.dbtfy_gift_wrap_product.id
+-%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="dbtfy-mega-menu" hidden>
+    <ul class="dbtfy-mega-menu__items">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign link_name = block.settings.link_name
+          assign link_url = block.settings.link_url
+          assign link_position = block.settings.link_position
+
+          assign nav_url = '#'
+
+          if link_url != blank
+            assign nav_url = link_url
+          endif
+        -%}
+
+        {%- capture block_settings -%}
+          {
+            "position": {{ link_position | json }}
+          }
+        {%- endcapture -%}
+
+        {%- if link_name != blank -%}
+          <li class="dropdown header-menu__item dbtfy-mega-menu__item"
+              data-block-settings='{{ block_settings }}'
+              {{ block.shopify_attributes }}>
+
+            <a id="MenuParentToggle-{{ block.id }}"
+               href="{{ link_url }}"
+               class="dropdown__toggle header-menu__link"
+               aria-controls="MegaMenu-{{ block.id }}"
+               aria-haspopup="true"
+               aria-expanded="false">
+              {{ link_name | escape }}
+              <span class="{{ settings.icon }}" translate="no" aria-hidden="true">keyboard_arrow_down</span>
+            </a>
+
+            <div id="MegaMenu-{{ block.id }}"
+                 class="dropdown__menu dropdown__menu--body dbtfy-mega-menu__dropdown"
+                 aria-labelledby="MegaMenuToggle-{{ block.id }}">
+
+              {%- case block.type -%}
+                {%- when 'mega' -%}
+                  {%- liquid
+                    assign show_menu_headers = block.settings.show_menu_headers
+                    assign limit = block.settings.product_slider_total_products_count | times: 1
+                    assign menu = block.settings.menu
+                    assign product_slider_heading = block.settings.product_slider_heading
+                    assign product_slider_heading_link = block.settings.product_slider_heading_link
+                    assign product_slider_collection = block.settings.product_slider_collection
+                    assign product_slider_show_arrows = block.settings.product_slider_show_arrows
+                    assign product_slider_show_dots = block.settings.product_slider_show_dots
+                    assign product_slider_enable_autoplay = block.settings.product_slider_autoplay
+                    assign product_slider_autoplay_speed = block.settings.product_slider_autoplay_speed | times: 1000
+                    assign product_slider_slides_to_show = block.settings.product_slider_products_count_per_view | times: 1
+                    assign enable_product_slider = true
+                    assign empty_state = false
+
+                    if product_slider_collection == blank or collections[product_slider_collection].products_count == 0
+                      assign empty_state = true
+                    endif
+
+                    if limit == product_slider_slides_to_show
+                      assign enable_product_slider = false
+                    endif
+
+                    capture menu_container_class
+                      if empty_state
+                        echo 'col-lg-12'
+                      else
+                        if product_slider_slides_to_show == 1
+                          echo 'col-lg-9'
+                        else
+                          echo 'col-lg-7'
+                        endif
+                      endif
+                    endcapture
+                  -%}
+
+                  <div class="row row--sm dbtfy-mega-menu__row">
+                    <div class="dbtfy-mega-menu__upper-section">
+                      <div class="row">
+                        <div class="dbtfy-mega-menu__menu-container {{ menu_container_class }}">
+                          {%- if menu != blank -%}
+                            {%- liquid
+                              assign menu_links_count = linklists[menu].links.size
+
+                              case menu_links_count
+                                when 1
+                                  assign menu_column_class = 'col-lg-12'
+
+                                when 2
+                                  assign menu_column_class = 'col-lg-6'
+
+                                else
+                                  assign menu_column_class = 'col-lg-4'
+                              endcase
+                            -%}
+
+                            {%- if menu_links_count > 0 -%}
+                              <div class="row row-cols-auto w-100">
+                                {%- for link in linklists[menu].links -%}
+                                  <div class="dbtfy-mega-menu__menu-item{% if empty_state or empty_state == false and product_slider_slides_to_show == 1 %} col-lg-3{% else %} {{ menu_column_class }}{% endif %}">
+                                    {%- if show_menu_headers -%}
+                                      <a href="{{ link.url }}" class="h6">
+                                        {{ link.title }}
+                                      </a>
+                                    {%- endif -%}
+
+                                    {%- if link.links != blank -%}
+                                      <ul class="dbtfy-mega-menu__list no-bullets mt-2">
+                                        {%- for childlink in link.links -%}
+                                          <li class="mb-1">
+                                            <a href="{{ childlink.url }}" class="text-ellipsis">
+                                              {{ childlink.title }}
+                                            </a>
+                                          </li>
+                                        {%- endfor -%}
+                                      </ul>
+                                    {%- endif -%}
+                                  </div>
+                                {%- endfor -%}
+                              </div>
+                            {%- endif -%}
+                          {%- endif -%}
+                        </div>
+
+                        {%- unless empty_state -%}
+                          <div class="dbtfy-mega-menu__product-slider-container{% if product_slider_slides_to_show == 1 %} col-lg-3{% else %} col-lg-5{% endif %}">
+                            {%- if product_slider_heading != blank -%}
+                              {%- if product_slider_heading_link != blank -%}
+                                <a href="{{ product_slider_heading_link }}">
+                              {%- endif -%}
+
+                              <h4 class="h6 text-primary">
+                                {{ product_slider_heading }}
+                              </h4>
+
+                              {%- if product_slider_heading_link != blank -%}
+                                </a>
+                              {%- endif -%}
+                            {%- endif -%}
+
+                            {%- capture section_settings -%}
+                              {
+                                "showArrows": {{ product_slider_show_arrows | json }},
+                                "showDots": {{ product_slider_show_dots | json }},
+                                "enableAutoplay": {{ product_slider_enable_autoplay | json }},
+                                "autoplaySpeed": {{ product_slider_autoplay_speed | json }},
+                                "slidesToShow": {{ product_slider_slides_to_show | json }}
+                              }
+                            {%- endcapture -%}
+
+                            <div class="row row--sm mt-2{% if enable_product_slider %} slick dbtfy-mega-menu__product-slider{% endif %}"
+                                 data-section-settings='{{ section_settings }}'>
+
+                              {%- liquid
+                                assign block_width = ''
+
+                                if enable_product_slider == false and product_slider_slides_to_show == 2
+                                  assign block_width = 'col-lg-6'
+                                endif
+
+                                for product in collections[product_slider_collection].products limit: limit
+                                  capture product_item
+                                    capture current
+                                      cycle 1, 2, 3, 4, 5, 6
+                                    endcapture
+
+                                    render 'product-grid-item', product: product, block_width: block_width, current: current, images_loading_type: 'lazy'
+                                  endcapture
+
+                                  if product.id != gift_wrap_product_id
+                                    echo product_item
+                                  endif
+                                endfor
+                              -%}
+                            </div>
+                          </div>
+                        {%- endunless -%}
+                      </div>
+                    </div>
+
+                    {%- liquid
+                      assign images_count = 0
+                      assign images_slider_show_arrows = block.settings.images_slider_show_arrows
+                      assign images_slider_show_dots = block.settings.images_slider_show_dots
+                      assign images_slider_enable_autoplay = block.settings.images_slider_autoplay
+                      assign images_slider_autoplay_speed = block.settings.images_slider_autoplay_speed | times: 1000
+                      assign enable_images_slider = false
+
+                      for i in (1..6)
+                        assign index = forloop.index
+
+                        capture image_setting
+                          echo 'image_' | append: i
+                        endcapture
+
+                        capture image_link_setting
+                          echo 'image_link_' | append: i
+                        endcapture
+
+                        assign image = block.settings[image_setting]
+                        assign image_link = block.settings[image_link_setting]
+
+                        if image != blank
+                          assign images_count = images_count | plus: 1
+                        endif
+                      endfor
+
+                      case images_count
+                        when 1
+                          assign images_column_class = 'col-lg-12'
+
+                        when 2
+                          assign images_column_class = 'col-lg-6'
+
+                        when 3
+                          assign images_column_class = 'col-lg-4'
+                      endcase
+
+                      if images_count > 3
+                        assign enable_images_slider = true
+                      endif
+                    -%}
+
+                    {%- capture section_settings -%}
+                      {
+                        "showArrows": {{ images_slider_show_arrows | json }},
+                        "showDots": {{ images_slider_show_dots | json }},
+                        "enableAutoplay": {{ images_slider_enable_autoplay | json }},
+                        "autoplaySpeed": {{ images_slider_autoplay_speed | json }}
+                      }
+                    {%- endcapture -%}
+
+                    <div class="mt-4">
+                      <div class="row row-cols-auto{% if enable_images_slider %} slick dbtfy-mega-menu__images-slider{% endif %}"
+                           data-section-settings='{{ section_settings }}'>
+
+                        {%- for i in (1..6) -%}
+                          {%- liquid
+                            assign index = forloop.index
+
+                            capture image_setting
+                              echo 'image_' | append: i
+                            endcapture
+
+                            capture image_link_setting
+                              echo 'image_link_' | append: i
+                            endcapture
+
+                            assign image = block.settings[image_setting]
+                            assign image_link = block.settings[image_link_setting]
+                          -%}
+
+                          {%- if image != blank -%}
+                            <div class="{% if images_count <= 3 %}{{ images_column_class }}{% endif %}">
+                            {%- if image_link != blank -%}
+                              <a class="d-block" href="{{ image_link }}">
+                                {%- endif -%}
+
+                                {%- capture sizes -%}{{ 100 | divided_by: images_count }}vw{% endcapture %}
+
+                                <div class="media-wrapper media-wrapper--cover media-wrapper--center-center"
+                                     style="padding-top: {% if images_count == 1 %}25{% else %}50{% endif %}%">
+
+                                  {{- image | image_url: width: image.width | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+                                </div>
+
+                                {%- if image_link != blank -%}
+                              </a>
+                              {%- endif -%}
+                            </div>
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </div>
+                    </div>
+                  </div>
+
+                {%- when 'products' -%}
+                  {%- liquid
+                    assign show_header = block.settings.show_header
+                    assign heading = block.settings.title
+                    assign collection_setting = block.settings.collection
+                    assign collection = collections[collection_setting]
+                    assign products_to_show = block.settings.products_to_show | times: 1
+                    assign block_width = ''
+
+                    if products_to_show == 4
+                      assign block_width = 'col-lg-3'
+                    endif
+                  -%}
+
+                  {%- if collection != blank and collection.products.size > 0 -%}
+                    {%- if show_header -%}
+                      <div class="d-flex align-items-center mb-2">
+                        <h4 class="h6 text-ellipsis">
+                          <a href="{{ collection.url }}">
+                            {%- if heading != blank -%}
+                              {{ heading | escape }}
+                            {%- else -%}
+                              {{ collection.title | escape }}
+                            {%- endif -%}
+                          </a>
+                        </h4>
+
+                        <a class="ms-auto text-link"
+                           href="{{ collection.url }}">
+                          {{ 'blogs.article.view_all' | t }}
+                        </a>
+                      </div>
+                    {%- endif -%}
+
+                    <div class="row row--sm dbtfy-mega-menu__row{% if products_to_show == 5 %} dbtfy-mega-menu__row--five{% endif %}">
+                      {%- liquid
+                        for product in collection.products limit: products_to_show
+                          capture product_item
+                            capture current
+                              cycle 1, 2, 3, 4, 5, 6
+                            endcapture
+
+                            render 'product-grid-item', product: product, block_width: block_width, current: current, images_loading_type: 'lazy'
+                          endcapture
+
+                          if product.id != gift_wrap_product_id
+                            echo product_item
+                          endif
+                        endfor
+                      -%}
+                    </div>
+                  {%- endif -%}
+
+                {%- when 'collections' -%}
+                  {%- liquid
+                    assign show_header = block.settings.show_header
+                    assign heading = block.settings.title
+                  -%}
+
+                  {%- if show_header and heading != blank -%}
+                    <div class="d-flex align-items-center mb-2">
+                      <h4 class="h6 text-ellipsis">
+                        <a href="{{ routes.collections_url }}">
+                          {{ heading | escape }}
+                        </a>
+                      </h4>
+
+                      <a class="ms-auto text-link"
+                         href="{{ routes.collections_url }}">
+                        {{ 'blogs.article.view_all' | t }}
+                      </a>
+                    </div>
+                  {%- endif -%}
+
+                  <div class="row row--sm gy-2-5 row-cols-auto">
+                    {%- liquid
+
+                      capture collections_count 
+                        assign total_collections = 0
+
+                        for i in (1..6)
+                          assign index = forloop.index
+
+                          capture collection_setting
+                            echo 'collection_' | append: i
+                          endcapture
+
+                          assign collection_handle = block.settings[collection_setting]
+
+                          if collection_handle != blank
+                            assign collection = collections[collection_handle]
+
+                            if collection != blank
+                              assign total_collections = total_collections | plus: 1
+                            endif
+                          endif
+                        endfor
+                        echo total_collections
+                      endcapture
+
+                      assign collections_count  = collections_count | plus: 0
+
+                      for i in (1..6)
+                        assign index = forloop.index
+
+                        capture collection_setting
+                          echo 'collection_' | append: i
+                        endcapture
+
+                        assign collection_handle = block.settings[collection_setting]
+
+                        if collection_handle != blank
+                          assign collection = collections[collection_handle]
+
+                          if collections_count < 4
+                            assign grid_item_width = 'col-md-6 col-lg-3 case'
+                          else
+                            assign grid_item_width = 'col-md-6 col'
+                          endif
+
+                          render 'collection-grid-item', collection: collection, section_height: 'sm', current: index, images_loading_type: 'lazy', grid_item_width: grid_item_width
+                        endif
+                      endfor
+                    -%}
+                  </div>
+
+                {%- when 'blog' -%}
+                  {%- liquid
+                    assign show_header = block.settings.show_header
+                    assign heading = block.settings.title
+                    assign blog_setting = block.settings.blog
+                    assign blog = blogs[blog_setting]
+                    assign block_width = 'col-lg-4'
+                  -%}
+
+                  {%- if blog != blank and blog.articles.size > 0 -%}
+                    {%- if show_header -%}
+                      <div class="d-flex align-items-center mb-2">
+                        <h4 class="h6 text-ellipsis">
+                          <a href="{{ blog.url }}">
+                            {%- if heading != blank -%}
+                              {{ heading | escape }}
+                            {%- else -%}
+                              {{ blog.title | escape }}
+                            {%- endif -%}
+                          </a>
+                        </h4>
+
+                        <a class="ms-auto text-link"
+                           href="{{ blog.url }}">
+                          {{ 'blogs.article.view_all' | t }}
+                        </a>
+                      </div>
+                    {%- endif -%}
+
+                    <div class="row row--sm">
+                      {%- liquid
+                        for article in blog.articles limit: 3
+                          render 'article-grid-item', article: article, blog: blog, width: block_width, number_of_rows: 1, images_loading_type: 'lazy'
+                        endfor
+                      -%}
+                    </div>
+                  {%- endif -%}
+
+                {%- when 'html' -%}
+                  {%- liquid
+                    assign heading = block.settings.title
+                    assign code = block.settings.html
+                  -%}
+
+                  {%- if code != blank -%}
+                    {%- if heading != blank -%}
+                      <div class="d-flex align-items-center mb-2">
+                        <h4 class="h6 text-ellipsis">
+                          {{ heading | escape }}
+                        </h4>
+                      </div>
+                    {%- endif -%}
+
+                    {{ code }}
+                  {%- endif -%}
+
+              {%- endcase -%}
+            </div>
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.mega_menu.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.mega_menu.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "mega",
+      "name": "t:sections.addons.mega_menu.blocks.mega.name",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.mega.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "link_name",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.link_name.label",
+          "default": "Mega menu"
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.link_url.label"
+        },
+        {
+          "type": "range",
+          "id": "link_position",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.link_position.label",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 1,
+          "info": "t:sections.addons.mega_menu.blocks.mega.settings.link_position.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.mega.settings.header__2.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_menu_headers",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.show_menu_headers.label",
+          "default": true
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.menu.label"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.mega.settings.header__3.content"
+        },
+        {
+          "type": "text",
+          "id": "product_slider_heading",
+          "label": "t:general.settings.heading.label",
+          "default": "Specials"
+        },
+        {
+          "type": "url",
+          "id": "product_slider_heading_link",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_heading_link.label"
+        },
+        {
+          "id": "product_slider_collection",
+          "type": "collection",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_collection.label"
+        },
+        {
+          "type": "select",
+          "id": "product_slider_products_count_per_view",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_products_count_per_view.label",
+          "default": "2",
+          "options": [
+            {
+              "value": "1",
+              "label": "1"
+            },
+            {
+              "value": "2",
+              "label": "2"
+            }
+          ]
+        },
+        {
+          "type": "range",
+          "id": "product_slider_total_products_count",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_total_products_count.label",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 2
+        },
+        {
+          "type": "checkbox",
+          "id": "product_slider_show_arrows",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_show_arrows.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "product_slider_show_dots",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_show_dots.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "product_slider_autoplay",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_autoplay.label",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "product_slider_autoplay_speed",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.product_slider_autoplay_speed.label",
+          "min": 3,
+          "max": 10,
+          "step": 1,
+          "unit": "s",
+          "default": 5
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.mega.settings.header__4.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "images_slider_show_arrows",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.images_slider_show_arrows.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "images_slider_show_dots",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.images_slider_show_dots.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "images_slider_autoplay",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.images_slider_autoplay.label",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "images_slider_autoplay_speed",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.images_slider_autoplay_speed.label",
+          "min": 3,
+          "max": 10,
+          "step": 1,
+          "unit": "s",
+          "default": 5
+        },
+        {
+          "type": "image_picker",
+          "id": "image_1",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_1.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link_1",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_link_1.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_2",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_2.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link_2",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_link_2.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_3",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_3.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link_3",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_link_3.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_4",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_4.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link_4",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_link_4.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_5",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_5.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link_5",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_link_5.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_6",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_6.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link_6",
+          "label": "t:sections.addons.mega_menu.blocks.mega.settings.image_link_6.label"
+        }
+      ]
+    },
+    {
+      "type": "products",
+      "name": "t:sections.addons.mega_menu.blocks.products.name",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.products.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "link_name",
+          "label": "t:sections.addons.mega_menu.blocks.products.settings.link_name.label",
+          "default": "Mega menu"
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "t:sections.addons.mega_menu.blocks.products.settings.link_url.label"
+        },
+        {
+          "type": "range",
+          "id": "link_position",
+          "label": "t:sections.addons.mega_menu.blocks.products.settings.link_position.label",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 1,
+          "info": "t:sections.addons.mega_menu.blocks.products.settings.link_position.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.products.settings.header__2.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_header",
+          "label": "t:sections.addons.mega_menu.blocks.products.settings.show_header.label",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "info": "t:sections.addons.mega_menu.blocks.products.settings.heading.info"
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:sections.addons.mega_menu.blocks.products.settings.collection.label"
+        },
+        {
+          "type": "select",
+          "id": "products_to_show",
+          "label": "t:sections.addons.mega_menu.blocks.products.settings.products_to_show.label",
+          "default": "4",
+          "options": [
+            {
+              "value": "4",
+              "label": "4"
+            },
+            {
+              "value": "5",
+              "label": "5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "collections",
+      "name": "t:sections.addons.mega_menu.blocks.collections.name",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.collections.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "link_name",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.link_name.label",
+          "default": "Mega menu"
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.link_url.label"
+        },
+        {
+          "type": "range",
+          "id": "link_position",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.link_position.label",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 1,
+          "info": "t:sections.addons.mega_menu.blocks.collections.settings.link_position.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.collections.settings.header__2.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_header",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.show_header.label",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "default": "Collections"
+        },
+        {
+          "type": "collection",
+          "id": "collection_1",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.collection_1.label"
+        },
+        {
+          "type": "collection",
+          "id": "collection_2",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.collection_2.label"
+        },
+        {
+          "type": "collection",
+          "id": "collection_3",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.collection_3.label"
+        },
+        {
+          "type": "collection",
+          "id": "collection_4",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.collection_4.label"
+        },
+        {
+          "type": "collection",
+          "id": "collection_5",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.collection_5.label"
+        },
+        {
+          "type": "collection",
+          "id": "collection_6",
+          "label": "t:sections.addons.mega_menu.blocks.collections.settings.collection_6.label"
+        }
+      ]
+    },
+    {
+      "type": "blog",
+      "name": "t:sections.addons.mega_menu.blocks.blog.name",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.blog.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "link_name",
+          "label": "t:sections.addons.mega_menu.blocks.blog.settings.link_name.label",
+          "default": "Mega menu"
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "t:sections.addons.mega_menu.blocks.blog.settings.link_url.label"
+        },
+        {
+          "type": "range",
+          "id": "link_position",
+          "label": "t:sections.addons.mega_menu.blocks.blog.settings.link_position.label",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 1,
+          "info": "t:sections.addons.mega_menu.blocks.blog.settings.link_position.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.blog.settings.header__2.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_header",
+          "label": "t:sections.addons.mega_menu.blocks.blog.settings.show_header.label",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "info": "t:sections.addons.mega_menu.blocks.blog.settings.heading.info"
+        },
+        {
+          "type": "blog",
+          "id": "blog",
+          "label": "t:sections.addons.mega_menu.blocks.blog.settings.blog.label"
+        }
+      ]
+    },
+    {
+      "type": "html",
+      "name": "t:sections.addons.mega_menu.blocks.html.name",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.html.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "link_name",
+          "label": "t:sections.addons.mega_menu.blocks.html.settings.link_name.label",
+          "default": "Mega menu"
+        },
+        {
+          "type": "url",
+          "id": "link_url",
+          "label": "t:sections.addons.mega_menu.blocks.html.settings.link_url.label"
+        },
+        {
+          "type": "range",
+          "id": "link_position",
+          "label": "t:sections.addons.mega_menu.blocks.html.settings.link_position.label",
+          "min": 1,
+          "max": 10,
+          "step": 1,
+          "default": 1,
+          "info": "t:sections.addons.mega_menu.blocks.html.settings.link_position.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.mega_menu.blocks.html.settings.header__2.content"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label"
+        },
+        {
+          "type": "textarea",
+          "id": "html",
+          "label": "t:sections.addons.mega_menu.blocks.html.settings.html.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

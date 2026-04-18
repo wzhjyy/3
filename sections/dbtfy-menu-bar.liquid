@@ -1,0 +1,51 @@
+{%- liquid
+  assign menu = settings.dbtfy_menu_bar_link_list
+  assign show_on_desktop = settings.dbtfy_menu_bar_show_on_desktop
+  assign show_on_mobile = settings.dbtfy_menu_bar_show_on_mobile
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+-%}
+
+{%- if linklists[menu].links.size > 0 -%}
+  <div class="dbtfy-menu-bar__container {{ visibility_class }}">
+    <ul class="dbtfy-menu-bar__inner no-bullets d-flex">
+      {%- for link in linklists[menu].links -%}
+        <li class="dbtfy-menu-bar__item">
+          <a href="{{ link.url }}" class="dbtfy-menu-bar__link btn btn--sm">
+            <span class="dbtfy-menu-bar__link-text">
+              {{ link.title | escape }}
+            </span>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.menu_bar.name",
+  "class": "dbtfy-menu-bar",
+  "enabled_on": {
+    "groups": [
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.menu_bar.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,746 @@
+{%- liquid
+  assign show_as_separate_section = section.settings.show_as_separate_section
+  assign display_type = section.settings.display_type
+  assign heading_color = section.settings.heading_color
+  assign text_color = section.settings.text_color
+  assign background_color = section.settings.background_color
+-%}
+
+{%- capture section_settings -%}
+  {
+    "showAsSeparateSection": {{ show_as_separate_section | json }},
+    "displayType": {{ display_type | json }},
+    "headingColor": {{ heading_color | json }},
+    "textColor": {{ text_color | json }},
+    "backgroundColor": {{ background_color | json }}
+  }
+{%- endcapture -%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="dbtfy-product-tabs dbtfy-product-tabs--{{ display_type }}" data-section-settings='{{ section_settings }}' hidden>
+    {%- if display_type == 'vertical' -%}
+      <div class="dbtfy-product-tabs__items">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign open_by_default = block.settings.open_by_default
+            assign heading = block.settings.title
+            assign icon = block.settings.icon
+            assign text = block.settings.text
+            assign image = block.settings.image
+            assign image_link = block.settings.image_link
+            assign html_code = block.settings.html_code
+            assign show_star_ratings = block.settings.show_star_ratings
+            assign text_alignment = block.settings.text_alignment
+            assign visibility = block.settings.visibility
+            assign collection = block.settings.collection
+            assign types = block.settings.types
+            assign tags = block.settings.tags
+            assign selected_product = block.settings.product
+          -%}
+
+          {%- capture block_settings -%}
+            {
+              "visibility": {{ visibility | json }},
+              "collection": {{ collection | json }},
+              "types": {{ types | json }},
+              "tags": {{ tags | json }},
+              "productId": {{ selected_product.id | json }}
+            }
+          {%- endcapture -%}
+
+          <div class="dbtfy-product-tabs__tab dbtfy-product-tabs__tab--vertical dbtfy-product-tabs__tab--{{ block.type }}"
+               data-block-settings='{{ block_settings }}'
+               {{ block.shopify_attributes }}>
+            <div class="card tab">
+              <button type="button"
+                      id="tab-button-{{ forloop.index }}-{{ block.id }}"
+                      class="card__header tab__header tab__header--{{ block.id }}{% if open_by_default %} active{% endif %}"
+                      role="tab"
+                      aria-controls="tab-content-{{ forloop.index }}-{{ block.id }}"
+                      aria-selected="{% if open_by_default %}true{% else %}false{% endif %}">
+
+                {%- if icon != blank -%}
+                  <span class="{{ settings.icon }} icon icon--width text-secondary" translate="no">{{ icon }}</span>
+                {%- endif -%}
+
+                {%- if heading != blank -%}
+                  <span class="tab__header-title">{{ heading }}</span>
+                {%- endif -%}
+
+                {%- if block.type == 'reviews' and show_star_ratings -%}
+                  {%- render 'review-badge', product: product, position: 'product_grid' -%}
+                {%- endif -%}
+              </button>
+
+              <div class="card__body tab__body {{ text_alignment }}"
+                   role="tabpanel"
+                   id="tab-content-{{ forloop.index }}-{{ block.id }}"
+                   aria-labelledby="tab-button-{{ forloop.index }}-{{ block.id }}">
+
+                <div class="tab__content">
+                  {%- case block.type -%}
+                    {%- when 'description' -%}
+                      <div class="rte {{ text_alignment }} js-product-description" {{ block.shopify_attributes }}>
+                        {%- liquid
+                          assign is_to_split_description = false
+
+                          if product.description contains '[split_description]'
+                            assign is_to_split_description = true
+                          endif
+
+                          if is_to_split_description
+                            assign second_part = product.description | split: '<p>[split_description]</p>' | last
+
+                            unless second_part contains '[split_description]'
+                              echo second_part
+                            else
+                              echo product.description | split: '[split_description]' | last
+                            endunless
+                          else
+                            echo product.description | replace: '<p>[split_description]</p>', '' | replace: '[split_description]', ''
+                          endif
+                        -%}
+                      </div>
+
+                    {%- when 'text' -%}
+                      <div class="rte {{ text_alignment }}" {{ block.shopify_attributes }}>
+                        {%- if text != blank -%}
+                          {{ text }}
+                        {%- endif -%}
+
+                        {%- if image != blank -%}
+                          {%- if image_link != blank -%}
+                            <a href="{{ image_link }}" target="_blank">
+                          {%- endif -%}
+
+                            <div class="media-wrapper" style="padding-top: {{ 1 | divided_by: image.aspect_ratio | times: 100 }}%;">
+                              {%- capture sizes -%}50vw{% endcapture %}
+
+                              {{- image | image_url: width: 500 | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300,500,700,900,1100', class: 'media' -}}
+                            </div>
+
+                          {%- if image_link != blank -%}
+                            </a>
+                          {%- endif -%}
+                        {%- endif -%}
+
+                        {%- if html_code != blank -%}
+                          {{ html_code }}
+                        {%- endif -%}
+                      </div>
+
+                  {%- endcase -%}
+                </div>
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      <div class="dbtfy-product-tabs__trigger-buttons">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign open_by_default = block.settings.open_by_default
+            assign heading = block.settings.title
+            assign icon = block.settings.icon
+            assign visibility = block.settings.visibility
+            assign collection = block.settings.collection
+            assign types = block.settings.types
+            assign tags = block.settings.tags
+            assign selected_product = block.settings.product
+          -%}
+
+          {%- capture block_settings -%}
+            {
+              "visibility": {{ visibility | json }},
+              "collection": {{ collection | json }},
+              "types": {{ types | json }},
+              "tags": {{ tags | json }},
+              "productId": {{ selected_product.id | json }}
+            }
+          {%- endcapture -%}
+
+          <button class="dbtfy-product-tabs__trigger-button{% if open_by_default %} active{% endif %}"
+                  data-block-settings='{{ block_settings }}'
+                  role="tab"
+                  id="tab-button-{{ forloop.index }}-{{ block.id }}"
+                  aria-controls="tab-content-{{ forloop.index }}-{{ block.id }}"
+                  {{ block.shopify_attributes }}>
+
+            {%- if icon != blank -%}
+              <span class="{{ settings.icon }} icon icon--width" translate="no">{{ icon }}</span>
+            {%- endif -%}
+
+            {%- if heading != blank -%}
+              <span>{{ heading }}</span>
+            {%- endif -%}
+          </button>
+        {%- endfor -%}
+      </div>
+
+      <div class="dbtfy-product-tabs__content-blocks">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign open_by_default = block.settings.open_by_default
+            assign heading = block.settings.title
+            assign icon = block.settings.icon
+            assign text = block.settings.text
+            assign image = block.settings.image
+            assign image_link = block.settings.image_link
+            assign html_code = block.settings.html_code
+            assign show_star_ratings = block.settings.show_star_ratings
+            assign text_alignment = block.settings.text_alignment
+            assign visibility = block.settings.visibility
+            assign collection = block.settings.collection
+            assign types = block.settings.types
+            assign tags = block.settings.tags
+            assign selected_product = block.settings.product
+          -%}
+
+          {%- capture block_settings -%}
+            {
+              "visibility": {{ visibility | json }},
+              "collection": {{ collection | json }},
+              "types": {{ types | json }},
+              "tags": {{ tags | json }},
+              "productId": {{ selected_product.id | json }}
+            }
+          {%- endcapture -%}
+
+          <div class="dbtfy-product-tabs__content dbtfy-product-tabs__content--{{ block.type }} card tab"
+               data-block-settings='{{ block_settings }}'
+               {% unless open_by_default %}hidden{% endunless %}
+               {{ block.shopify_attributes }}>
+
+            <div class="card__body tab__body {{ text_alignment }}"
+                 role="tabpanel"
+                 id="tab-content-{{ forloop.index }}-{{ block.id }}"
+                 aria-labelledby="tab-button-{{ forloop.index }}-{{ block.id }}">
+
+              <div class="tab__content">
+                {%- case block.type -%}
+                  {%- when 'description' -%}
+                    <div class="rte {{ text_alignment }} js-product-description" {{ block.shopify_attributes }}>
+                      {%- liquid
+                        assign is_to_split_description = false
+
+                        if product.description contains '[split_description]'
+                          assign is_to_split_description = true
+                        endif
+
+                        if is_to_split_description
+                          assign second_part = product.description | split: '<p>[split_description]</p>' | last
+
+                          unless second_part contains '[split_description]'
+                            echo second_part
+                          else
+                            echo product.description | split: '[split_description]' | last
+                          endunless
+                        else
+                          echo product.description | replace: '<p>[split_description]</p>', '' | replace: '[split_description]', ''
+                        endif
+                      -%}
+                    </div>
+
+                  {%- when 'text' -%}
+                    <div class="rte {{ text_alignment }}" {{ block.shopify_attributes }}>
+                      {%- if text != blank -%}
+                        {{ text }}
+                      {%- endif -%}
+
+                      {%- if image != blank -%}
+                        {%- if image_link != blank -%}
+                          <a href="{{ image_link }}" target="_blank">
+                        {%- endif -%}
+
+                        <div class="media-wrapper" style="padding-top: {{ 1 | divided_by: image.aspect_ratio | times: 100 }}%;">
+                          {%- capture sizes -%}50vw{% endcapture %}
+
+                          {{- image | image_url: width: 500 | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300,500,700,900,1100', class: 'media' -}}
+                        </div>
+
+                        {%- if image_link != blank -%}
+                          </a>
+                        {%- endif -%}
+                      {%- endif -%}
+
+                      {%- if html_code != blank -%}
+                        {{ html_code }}
+                      {%- endif -%}
+                    </div>
+
+                {%- endcase -%}
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.product_tabs.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.product_tabs.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_as_separate_section",
+      "label": "t:sections.addons.product_tabs.settings.show_as_separate_section.label",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "display_type",
+      "label": "t:sections.addons.product_tabs.settings.display_type.label",
+      "default": "vertical",
+      "options": [
+        {
+          "value": "vertical",
+          "label": "t:sections.addons.product_tabs.settings.display_type.options__1.label"
+        },
+        {
+          "value": "horizontal",
+          "label": "t:sections.addons.product_tabs.settings.display_type.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "heading_color",
+      "label": "t:sections.addons.product_tabs.settings.heading_color.label",
+      "default": "headings",
+      "options": [
+        {
+          "value": "headings",
+          "label": "t:sections.addons.product_tabs.settings.heading_color.options__1.label"
+        },
+        {
+          "value": "background",
+          "label": "t:sections.addons.product_tabs.settings.heading_color.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_color",
+      "label": "t:sections.addons.product_tabs.settings.text_color.label",
+      "default": "text",
+      "options": [
+        {
+          "value": "headings",
+          "label": "t:sections.addons.product_tabs.settings.text_color.options__1.label"
+        },
+        {
+          "value": "text",
+          "label": "t:sections.addons.product_tabs.settings.text_color.options__2.label"
+        },
+        {
+          "value": "background",
+          "label": "t:sections.addons.product_tabs.settings.text_color.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "background_color",
+      "label": "t:sections.addons.product_tabs.settings.background_color.label",
+      "default": "accent",
+      "options": [
+        {
+          "value": "accent",
+          "label": "t:sections.addons.product_tabs.settings.background_color.options__1.label"
+        },
+        {
+          "value": "headings",
+          "label": "t:sections.addons.product_tabs.settings.background_color.options__2.label"
+        },
+        {
+          "value": "text",
+          "label": "t:sections.addons.product_tabs.settings.background_color.options__3.label"
+        },
+        {
+          "value": "buttons",
+          "label": "t:sections.addons.product_tabs.settings.background_color.options__4.label"
+        },
+        {
+          "value": "link",
+          "label": "t:sections.addons.product_tabs.settings.background_color.options__5.label"
+        },
+        {
+          "value": "form",
+          "label": "t:sections.addons.product_tabs.settings.background_color.options__6.label"
+        },
+        {
+          "value": "sale",
+          "label": "t:sections.addons.product_tabs.settings.background_color.options__7.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "description",
+      "name": "t:sections.addons.product_tabs.blocks.description.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.product_tabs.blocks.description.settings.header__1.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "label": "t:sections.addons.product_tabs.blocks.description.settings.open_by_default.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "info": "t:general.settings.icon.info"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "default": "Details"
+        },
+        {
+          "type": "select",
+          "id": "text_alignment",
+          "label": "t:general.settings.text_alignment.label",
+          "default": "text-center",
+          "options": [
+            {
+              "value": "text-start",
+              "label": "t:general.settings.text_alignment.options__1.label"
+            },
+            {
+              "value": "text-center",
+              "label": "t:general.settings.text_alignment.options__2.label"
+            },
+            {
+              "value": "text-end",
+              "label": "t:general.settings.text_alignment.options__3.label"
+            },
+            {
+              "value": "text-justify",
+              "label": "t:general.settings.text_alignment.options__4.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.visibility.header.content",
+          "info": "t:general.settings.visibility.header.info"
+        },
+        {
+          "type": "radio",
+          "id": "visibility",
+          "label": "t:general.settings.visibility.visibility.label",
+          "info": "t:general.settings.visibility.visibility.info",
+          "default": "all",
+          "options": [
+            {
+              "value": "all",
+              "label": "t:general.settings.visibility.visibility.options__1.label"
+            },
+            {
+              "value": "collection",
+              "label": "t:general.settings.visibility.visibility.options__2.label"
+            },
+            {
+              "value": "type",
+              "label": "t:general.settings.visibility.visibility.options__3.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:general.settings.visibility.visibility.options__4.label"
+            },
+            {
+              "value": "product",
+              "label": "t:general.settings.visibility.visibility.options__5.label"
+            }
+          ]
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.settings.visibility.collection.label"
+        },
+        {
+          "type": "text",
+          "id": "types",
+          "label": "t:general.settings.visibility.types.label",
+          "info": "t:general.settings.visibility.types.info"
+        },
+        {
+          "type": "text",
+          "id": "tags",
+          "label": "t:general.settings.visibility.tags.label",
+          "info": "t:general.settings.visibility.tags.info"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:general.settings.visibility.product.label"
+        }
+      ]
+    },
+    {
+      "type": "reviews",
+      "name": "t:sections.addons.product_tabs.blocks.reviews.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.product_tabs.blocks.reviews.settings.header__1.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "label": "t:sections.addons.product_tabs.blocks.reviews.settings.open_by_default.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "info": "t:general.settings.icon.info"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "default": "Reviews"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_star_ratings",
+          "label": "t:sections.addons.product_tabs.blocks.reviews.settings.show_star_ratings.label",
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.visibility.header.content",
+          "info": "t:general.settings.visibility.header.info"
+        },
+        {
+          "type": "radio",
+          "id": "visibility",
+          "label": "t:general.settings.visibility.visibility.label",
+          "info": "t:general.settings.visibility.visibility.info",
+          "default": "all",
+          "options": [
+            {
+              "value": "all",
+              "label": "t:general.settings.visibility.visibility.options__1.label"
+            },
+            {
+              "value": "collection",
+              "label": "t:general.settings.visibility.visibility.options__2.label"
+            },
+            {
+              "value": "type",
+              "label": "t:general.settings.visibility.visibility.options__3.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:general.settings.visibility.visibility.options__4.label"
+            },
+            {
+              "value": "product",
+              "label": "t:general.settings.visibility.visibility.options__5.label"
+            }
+          ]
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.settings.visibility.collection.label"
+        },
+        {
+          "type": "text",
+          "id": "types",
+          "label": "t:general.settings.visibility.types.label",
+          "info": "t:general.settings.visibility.types.info"
+        },
+        {
+          "type": "text",
+          "id": "tags",
+          "label": "t:general.settings.visibility.tags.label",
+          "info": "t:general.settings.visibility.tags.info"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:general.settings.visibility.product.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "t:sections.addons.product_tabs.blocks.text.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.product_tabs.blocks.text.settings.header__1.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "label": "t:sections.addons.product_tabs.blocks.text.settings.open_by_default.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "info": "t:general.settings.icon.info"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "default": "Rich text"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:general.settings.text.label"
+        },
+        {
+          "type": "select",
+          "id": "text_alignment",
+          "label": "t:general.settings.text_alignment.label",
+          "default": "text-center",
+          "options": [
+            {
+              "value": "text-start",
+              "label": "t:general.settings.text_alignment.options__1.label"
+            },
+            {
+              "value": "text-center",
+              "label": "t:general.settings.text_alignment.options__2.label"
+            },
+            {
+              "value": "text-end",
+              "label": "t:general.settings.text_alignment.options__3.label"
+            },
+            {
+              "value": "text-justify",
+              "label": "t:general.settings.text_alignment.options__4.label"
+            }
+          ]
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:general.settings.image.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link",
+          "label": "t:general.settings.image_link.label"
+        },
+        {
+          "type": "html",
+          "id": "html_code",
+          "label": "t:sections.addons.product_tabs.blocks.text.settings.html_code.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.visibility.header.content",
+          "info": "t:general.settings.visibility.header.info"
+        },
+        {
+          "type": "radio",
+          "id": "visibility",
+          "label": "t:general.settings.visibility.visibility.label",
+          "info": "t:general.settings.visibility.visibility.info",
+          "default": "all",
+          "options": [
+            {
+              "value": "all",
+              "label": "t:general.settings.visibility.visibility.options__1.label"
+            },
+            {
+              "value": "collection",
+              "label": "t:general.settings.visibility.visibility.options__2.label"
+            },
+            {
+              "value": "type",
+              "label": "t:general.settings.visibility.visibility.options__3.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:general.settings.visibility.visibility.options__4.label"
+            },
+            {
+              "value": "product",
+              "label": "t:general.settings.visibility.visibility.options__5.label"
+            }
+          ]
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.settings.visibility.collection.label"
+        },
+        {
+          "type": "text",
+          "id": "types",
+          "label": "t:general.settings.visibility.types.label",
+          "info": "t:general.settings.visibility.types.info"
+        },
+        {
+          "type": "text",
+          "id": "tags",
+          "label": "t:general.settings.visibility.tags.label",
+          "info": "t:general.settings.visibility.tags.info"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:general.settings.visibility.product.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

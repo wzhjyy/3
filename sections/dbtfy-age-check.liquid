@@ -1,0 +1,186 @@
+{%- liquid
+  assign background_image = section.settings.background_image
+  assign type = section.settings.type
+  assign valid_age = section.settings.valid_age
+  assign logo = section.settings.logo
+  assign logo_width = section.settings.logo_width
+
+  assign title = 'add-ons.age_check.title' | t
+  assign description = 'add-ons.age_check.description' | t
+  assign error_message = 'add-ons.age_check.error_message' | t
+  assign yes_label = 'add-ons.age_check.yes_label' | t
+  assign no_label = 'add-ons.age_check.no_label' | t
+  assign button_label = 'add-ons.age_check.button_label' | t
+-%}
+
+{%- capture section_settings -%}
+  {
+    "validAge": {{ valid_age | json }}
+  }
+{%- endcapture -%}
+
+<style>
+  .dbtfy-age-check[data-section-id='{{ section.id }}'] .dbtfy-age-check__logo img {
+      width: {{ logo_width }}px;
+  }
+</style>
+
+<div class="dbtfy-age-check" data-section-id="{{ section.id }}" data-section-settings='{{ section_settings }}'>
+  <div class="modal stacked-on-top-of-content text-center dbtfy-age-check__modal" data-modal-no-close>
+    <div class="modal__dialog">
+      <div class="modal__content overlay-content">
+        <div class="modal__body">
+          {%- if logo != blank -%}
+            {%- capture sizes -%}{{ logo_width }}px{% endcapture %}
+
+            <div class="dbtfy-age-check__logo mb-3 d-flex justify-content-center">
+              {{- logo | image_url: width: logo.width | image_tag: loading: 'lazy', sizes: sizes, widths: '100,200,300' -}}
+            </div>
+          {%- endif -%}
+
+          {%- if title != blank -%}
+            <h2 class="h1 mb-3">
+              {{ title }}
+            </h2>
+          {%- endif -%}
+
+          {%- if description != blank -%}
+            <p class="dbtfy-age-check__adult-text mb-3">
+              {{ description }}
+            </p>
+          {%- endif -%}
+
+          {%- if error_message != blank -%}
+            <p class="dbtfy-age-check__error-text errors text-center" hidden>
+              {{ error_message }}
+            </p>
+          {%- endif -%}
+
+          {%- if type == 'birth-date' -%}
+            <div>
+              <select class="dbtfy-age-check__month-picker select select--sm w-100 mb-2">
+                <option value="0" selected>{{ 'general.dates.month' | t }}</option>
+                <option value="1">{{ 'general.months.full.january' | t }}</option>
+                <option value="2">{{ 'general.months.full.february' | t }}</option>
+                <option value="3">{{ 'general.months.full.march' | t }}</option>
+                <option value="4">{{ 'general.months.full.april' | t }}</option>
+                <option value="5">{{ 'general.months.full.may' | t }}</option>
+                <option value="6">{{ 'general.months.full.june' | t }}</option>
+                <option value="7">{{ 'general.months.full.july' | t }}</option>
+                <option value="8">{{ 'general.months.full.august' | t }}</option>
+                <option value="9">{{ 'general.months.full.september' | t }}</option>
+                <option value="10">{{ 'general.months.full.october' | t }}</option>
+                <option value="11">{{ 'general.months.full.november' | t }}</option>
+                <option value="12">{{ 'general.months.full.december' | t }}</option>
+              </select>
+
+              <select class="dbtfy-age-check__day-picker select select--sm w-100 mb-2">
+                <option value="0" selected>{{ 'general.dates.day' | t }}</option>
+
+                {%- for i in (1..31) -%}
+                  <option value="{{ forloop.index }}">{{ i }}</option>
+                {%- endfor -%}
+              </select>
+
+              <select class="dbtfy-age-check__year-picker select select--sm w-100 mb-2">
+                <option value="0" selected>{{ 'general.dates.year' | t }}</option>
+
+                {% assign current_year = 'now' | date: '%Y' %}
+
+                {%- for i in (1910..current_year) reversed -%}
+                  <option value="{{ i }}">{{ i }}</option>
+                {%- endfor -%}
+              </select>
+            </div>
+
+            <button class="btn btn--primary btn--full mt-2 dbtfy-age-check__submit-birthdate">{{ button_label }}</button>
+          {%- else -%}
+            <div class="inline-list justify-content-center">
+              <button type="button" class="btn btn--primary dbtfy-age-check__yes-button">{{ yes_label }}</button>
+              <button type="button" class="btn btn--primary dbtfy-age-check__no-button">{{ no_label }}</button>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-modal overlay-backdrop">
+    {%- if background_image != blank -%}
+      {%- capture sizes -%}100vw{% endcapture %}
+
+      <div class="media-wrapper media-wrapper--cover media-wrapper--center-center media-wrapper--overlay-backdrop h-100 w-100">
+        {{- background_image | image_url: width: background_image.width | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.age_check.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.age_check.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "t:sections.addons.age_check.settings.background_image.label"
+    },
+    {
+      "type": "select",
+      "id": "type",
+      "label": "t:sections.addons.age_check.settings.type.label",
+      "default": "birth-date",
+      "options": [
+        {
+          "value": "birth-date",
+          "label": "t:sections.addons.age_check.settings.type.options__1.label"
+        },
+        {
+          "value": "yes-no",
+          "label": "t:sections.addons.age_check.settings.type.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "valid_age",
+      "label": "t:sections.addons.age_check.settings.valid_age.label",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "default": 18
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "t:sections.addons.age_check.settings.logo.label"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "t:sections.addons.age_check.settings.logo_width.label",
+      "min": 50,
+      "max": 400,
+      "step": 5,
+      "unit": "px",
+      "default": 80
+    }
+  ]
+}
+{% endschema %}

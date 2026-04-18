@@ -1,0 +1,955 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign total_price_label = section.settings.total_price_label
+  assign button_label = section.settings.button_label
+  assign button_icon = section.settings.button_icon
+  assign current_product_label = section.settings.current_product_label
+  assign show_star_rating = section.settings.show_star_rating
+  assign show_automatic_bundles = section.settings.show_automatic_bundles
+  assign product_count_in_bundle = section.settings.product_count_in_bundle
+  assign position = section.settings.position
+  assign target_discount_name = section.settings.discount_name
+  assign target_discount_amount = section.settings.discount_amount
+  assign target_discount_type = section.settings.discount_type
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  assign specific_bundle = false
+  assign has_offer_1 = false
+  assign has_offer_2 = false
+  assign has_collection = true
+
+  assign current_product = product
+
+  assign grid_item_width = 'col-4'
+
+  if position == 'product_section'
+    assign grid_column_images_width = ''
+    assign grid_column_total_width = 'order-2'
+    assign grid_column_form_width = ''
+  else
+    assign grid_column_images_width = 'col-md-7 col-lg-6'
+    assign grid_column_total_width = 'col-md-5 col-lg-6 order-2 order-md-1'
+    assign grid_column_form_width = 'order-md-2'
+  endif
+
+  for block in section.blocks
+    for i in (1..10)
+      capture product_trigger_setting
+        echo 'product_trigger_' | append: i
+      endcapture
+
+      capture first_product_offer_setting
+        echo 'first_product_offer_' | append: i
+      endcapture
+
+      capture second_product_offer_setting
+        echo 'second_product_offer_' | append: i
+      endcapture
+
+      capture discount_name_setting
+        echo 'discount_name_' | append: i
+      endcapture
+
+      capture discount_amount_setting
+        echo 'discount_amount_' | append: i
+      endcapture
+
+      capture discount_type_setting
+        echo 'discount_type_' | append: i
+      endcapture
+
+      assign product_trigger = block.settings[product_trigger_setting]
+      assign first_product_offer = block.settings[first_product_offer_setting]
+      assign second_product_offer = block.settings[second_product_offer_setting]
+      assign discount_name = block.settings[discount_name_setting]
+      assign discount_amount = block.settings[discount_amount_setting]
+      assign discount_type = block.settings[discount_type_setting]
+
+      if product_trigger.handle == current_product.handle
+        assign offer_1 = blank
+        assign offer_2 = blank
+
+        if first_product_offer != blank
+          assign offer_1 = first_product_offer
+          assign has_offer_1 = true
+        endif
+
+        if second_product_offer != blank
+          assign offer_2 = second_product_offer
+          assign has_offer_2 = true
+        endif
+
+        if product_trigger.available
+          assign target_discount_name = discount_name
+          assign target_discount_amount = discount_amount
+          assign target_discount_type = discount_type
+          assign specific_bundle = true
+        endif
+      endif
+    endfor
+  endfor
+
+  assign dbtfy_gift_wrap_product = settings.dbtfy_gift_wrap_product
+-%}
+
+{%- capture section_settings -%}
+  {
+    "sectionId": {{ section.id | json }},
+    "productId": {{ current_product.id | json }},
+    "position": {{ position | json }},
+    "limit": {{ product_count_in_bundle | json }},
+    "discountName": {{ target_discount_name | json }},
+    "discountAmount": {{ target_discount_amount | json }},
+    "discountType": {{ target_discount_type | json }}
+  }
+{%- endcapture -%}
+
+{%- if show_automatic_bundles or specific_bundle -%}
+  <div class="dbtfy-upsell-bundles{% if specific_bundle %} dbtfy-upsell-bundles--has-specific{% endif %}{% if position == 'separate_section' %} section section--{{ section_style }}{% endif %} {{ visibility_class }}"
+       data-section-settings='{{ section_settings }}'>
+
+    {%- if recommendations.performed or specific_bundle -%}
+      {%- if recommendations.products_count > 0 or specific_bundle -%}
+        <div class="{% if position == 'separate_section' %}{{ container_size }}{% endif %}">
+          {%- render 'section-header', heading: heading, subheading: subheading -%}
+
+          <div class="row gy-4">
+            <div class="{{ grid_column_images_width }}">
+              <div class="row dbtfy-upsell-bundles__images-wrapper">
+                {%- liquid
+                  if specific_bundle
+                    if has_offer_1
+                      render 'dbtfy-upsell-bundles-item', product: offer_1, type: 'image', grid_item_width: grid_item_width, index: 1, show_star_rating: show_star_rating
+                    endif
+
+                    if has_offer_2
+                      render 'dbtfy-upsell-bundles-item', product: offer_2, type: 'image', grid_item_width: grid_item_width, index: 2, show_star_rating: show_star_rating
+                    endif
+                  else
+                    assign products_added_count = 0
+
+                    for product in recommendations.products
+                      if products_added_count != product_count_in_bundle
+                        assign product_type = product.type | downcase
+
+                        if product_type != 'insurance'
+                          unless product.id == dbtfy_gift_wrap_product.id
+                            assign products_added_count = products_added_count | plus: 1
+                            render 'dbtfy-upsell-bundles-item', product: product, type: 'image', grid_item_width: grid_item_width, index: forloop.index, show_star_rating: show_star_rating
+                          endunless
+                        endif
+                      endif
+                    endfor
+                  endif
+                -%}
+              </div>
+            </div>
+
+            <div class="{{ grid_column_total_width }} mt-2{% if position == 'separate_section' %} mt-md-4{% endif %}">
+              <div class="row gy-2 text-center">
+                <div>
+                  {%- if total_price_label != blank -%}
+                    <p><b>{{ total_price_label }}</b></p>
+                  {%- endif -%}
+
+                  <div class="d-flex align-items-center justify-content-center flex-wrap text-accent">
+                    <span class="dbtfy-upsell-bundles__price dbtfy-upsell-bundles__price--total mb-1"></span>
+                    <span class="dbtfy-upsell-bundles__price dbtfy-upsell-bundles__price--compare text-muted text-strike ms-2 mb-1"></span>
+
+                    <span class="dbtfy-discount-saved badge small-order-0 dbtfy-upsell-bundles__discount-saved ms-2 mb-1">
+                      <span class="{{ settings.icon }}" translate="no">local_offer</span>
+                      <span class="dbtfy-upsell-bundles__discount-saved-text"></span>
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <button type="button" class="dbtfy-upsell-bundles__button btn btn--primary w-100{% unless position == 'product_section' %} w-md-auto{% endunless %}">
+                    <span class="btn__text">
+                      {%- if button_icon != blank -%}
+                        <span class="{{ settings.icon }} icon icon--width" translate="no">{{ button_icon }}</span>
+                      {%- endif -%}
+
+                      {{ button_label }}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="{{ grid_column_form_width }}">
+              <div class="row gy-1 dbtfy-upsell-bundles__forms-wrapper">
+                {%- liquid
+                  if specific_bundle
+                    if has_offer_1
+                      render 'dbtfy-upsell-bundles-item', product: offer_1, type: 'form', grid_item_width: grid_item_width, index: 1, current_product_label: current_product_label, show_star_rating: show_star_rating
+                    endif
+
+                    if has_offer_2
+                      render 'dbtfy-upsell-bundles-item', product: offer_2, type: 'form', grid_item_width: grid_item_width, index: 2, current_product_label: current_product_label, show_star_rating: show_star_rating
+                    endif
+                  else
+                    assign products_added_count = 0
+
+                    for product in recommendations.products
+                      if products_added_count != product_count_in_bundle
+                        assign product_type = product.type | downcase
+
+                        if product_type != 'insurance'
+                          unless product.id == dbtfy_gift_wrap_product.id
+                            assign products_added_count = products_added_count | plus: 1
+                            render 'dbtfy-upsell-bundles-item', product: product, type: 'form', grid_item_width: grid_item_width, index: forloop.index, current_product_label: current_product_label, show_star_rating: show_star_rating
+                          endunless
+                        endif
+                      endif
+                    endfor
+                  endif
+                -%}
+              </div>
+            </div>
+          </div>
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+
+    <div hidden>
+      {%- render 'dbtfy-upsell-bundles-item', product: current_product, type: 'image', item: 'first', grid_item_width: grid_item_width, index: 0, current_product_label: current_product_label, show_star_rating: show_star_rating -%}
+      {%- render 'dbtfy-upsell-bundles-item', product: current_product, type: 'form', item: 'first', grid_item_width: grid_item_width, index: 0, current_product_label: current_product_label, show_star_rating: show_star_rating -%}
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.upsell_bundles.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.upsell_bundles.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.upsell_bundles.settings.header__1.content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Frequently bought together"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "type": "text",
+      "id": "total_price_label",
+      "label": "t:sections.addons.upsell_bundles.settings.total_price_label.label",
+      "default": "Total price:"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:general.settings.button_label.label",
+      "default": "Add selected items"
+    },
+    {
+      "type": "text",
+      "id": "button_icon",
+      "label": "t:sections.addons.upsell_bundles.settings.button_icon.label",
+      "default": "library_add_check",
+      "info": "t:general.settings.icon.info"
+    },
+    {
+      "type": "text",
+      "id": "current_product_label",
+      "label": "t:sections.addons.upsell_bundles.settings.current_product_label.label",
+      "default": "Current product:"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.upsell_bundles.settings.header__2.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_star_rating",
+      "label": "t:sections.addons.upsell_bundles.settings.show_star_rating.label",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_automatic_bundles",
+      "label": "t:sections.addons.upsell_bundles.settings.show_automatic_bundles.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "product_count_in_bundle",
+      "label": "t:sections.addons.upsell_bundles.settings.product_count_in_bundle.label",
+      "default": "2",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "position",
+      "label": "t:sections.addons.upsell_bundles.settings.position.label",
+      "default": "separate_section",
+      "options": [
+        {
+          "value": "separate_section",
+          "label": "t:sections.addons.upsell_bundles.settings.position.options__1.label"
+        },
+        {
+          "value": "product_section",
+          "label": "t:sections.addons.upsell_bundles.settings.position.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.discount.header.content",
+      "info": "t:general.settings.discount.header.info"
+    },
+    {
+      "type": "text",
+      "id": "discount_name",
+      "label": "t:general.settings.discount.name.label",
+      "placeholder": "20OFF"
+    },
+    {
+      "type": "text",
+      "id": "discount_amount",
+      "label": "t:general.settings.discount.amount.label",
+      "placeholder": "20"
+    },
+    {
+      "type": "select",
+      "id": "discount_type",
+      "label": "t:general.settings.discount.type.label",
+      "default": "%",
+      "options": [
+        {
+          "value": "%",
+          "label": "t:general.settings.discount.type.options__1.label"
+        },
+        {
+          "value": "$",
+          "label": "t:general.settings.discount.type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "bundle",
+      "name": "Upsell bundle",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__1.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_1",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_1",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_1",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_1",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_1",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_1",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__2.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_2",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_2",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_2",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_2",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_2",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_2",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__3.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_3",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_3",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_3",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_3",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_3",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_3",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__4.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_4",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_4",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_4",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_4",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_4",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_4",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__5.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_5",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_5",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_5",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_5",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_5",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_5",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__6.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_6",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_6",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_6",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_6",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_6",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_6",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__7.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_7",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_7",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_7",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_7",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_7",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_7",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__8.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_8",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_8",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_8",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_8",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_8",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_8",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__9.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_9",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_9",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_9",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_9",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_9",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_9",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_bundles.blocks.bundle.settings.header__10.content"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_10",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "first_product_offer_10",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "product",
+          "id": "second_product_offer_10",
+          "label": "t:sections.addons.upsell_bundles.blocks.bundle.settings.product_offer.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_10",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_10",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_10",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

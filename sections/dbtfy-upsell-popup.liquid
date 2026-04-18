@@ -1,0 +1,963 @@
+{%- liquid
+  assign width = section.settings.width
+  assign description_tab_heading = section.settings.description_tab_heading | escape
+  assign decline_offer_text = section.settings.decline_offer_text | escape
+  assign go_to_checkout_text = section.settings.go_to_checkout_text | escape
+  assign text_alignment = section.settings.text_alignment
+  assign progress_bar_width = section.settings.progress_bar_width
+-%}
+
+{%- capture section_settings -%}
+  {
+    "width": {{ width | json }},
+    "descriptionTabHeading": {{ description_tab_heading | json }},
+    "declineOfferText": {{ decline_offer_text | json }},
+    "goToCheckoutText": {{ go_to_checkout_text | json }},
+    "textAlignment": {{ text_alignment | json }},
+    "progressBarWidth": {{ progress_bar_width | json }}
+  }
+{%- endcapture -%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="dbtfy-upsell-popup" data-section-settings='{{ section_settings }}'>
+    {%- for block in section.blocks -%}
+      {%- for i in (1..10) -%}
+        {%- capture heading_setting -%}heading_{{ i }}{%- endcapture -%}
+        {%- capture text_setting -%}text_{{ i }}{%- endcapture -%}
+        {%- capture collection_trigger_setting -%}collection_trigger_{{ i }}{%- endcapture -%}
+        {%- capture product_trigger_setting -%}product_trigger_{{ i }}{%- endcapture -%}
+        {%- capture product_offer_setting -%}product_offer_{{ i }}{%- endcapture -%}
+        {%- capture button_label_setting -%}button_label_{{ i }}{%- endcapture -%}
+        {%- capture button_icon_setting -%}button_icon_{{ i }}{%- endcapture -%}
+        {%- capture discount_name_setting -%}discount_name_{{ i }}{%- endcapture -%}
+        {%- capture discount_amount_setting -%}discount_amount_{{ i }}{%- endcapture -%}
+        {%- capture discount_type_setting -%}discount_type_{{ i }}{%- endcapture -%}
+
+        {%- liquid
+          assign heading = block.settings[heading_setting] | escape
+          assign text = block.settings[text_setting] | replace: "'", "&#39;"
+          assign collection_trigger = block.settings[collection_trigger_setting]
+          assign product_trigger = block.settings[product_trigger_setting]
+          assign product_offer = block.settings[product_offer_setting]
+          assign button_label = block.settings[button_label_setting] | escape
+          assign button_icon = block.settings[button_icon_setting]
+          assign discount_name = block.settings[discount_name_setting]
+          assign discount_amount = block.settings[discount_amount_setting]
+          assign discount_type = block.settings[discount_type_setting]
+        -%}
+
+        {%- capture block_settings -%}
+          {
+            "heading": {{ heading | json }},
+            "text": {{ text | json }},
+            "collectionTrigger": {{ collection_trigger | json }},
+            "productTrigger": {{ product_trigger | json }},
+            "productTriggerId": {{ product_trigger.id | json }},
+            "productOffer": {{ product_offer | json }},
+            "buttonLabel": {{ button_label | json }},
+            "buttonIcon": {{ button_icon | json }},
+            "discountName": {{ discount_name | json }},
+            "discountAmount": {{ discount_amount | json }},
+            "discountType": {{ discount_type | json }},
+            "productMedia": {% if product_offer.media.first != blank %}{{ product_offer.media.first | json }}{% else %}null{% endif %},
+            "blockId": {{ block.id | json }}
+          }
+        {%- endcapture -%}
+
+        {%- if product_offer != blank -%}
+          <div class="dbtfy-upsell-popup__item" data-block-settings='{{ block_settings }}' hidden></div>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.upsell_popup.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.upsell_popup.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "t:sections.addons.upsell_popup.settings.width.label",
+      "default": "md",
+      "options": [
+        {
+          "label": "t:sections.addons.upsell_popup.settings.width.options__1.label",
+          "value": "sm"
+        },
+        {
+          "label": "t:sections.addons.upsell_popup.settings.width.options__2.label",
+          "value": "md"
+        },
+        {
+          "label": "t:sections.addons.upsell_popup.settings.width.options__3.label",
+          "value": "lg"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "description_tab_heading",
+      "label": "t:sections.addons.upsell_popup.settings.description.label",
+      "default": "See product details"
+    },
+    {
+      "type": "text",
+      "id": "decline_offer_text",
+      "label": "t:sections.addons.upsell_popup.settings.decline_offer.label",
+      "default": "No thanks"
+    },
+    {
+      "type": "text",
+      "id": "go_to_checkout_text",
+      "label": "t:sections.addons.upsell_popup.settings.go_to_checkout_text.label",
+      "default": "Go to checkout →"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "t:general.settings.text_alignment.label",
+      "default": "text-center",
+      "options": [
+        {
+          "value": "text-start",
+          "label": "t:general.settings.text_alignment.options__1.label"
+        },
+        {
+          "value": "text-center",
+          "label": "t:general.settings.text_alignment.options__2.label"
+        },
+        {
+          "value": "text-end",
+          "label": "t:general.settings.text_alignment.options__3.label"
+        },
+        {
+          "value": "text-justify",
+          "label": "t:general.settings.text_alignment.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "progress_bar_width",
+      "label": "t:sections.addons.upsell_popup.settings.progress_bar_width.label",
+      "min": 50,
+      "max": 90,
+      "step": 1,
+      "unit": "%",
+      "default": 75
+    }
+  ],
+  "blocks" : [
+    {
+      "type": "upsell-products",
+      "name": "t:sections.addons.upsell_popup.blocks.upsell_products.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_1",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_1",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_1",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_1",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_1",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_1",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_1",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_1",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_1",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_1",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__2.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_2",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_2",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_2",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_2",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_2",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_2",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_2",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_2",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_2",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_2",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__3.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_3",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_3",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_3",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_3",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_3",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_3",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_3",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_3",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_3",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_3",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__4.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_4",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_4",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_4",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_4",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_4",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_4",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_4",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_4",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_4",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_4",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__5.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_5",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_5",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_5",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_5",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_5",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_5",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_5",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_5",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_5",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_5",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__6.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_6",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_6",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_6",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_6",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_6",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_6",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_6",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_6",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_6",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_6",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__7.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_7",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_7",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_7",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_7",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_7",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_7",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_7",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_7",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_7",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_7",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__8.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_8",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_8",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_8",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_8",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_8",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_8",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_8",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_8",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_8",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_8",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__9.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_9",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_9",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_9",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_9",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_9",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_9",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_9",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_9",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_9",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_9",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discXount.type.options__2.label"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.header__10.content"
+        },
+        {
+          "type": "text",
+          "id": "heading_10",
+          "label": "t:general.settings.heading.label",
+          "default": "Special Offer!"
+        },
+        {
+          "type": "richtext",
+          "id": "text_10",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Add this product to your cart and get 20% OFF your entire order.</p>"
+        },
+        {
+          "type": "collection",
+          "id": "collection_trigger_10",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.collection_trigger.label"
+        },
+        {
+          "type": "product",
+          "id": "product_trigger_10",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.label",
+          "info": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_trigger.info"
+        },
+        {
+          "type": "product",
+          "id": "product_offer_10",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.product_offer.label"
+        },
+        {
+          "type": "text",
+          "id": "button_label_10",
+          "label": "t:general.settings.button_label.label",
+          "default": "Claim offer!"
+        },
+        {
+          "type": "text",
+          "id": "button_icon_10",
+          "label": "t:sections.addons.upsell_popup.blocks.upsell_products.settings.button_icon.label",
+          "info": "t:general.settings.icon.info",
+          "default": "card_giftcard"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.discount.header.content",
+          "info": "t:general.settings.discount.header.info"
+        },
+        {
+          "type": "text",
+          "id": "discount_name_10",
+          "label": "t:general.settings.discount.name.label",
+          "placeholder": "20OFF"
+        },
+        {
+          "type": "text",
+          "id": "discount_amount_10",
+          "label": "t:general.settings.discount.amount.label",
+          "placeholder": "20"
+        },
+        {
+          "type": "select",
+          "id": "discount_type_10",
+          "label": "t:general.settings.discount.type.label",
+          "default": "%",
+          "options": [
+            {
+              "value": "%",
+              "label": "t:general.settings.discount.type.options__1.label"
+            },
+            {
+              "value": "$",
+              "label": "t:general.settings.discount.type.options__2.label"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

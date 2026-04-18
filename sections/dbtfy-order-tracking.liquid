@@ -1,0 +1,107 @@
+{%- liquid
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign input_placeholder = 'add-ons.order_tracking.input_placeholder' | t
+  assign button_text = 'add-ons.order_tracking.button_text' | t
+-%}
+
+<div class="section section--{{ section_style }}">
+  <div class="container mb-5">
+    {%- render 'section-header', heading: page.title, enlarge: true -%}
+
+    {%- if page.content != blank -%}
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="rte">
+            {{ page.content }}
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="{{ container_size }}">
+    <div class="row">
+      <div class="col-md-6 col-lg-4 offset-md-3 offset-lg-4 text-center">
+        <form action="/" class="form form--vertical dbtfy-order-tracking__form">
+          <input type="text" class="input input--full dbtfy-order-tracking__input" maxlength="50" placeholder="{{ input_placeholder }}"/>
+
+          {%- if button_text != blank -%}
+            <button type="submit" class="btn btn--primary btn--full dbtfy-order-tracking__button" value="{{ button_text }}">
+              <span class="btn__text">
+                {{ button_text }}
+              </span>
+            </button>
+          {%- endif -%}
+        </form>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <div id="ot-container"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.order_tracking.name",
+  "class": "dbtfy-order-tracking",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.order_tracking.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,73 @@
+<style>
+  {%- for block in section.blocks -%}
+    {%- liquid
+      assign color_name = block.settings.title
+      assign color_value = block.settings.value
+      assign color_image = block.settings.image
+
+      assign apply_color_swatch_css = false
+
+      if color_name != blank
+        if color_value != blank or color_image != blank
+          assign apply_color_swatch_css = true
+        endif
+      endif
+    -%}
+
+    {%- if apply_color_swatch_css -%}
+      .product-option-color--{{ color_name | handleize }} {
+        {%- if color_value != blank -%} background-color: {{ color_value }} !important; {%- endif -%}
+        {%- if color_image != blank -%} background-image: url("{{ color_image | image_url: width: 50 }}") !important; {%- endif -%}
+      }
+    {%- endif -%}
+  {%- endfor -%}
+</style>
+
+{% schema %}
+{
+  "name": "t:sections.addons.color_swatches.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.color_swatches.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "swatch",
+      "name": "t:sections.addons.color_swatches.blocks.swatch.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.addons.color_swatches.blocks.swatch.settings.color_name.label"
+        },
+        {
+          "type": "color",
+          "id": "value",
+          "label": "t:sections.addons.color_swatches.blocks.swatch.settings.color.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.addons.color_swatches.blocks.swatch.settings.image.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

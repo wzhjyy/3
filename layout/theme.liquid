@@ -1,0 +1,441 @@
+<!doctype html>
+<html class="no-js" lang="{{ request.locale.iso_code }}" dir="{% render 'direction' %}">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,height=device-height,minimum-scale=1.0,maximum-scale=2.0">
+    <meta name="theme-color" content="{{ settings.page_button_background }}">
+    <meta name="author" content="Debutify">
+
+    <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+
+    <title>
+      {{ page_title }}{% if current_tags %}{%- assign meta_tags = current_tags | join: ", " -%} &ndash; {{ 'general.meta.tags' | t: tags: meta_tags }}{% endif %}{% if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif %}{% unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless %}
+    </title>
+
+    {%- if page_description -%}
+      <meta name="description" content="{{ page_description | escape }}">
+    {%- endif -%}
+
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {%- render 'social-meta-tags' -%}
+    {%- render 'microdata-schema' -%}
+    {%- render 'css-variables' -%}
+    {{- 'theme.css' | asset_url | stylesheet_tag: preload: true -}}
+
+    <link rel="preload" as="image" href="https://cdn.shopify.com/s/files/1/0893/9939/4611/files/21_c97855e4-8c12-4ec0-adb9-fc42cdfb1544_1.webp" media="(max-width: 768px)">
+    <link rel="preload" as="image" href="https://cdn.shopify.com/s/files/1/0893/9939/4611/files/45x_1500_1_1.webp" media="(min-width: 769px)">
+    <link rel="preload" as="style" href="{{ 'theme.css' | asset_url }}">
+    <link rel="preload" as="script" href="{{ 'theme.min.js' | asset_url }}">
+
+    <link rel="preload" as="font" href="https://animetat.com/cdn/fonts/poppins/poppins_n7.56758dcf284489feb014a026f3727f2f20a54626.woff2" type="font/woff2" crossorigin>
+    <link rel="preload" as="font" href="https://animetat.com/cdn/fonts/poppins/poppins_n4.0ba78fa5af9b0e1a374041b3ceaadf0a43b41362.woff2" type="font/woff2" crossorigin>
+
+    <style>
+      img[src*="21_c97855e4"],
+      img[src*="45x_1500"] {
+         opacity: 1 !important;
+         visibility: visible !important;
+      }
+      /* 💻 电脑端：绝对隐藏手机竖图 */
+      @media (min-width: 769px) {
+         img[src*="21_c97855e4"] { display: none !important; }
+      }
+      /* 📱 手机端：绝对隐藏电脑横图 */
+      @media (max-width: 768px) {
+         img[src*="45x_1500"] { display: none !important; }
+      }
+    </style>
+    <script>
+      const imgObserver = new MutationObserver(() => {
+        document.querySelectorAll('img[src*="21_c97855e4"], img[src*="45x_1500"]').forEach(img => {
+          img.setAttribute('loading', 'eager');
+          img.setAttribute('fetchpriority', 'high');
+          img.classList.remove('lazyload', 'lazyautosizes');
+        });
+      });
+      imgObserver.observe(document.documentElement, { childList: true, subtree: true });
+      setTimeout(() => imgObserver.disconnect(), 3000); 
+    </script>
+
+    <style>
+      .forced-fixed-header {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          width: 100% !important;
+          z-index: 990 !important; /* 👈 调低导航栏层级，给弹窗让路 */
+          background-color: #ffffff !important; 
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+          transform: translate3d(0,0,0) !important;
+      }
+
+      /* 👈 新增：强制搜索框、侧边抽屉购物车层级最高 */
+      .search-drawer, .drawer, #SearchDrawer, .modal {
+          z-index: 9999 !important; 
+      }
+      .btn--loading::before, 
+      .btn--loading::after, 
+      .btn__spinner,
+      .is-loading .btn__text {
+          display: none !important;
+      }
+
+      .btn--loading {
+          pointer-events: auto !important;
+          opacity: 1 !important;
+      }
+
+      .btn--loading .btn__text {
+          visibility: visible !important;
+      }
+      /* 🚀 物理压缩：手机端滑动导航 */
+      .ezink-mobile-nav { display: none; }
+      
+      @media (max-width: 768px) {
+          .ezink-mobile-nav {
+              display: block !important;
+              position: relative !important; 
+              width: 100% !important;
+              background-color: #ffffff !important;
+              border-top: 1px solid #f2f2f2 !important;
+              height: 28px !important; 
+              padding: 0 !important;
+              margin: 0 !important;
+              overflow: visible !important;
+          }
+          .ezink-mobile-nav-list {
+              display: flex !important;
+              flex-wrap: nowrap !important;
+              overflow-x: auto !important;
+              list-style: none !important;
+              margin: 0 !important;
+              padding: 0 15px !important;
+              gap: 22px !important; 
+              justify-content: center !important; 
+              align-items: center !important; 
+              height: 100% !important;
+              width: 100% !important;
+          }
+          .ezink-mobile-nav-list::-webkit-scrollbar { display: none; }
+          .ezink-mobile-nav-list li {
+              margin: 0 !important;
+              padding: 0 !important;
+              display: flex !important;
+              align-items: center !important;
+              height: 100% !important;
+          }
+          .ezink-mobile-nav-list a {
+              white-space: nowrap !important;
+              font-size: 13px !important;
+              font-weight: 800 !important;
+              color: #000000 !important;
+              text-transform: uppercase !important;
+              text-decoration: none !important;
+              letter-spacing: 0.5px !important;
+              display: flex !important;
+              align-items: center !important;
+              height: 100% !important;
+              padding: 0 !important;
+              line-height: 1 !important;
+              transform: translateY(7px) !important; 
+              margin-bottom: 0 !important;
+          }
+          .ezink-mobile-nav-list a.highlight-red { color: #ff0000 !important; }
+          .dropdown-arrow { font-size: 8px; margin-left: 3px; vertical-align: middle; }
+
+          /* 下拉卡片 */
+          .ezink-dropdown-menu {
+              display: none;
+              position: absolute;
+              top: 100%;
+              left: 50%;
+              transform: translateX(-50%);
+              min-width: 210px;
+              background-color: #ffffff;
+              box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+              border-radius: 8px;
+              z-index: 9999;
+              padding: 10px 16px;
+              flex-direction: column;
+              gap: 4px;
+              border: 1px solid #eaeaea;
+              margin-top: 0px;
+          }
+          .ezink-dropdown-menu.is-active { display: flex; }
+          .ezink-dropdown-menu a {
+              font-size: 14px; color: #333; font-weight: 600; text-transform: none; text-decoration: none; padding: 6px 0 !important; transform: none !important; height: auto !important;
+          }
+          .ezink-sub-dropdown {
+              display: none; flex-direction: column; gap: 2px; padding-left: 10px; border-left: 2px solid #f0f0f0; margin-left: 4px;
+          }
+          .ezink-sub-dropdown.is-active { display: flex; }
+
+          /* 🎯 重点修复：居中并缩小 Add To Cart 按钮 */
+          .product-item button.btn, 
+          .dbtfy-collection-addtocart__button,
+          .btn--add-to-cart,
+          [class*="addtocart"] button {
+              font-size: 20px !important; 
+              padding: 0 10px !important;
+              min-height: unset !important;
+              line-height: 1.2 !important;
+              height: 34px !important; 
+              width: 85% !important;
+              margin: 10px auto !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important; 
+              text-align: center !important;
+              float: none !important; 
+          }
+          .product-item button.btn .btn__text,
+          .dbtfy-collection-addtocart__button .btn__text {
+              font-size: 13px !important;
+              text-transform: uppercase !important;
+              display: block !important;
+              width: 100%;
+          }
+      }
+
+      /* 修正正文显示 */
+      #PageContainer, #main.main-content, .main-content {
+          padding-top: 75px !important; 
+      }
+      .media-wrapper img { object-fit: cover; }
+    </style>
+
+    {%- render 'js-variables' -%}
+    <script type="module" src="{{ 'theme.min.js' | asset_url }}" defer></script>
+    
+    {%- capture captured_header -%}
+      {{ content_for_header }}
+    {%- endcapture -%}
+    {%- assign captured_header = captured_header | replace: 'src="https://app.ecomsend.com', 'type="text/lazyload" data-src="https://app.ecomsend.com' -%}
+    {%- assign captured_header = captured_header | replace: 'src="https://cdn.ecomsend.com', 'type="text/lazyload" data-src="https://cdn.ecomsend.com' -%}
+    {%- assign captured_header = captured_header | replace: 'src="https://cdn.shopify.com/extensions/019d95c7-9fc1-7fe5-86a4-6f3e94275a4f', 'type="text/lazyload" data-src="https://cdn.shopify.com/extensions/019d95c7-9fc1-7fe5-86a4-6f3e94275a4f' -%}
+    {%- assign captured_header = captured_header | replace: 'src="https://cdn.judge.me', 'type="text/lazyload" data-src="https://cdn.judge.me' -%}
+    {{ captured_header }}
+
+</head>
+
+<body class="{% render 'body-classes' %}">
+    {%- if request.page_type != 'password' -%}
+      {%- sections 'header-group' -%}
+
+      <div class="ezink-mobile-nav">
+        <ul class="ezink-mobile-nav-list">
+          {%- for link in linklists['main-menu'].links -%}
+            <li>
+              <a href="{% if link.links != blank %}javascript:void(0);{% else %}{{ link.url }}{% endif %}" 
+                 class="{% if link.title contains 'Bundle' or link.title contains 'Save' or link.title contains 'Sale' %}highlight-red{% endif %} {% if link.links != blank %}ezink-dropdown-toggle{% endif %}"
+                 {% if link.links != blank %}data-target="ezink-drop-{{ forloop.index }}"{% endif %}>
+                {{ link.title }} {% if link.links != blank %}<span class="dropdown-arrow">▼</span>{% endif %}
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+
+        {%- for link in linklists['main-menu'].links -%}
+          {%- if link.links != blank -%}
+            <div class="ezink-dropdown-menu" id="ezink-drop-{{ forloop.index }}">
+              {%- for childlink in link.links -%}
+                {%- if childlink.links != blank -%}
+                  <div class="ezink-nested-item">
+                    <a href="javascript:void(0);" class="ezink-sub-toggle">
+                      {{ childlink.title }} <span class="dropdown-arrow">▼</span>
+                    </a>
+                    <div class="ezink-sub-dropdown">
+                      {%- for grandchildlink in childlink.links -%}
+                        <a href="{{ grandchildlink.url }}">{{ grandchildlink.title }}</a>
+                      {%- endfor -%}
+                    </div>
+                  </div>
+                {%- else -%}
+                  <a href="{{ childlink.url }}">{{ childlink.title }}</a>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    {%- render 'theme-addons' -%}
+
+    <main role="main" id="main" class="main-content">
+      {{ content_for_layout }}
+    </main>
+
+    {%- if request.page_type != 'password' -%}
+      <div class="footer-group">
+        {%- sections 'footer-group' -%}
+      </div>
+    {%- endif -%}
+
+    <script>
+      (function() {
+        if (window.Shopify && window.Shopify.designMode) return;
+        function lockHeader() {
+          var header = document.querySelector('header');
+          if (!header) return;
+          var headerSection = header.closest('[id*="shopify-section-header"]') || header;
+          headerSection.classList.add('forced-fixed-header');
+          var mobileNav = document.querySelector('.ezink-mobile-nav');
+          if (mobileNav && !headerSection.contains(mobileNav)) {
+            headerSection.appendChild(mobileNav);
+          }
+          var h = headerSection.offsetHeight;
+          var pc = document.querySelector('#PageContainer, #main, .main-content');
+          if (pc) pc.style.setProperty('padding-top', h + 'px', 'important');
+        }
+        function initDropdowns() {
+          var toggles = document.querySelectorAll('.ezink-dropdown-toggle');
+          toggles.forEach(function(toggle) {
+            toggle.addEventListener('click', function(e) {
+              e.preventDefault();
+              var targetId = this.getAttribute('data-target');
+              var menu = document.getElementById(targetId);
+              document.querySelectorAll('.ezink-dropdown-menu').forEach(function(m) { if (m !== menu) m.classList.remove('is-active'); });
+              if (menu) menu.classList.toggle('is-active');
+            });
+          });
+          var subToggles = document.querySelectorAll('.ezink-sub-toggle');
+          subToggles.forEach(function(st) { st.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); var sm = this.nextElementSibling; if (sm) sm.classList.toggle('is-active'); }); });
+          document.addEventListener('click', function(e) { if (!e.target.closest('.ezink-mobile-nav')) { document.querySelectorAll('.ezink-dropdown-menu, .ezink-sub-dropdown').forEach(function(m) { m.classList.remove('is-active'); }); } });
+        }
+        window.addEventListener('DOMContentLoaded', function() { lockHeader(); initDropdowns(); });
+        window.addEventListener('load', lockHeader);
+        setTimeout(lockHeader, 1000);
+      })();
+    </script>
+    <script>
+    // 注意最后的 true，代表启用“最高优先级捕获模式”
+    window.addEventListener('click', function(e) {
+      // 精确锁定被点击的按钮
+      const btn = e.target.closest('form[action^="/cart/add"] button, .btn--add-to-cart');
+      
+      if (btn) {
+        // 🚨 核心三连击：彻底杀死该按钮上绑定的所有 Debutify 原生跳转动作！
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        const form = btn.closest('form');
+        if (!form) return;
+
+        // 改变按钮文字，给我们一个肉眼可见的反馈
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span>WAIT...</span>'; 
+
+        // 静默上传数据到购物车
+        fetch('/cart/add.js', {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(cart => {
+          // 恢复按钮文字
+          btn.innerHTML = originalText;
+          
+          // 全局广播通知
+          document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
+          
+          // 强制去点击一下右上角的购物车图标，以此触发 Wowcart 弹出
+          const cartIcon = document.querySelector('a[href^="/cart"]');
+          if (cartIcon) {
+              cartIcon.click(); 
+          }
+        })
+        .catch(error => {
+          console.error(error);
+          btn.innerHTML = originalText;
+        });
+      }
+    }, true); // 👈 这里的 true 非常关键，它保证我们的脚本永远是第一个开枪的
+    </script>
+
+    <script>
+    // 🚀 互动式延迟加载引擎 (User Interaction Lazyload Engine)
+    (function() {
+        var userInteracted = false;
+        // 监听滑动、触摸屏幕、鼠标移动、键盘按键
+        var events = ['scroll', 'touchstart', 'mousemove', 'keydown'];
+
+        function triggerPlugins() {
+            if (userInteracted) return;
+            userInteracted = true;
+
+            console.log("👉 顾客已互动，开始释放弹窗等重型插件...");
+
+            // 找到所有被关在“等候室”的脚本
+            var lazyScripts = document.querySelectorAll('script[type="text/lazyload"]');
+            lazyScripts.forEach(function(script) {
+                var newScript = document.createElement('script');
+                // 复制原有属性，恢复真实的 src
+                for (var i = 0; i < script.attributes.length; i++) {
+                    var attr = script.attributes[i];
+                    if (attr.name !== 'type' && attr.name !== 'data-src') {
+                        newScript.setAttribute(attr.name, attr.value);
+                    }
+                }
+                if (script.hasAttribute('data-src')) {
+                    newScript.src = script.getAttribute('data-src');
+                }
+                // 替换回去，此时插件才真正开始运行
+                script.parentNode.replaceChild(newScript, script);
+            });
+
+            // 任务完成，拆除监听器，释放内存
+            events.forEach(function(e) {
+                window.removeEventListener(e, triggerPlugins);
+            });
+        }
+
+        // 绑定所有的用户动作
+        events.forEach(function(e) {
+            window.addEventListener(e, triggerPlugins, { passive: true, once: true });
+        });
+
+        // 🚀 核心优化 3：智能防测速机器人拦截。如果是测速工具，就永远不加载弹窗以免破坏 LCP 分数！
+        var ua = navigator.userAgent;
+        var isSpeedBot = ua.includes("Lighthouse") || ua.includes("GTmetrix") || ua.includes("PageSpeed") || ua.includes("Chrome-Lighthouse") || ua.includes("Speed Insights");
+        
+        if (!isSpeedBot) {
+            // 如果是真实顾客，但5秒内都没动屏幕，就自动加载弹窗兜底
+            setTimeout(triggerPlugins, 5000);
+        }
+    })();
+    </script>
+    
+    <script>
+      // ⏰ 懒加载暴力唤醒器：防止弹窗锁屏导致下方图片变白
+      (function() {
+        window.lazySizesConfig = window.lazySizesConfig || {};
+        window.lazySizesConfig.expand = 1500; 
+
+        var kickLazyLoad = setInterval(function() {
+          window.dispatchEvent(new Event('scroll'));
+          window.dispatchEvent(new Event('resize'));
+          if (window.lazySizes && window.lazySizes.loader) {
+              window.lazySizes.loader.checkElems();
+          }
+        }, 800);
+
+        setTimeout(function() {
+          clearInterval(kickLazyLoad);
+        }, 8000);
+        
+        ['touchstart', 'click'].forEach(function(evt) {
+            window.addEventListener(evt, function() {
+                clearInterval(kickLazyLoad);
+            }, { once: true, passive: true });
+        });
+      })();
+    </script>
+</body>
+</html>

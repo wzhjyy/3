@@ -1,0 +1,257 @@
+{%- liquid
+  assign toggle_submenu_on_links = section.settings.toggle_submenu_on_links
+  assign show_email = section.settings.show_email
+  assign show_phone = section.settings.show_phone
+  assign show_social_medias = section.settings.show_social_medias
+  assign show_menu_icon = section.settings.show_menu_icon
+  assign heading = section.settings.heading
+  assign primary_menu = section.settings.primary_menu
+  assign secondary_menu = section.settings.secondary_menu
+-%}
+
+<div id="NavDrawer"
+     class="drawer drawer--left overlay-content"
+     data-section-id="{{ section.id }}"
+     data-section-type="drawer-menu"
+     data-section-force-loading
+     aria-hidden="true"
+     tabindex="-1">
+
+  <div class="drawer__header">
+    <div class="drawer__title">
+      <span class="{{ settings.icon }} icon" translate="no" {% unless show_menu_icon %}hidden{% endunless %} aria-hidden="true">menu</span>
+
+      <span {% if show_menu_icon %}class="ms-2"{% endif %}>
+        {%- if heading != blank -%}
+          {{ heading }}
+        {%- else -%}
+          {{ 'general.drawers.navigation' | t }}
+        {%- endif -%}
+      </span>
+    </div>
+
+    <div class="drawer__close">
+      <button type="button" class="btn btn--square-sm js-drawer-close" aria-label="{{ 'general.drawers.close_menu' | t }}" title="{{ 'general.drawers.close_menu' | t }}">
+        <span class="{{ settings.icon }}" translate="no" aria-hidden="true">close</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="drawer__inner">
+    {%- if primary_menu != blank -%}
+      <div class="drawer__inner-section">
+        <ul class="mobile-nav">
+          {%- for link in linklists[primary_menu].links -%}
+            {%- if link.links != blank -%}
+              <li class="mobile-nav__item">
+                <div class="mobile-nav__has-sublist">
+                  <a href="{{ link.url }}"
+                     class="mobile-nav__link{% if toggle_submenu_on_links %} mobile-nav__toggle-link{% endif %}"
+                     id="Label-{{ forloop.index }}"
+                     {% unless request.page_type == 'index' %}{% if link.active %}aria-current="page"{% endif %}{% endunless %}>{{ link.title | escape }}</a>
+
+                    <div class="mobile-nav__toggle">
+                      <button type="button" class="btn btn--square-sm mobile-nav__toggle-btn" aria-controls="Linklist-{{ forloop.index }}" aria-expanded="false">
+                        <span class="mobile-nav__toggle-open" aria-label="{{ 'general.drawers.expand_submenu' | t }} {{ link.title | escape }}" title="{{ 'general.drawers.expand_submenu' | t }} {{ link.title | escape }}">
+                          <span class="{{ settings.icon }}" translate="no" aria-hidden="true">add</span>
+                        </span>
+
+                        <span class="mobile-nav__toggle-close" aria-label="{{ 'general.drawers.collapse_submenu' | t }} {{ link.title | escape }}" title="{{ 'general.drawers.collapse_submenu' | t }} {{ link.title | escape }}">
+                          <span class="{{ settings.icon }}" translate="no" aria-hidden="true">remove</span>
+                        </span>
+                      </button>
+                    </div>
+                </div>
+
+                <ul class="mobile-nav__sublist" id="Linklist-{{ forloop.index }}" aria-labelledby="Label-{{ forloop.index }}" role="navigation">
+                  {%- assign parent_index = forloop.index -%}
+
+                  {%- for childlink in link.links -%}
+                    {%- if childlink.links != blank -%}
+                      <li class="mobile-nav__item">
+                        <div class="mobile-nav__has-sublist">
+                          <a href="{{ childlink.url }}"
+                             class="mobile-nav__link{% if toggle_submenu_on_links %} mobile-nav__toggle-link{% endif %}"
+                             id="Label-{{ parent_index }}-{{ forloop.index }}"
+                             {% unless request.page_type == 'index' %}{% if link.active %}aria-current="page"{% endif %}{% endunless %}>
+                            {{ childlink.title }}
+                          </a>
+
+                          <div class="mobile-nav__toggle">
+                            <button type="button" class="btn btn--square-sm mobile-nav__toggle-btn" aria-controls="Linklist-{{ parent_index }}-{{ forloop.index }}" aria-expanded="false">
+                              <span class="mobile-nav__toggle-open" aria-label="{{ 'general.drawers.expand_submenu' | t }} {{ childlink.title | escape }}" title="{{ 'general.drawers.expand_submenu' | t }} {{ childlink.title | escape }}">
+                                <span class="{{ settings.icon }}" translate="no" aria-hidden="true">add</span>
+                              </span>
+
+                              <span class="mobile-nav__toggle-close" aria-label="{{ 'general.drawers.collapse_submenu' | t }} {{ childlink.title | escape }}" title="{{ 'general.drawers.collapse_submenu' | t }} {{ childlink.title | escape }}">
+                                <span class="{{ settings.icon }}" translate="no" aria-hidden="true">remove</span>
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <ul class="mobile-nav__sublist mobile-nav__subsublist" id="Linklist-{{ parent_index }}-{{ forloop.index }}" aria-labelledby="Label-{{ parent_index }}-{{ forloop.index }}" role="navigation">
+                          {%- for grandchildlink in childlink.links -%}
+                            <li class="mobile-nav__item">
+                              <a href="{{ grandchildlink.url }}"
+                                 class="mobile-nav__link"
+                                 {% unless request.page_type == 'index' %}{% if grandchildlink.active %}aria-current="page"{% endif %}{% endunless %}>
+                                {{ grandchildlink.title | escape }}
+                              </a>
+                            </li>
+                          {%- endfor -%}
+                        </ul>
+                      </li>
+                    {%- else -%}
+                      <li class="mobile-nav__item">
+                        <a href="{{ childlink.url }}"
+                           class="mobile-nav__link"
+                           {% unless request.page_type == 'index' %}{%- if childlink.active -%}aria-current="page"{% endif %}{% endunless %}>
+                          {{ childlink.title | escape }}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </ul>
+              </li>
+            {%- else -%}
+              <li class="mobile-nav__item">
+                <a href="{{ link.url }}"
+                   class="mobile-nav__link"
+                   {% unless request.page_type == 'index' %}{% if link.active %}aria-current="page"{% endif %}{% endunless %}>
+                  {{ link.title | escape }}
+                </a>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+
+    {%- if shop.customer_accounts_enabled -%}
+      <div class="drawer__inner-section">
+        {%- if customer -%}
+          <a href="{{ routes.account_logout_url }}" class="btn btn--sm btn--full mb-3">
+            <span class="{{ settings.icon }}" translate="no">exit_to_app</span>
+            {{ 'layout.customer.log_out' | t }}
+          </a>
+
+          <a href="{{ routes.account_url }}" class="btn btn--primary btn--sm btn--full" title="{{ 'layout.customer.account' | t }}">
+            <span class="{{ settings.icon }}" translate="no">account_circle</span>
+            <span class="customer-name">{{ customer.first_name | capitalize }}</span>
+          </a>
+        {%- else -%}
+          <a href="{{ routes.account_login_url }}" class="btn btn--sm btn--full mb-3">
+            <span class="{{ settings.icon }}" translate="no">exit_to_app</span>
+            {{ 'layout.customer.log_in' | t }}
+          </a>
+
+          <a href="{{ routes.account_register_url }}" class="btn btn--primary btn--sm btn--full">
+            <span class="{{ settings.icon }}" translate="no">person_add</span>
+            {{ 'layout.customer.create_account' | t }}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- if show_email or show_phone -%}
+      <div class="drawer__inner-section">
+        <ul class="mobile-nav">
+          {%- if show_email -%}
+            <li class="mobile-nav__item mobile-nav__item--secondary">
+              <a href="mailto:{{ shop.email | escape }}">
+                <span class="{{ settings.icon }}" translate="no" aria-hidden="true">email</span>
+                {{ shop.email }}
+              </a>
+            </li>
+          {%- endif -%}
+
+          {%- if show_phone -%}
+            <li class="mobile-nav__item mobile-nav__item--secondary">
+              <a href="tel:{{ shop.phone | remove: '-' | replace: ' ', '' }}">
+                <span class="{{ settings.icon }}" translate="no" aria-hidden="true">phone</span>
+                {{ shop.phone }}
+              </a>
+            </li>
+          {%- endif -%}
+        </ul>
+      </div>
+    {%- endif -%}
+
+    {%- if secondary_menu -%}
+      <div class="drawer__inner-section">
+        <ul class="mobile-nav">
+          {%- for link in linklists[secondary_menu].links -%}
+            <li class="mobile-nav__item mobile-nav__item--secondary">
+              <a href="{{ link.url }}">{{ link.title }}</a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- if show_social_medias -%}
+    <div class="drawer__footer">
+      {%- render 'social-media', classes: 'justify-content-center' -%}
+    </div>
+  {%- endif -%}
+</div>
+
+<div class="overlay-backdrop overlay-drawer"></div>
+
+{% schema %}
+{
+  "name": "t:sections.drawer_menu.name",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "toggle_submenu_on_links",
+      "label": "t:sections.drawer_menu.settings.toggle_submenu_on_links.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_email",
+      "label": "t:sections.drawer_menu.settings.show_email.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_phone",
+      "label": "t:sections.drawer_menu.settings.show_phone.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social_medias",
+      "label": "t:sections.drawer_menu.settings.show_social_medias.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_menu_icon",
+      "label": "t:sections.drawer_menu.settings.show_menu_icon.label",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Menu"
+    },
+    {
+      "type": "link_list",
+      "id": "primary_menu",
+      "label": "t:sections.drawer_menu.settings.primary_menu.label",
+      "default": "main-menu"
+    },
+    {
+      "type": "link_list",
+      "id": "secondary_menu",
+      "label": "t:sections.drawer_menu.settings.secondary_menu.label",
+      "default": "footer"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,20 @@
+{
+  "type": "custom.addons",
+  "name": "Addons group",
+  "sections": {
+    "color-swatches": {
+      "type": "dbtfy-color-swatches",
+      "settings": {}
+    },
+    "product-swatches": {
+      "type": "dbtfy-product-swatches",
+      "settings": {
+        "show_in_product_grid": true
+      }
+    }
+  },
+  "order": [
+    "color-swatches",
+    "product-swatches"
+  ]
+}

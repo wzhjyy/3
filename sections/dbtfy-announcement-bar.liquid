@@ -1,0 +1,184 @@
+{%- liquid
+  assign enable_sticky_bar = section.settings.enable_sticky_bar
+  assign enable_small_text_on_mobile = section.settings.enable_small_text_on_mobile
+  assign show_social_medias = section.settings.show_social_medias
+  assign show_email_address = section.settings.show_email_address
+  assign show_phone_number = section.settings.show_phone_number
+  assign left_message = section.settings.left_message
+  assign right_message = section.settings.right_message
+  assign rotation_speed = section.settings.rotation_speed | times: 1000
+-%}
+
+{%- capture section_settings -%}
+  {
+    "enableStickyBar": {{ enable_sticky_bar | json }},
+    "rotationSpeed": {{ rotation_speed | json }}
+  }
+{%- endcapture -%}
+
+<div class="dbtfy-announcement-bar__wrapper" data-section-settings='{{ section_settings }}' data-section-type="announcement-bar" data-section-id="{{ section.id }}">
+  <div class="container">
+    <div class="row row--sm text-whitespace-nowrap fadeIn dbtfy-announcement-bar__row align-items-center">
+      <div class="col-3 overflow-hidden d-none d-md-flex align-items-center flex-row-reverse justify-content-end flex-nowrap">
+        {%- if left_message != blank -%}
+          <div class="rte dbtfy-announcement-bar__left-message">{{- left_message -}}</div>
+        {%- endif -%}
+
+        {%- if show_social_medias -%}
+          {%- render 'social-media', classes: 'flex-nowrap' -%}
+        {%- endif -%}
+      </div>
+
+      <div class="col-md-6 overflow-hidden text-center d-flex flex-nowrap dbtfy-announcement-bar__center-message{% if section.blocks.size > 1 %} slick dbtfy-announcement-bar__slider{% else %} {% endif %}">
+        {%- for block in section.blocks -%}
+          {%- assign text = block.settings.text -%}
+
+          {%- if text != blank -%}
+            <div class="{% if section.blocks.size == 1 %} w-100{% endif %}{% if enable_small_text_on_mobile %} text-sm sm:text-base{% endif %}"
+                 data-block-id="{{ block.id }}"
+                {{ block.shopify_attributes }}>
+
+              <div class="rte">
+                {{ text }}
+              </div>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+
+      <div class="col-3 overflow-hidden d-none d-md-flex justify-content-end align-items-center">
+        {%- if right_message != blank -%}
+          <div class="rte dbtfy-announcement-bar__right-message">{{- right_message -}}</div>
+        {%- endif -%}
+
+        <ul class="inline-list flex-nowrap">
+          {%- if show_phone_number -%}
+            <li>
+              <a href="tel:{{ shop.phone | remove: '-' | replace: ' ', '' }}" title="{{ shop.phone }}" aria-label="{{ shop.phone }}">
+                <span class="{{ settings.icon }}" translate="no" aria-hidden="true">phone</span>
+              </a>
+            </li>
+          {%- endif -%}
+
+          {%- if show_email_address -%}
+            <li>
+              <a href="mailto:{{ shop.email | escape }}" title="{{ shop.email }}" aria-label="{{ shop.email }}">
+                <span class="{{ settings.icon }}" translate="no" aria-hidden="true">email</span>
+              </a>
+            </li>
+          {%- endif -%}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.announcement.name",
+  "class": "dbtfy-announcement-bar stacked-on-top-of-content",
+  "max_blocks": 5,
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.announcement.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_bar",
+      "label": "t:sections.addons.announcement.settings.enable_sticky_bar.label",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_small_text_on_mobile",
+      "label": "t:sections.addons.announcement.settings.enable_small_text_on_mobile.label",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social_medias",
+      "label": "t:sections.addons.announcement.settings.show_social_medias.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_email_address",
+      "label": "t:sections.addons.announcement.settings.show_email_address.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_phone_number",
+      "label": "t:sections.addons.announcement.settings.show_phone_number.label",
+      "default": true
+    },
+    {
+      "type": "richtext",
+      "id": "left_message",
+      "label": "t:sections.addons.announcement.settings.left_message.label",
+      "default": "<p>Follow us!</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "right_message",
+      "label": "t:sections.addons.announcement.settings.right_message.label",
+      "default": "<p>Get in touch with us</p>"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.announcement.settings.header__1.content",
+      "info": "t:sections.addons.announcement.settings.header__1.info"
+    },
+    {
+      "type": "range",
+      "id": "rotation_speed",
+      "label": "t:sections.addons.announcement.settings.rotation_speed.label",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "default": 5
+    }
+  ],
+  "blocks": [
+    {
+      "type": "message",
+      "name": "t:sections.addons.announcement.blocks.message.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Free shipping worldwide | 30-Day free returns</p>"
+        }
+      ]
+    }
+  ],
+  "default": {
+    "blocks": [
+      {
+        "type": "message"
+      }
+    ]
+  }
+}
+{% endschema %}

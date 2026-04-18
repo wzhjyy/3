@@ -1,0 +1,239 @@
+{%- if section.blocks.size > 0 -%}
+  <div class="dbtfy-delivery-time" hidden>
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign icon = block.settings.icon
+        assign text = block.settings.text
+        assign show_as_date = block.settings.show_as_date
+        assign date_format = block.settings.date_format
+        assign min_days = block.settings.min_days
+        assign max_days = block.settings.max_days
+        assign exclude_days = block.settings.exclude_days
+        assign show_delivery_cutoff_time = block.settings.show_delivery_cutoff_time
+        assign cutoff_time = block.settings.cutoff_time
+        assign cutoff_message = block.settings.cutoff_message
+        assign visibility = block.settings.visibility
+        assign collection = block.settings.collection
+        assign types = block.settings.types
+        assign tags = block.settings.tags
+        assign product = block.settings.product
+      -%}
+
+      {%- capture block_settings -%}
+        {
+          "text": {{ text | json }},
+          "showAsDate": {{ show_as_date | json }},
+          "dateFormat": {{ date_format | json }},
+          "minDays": {{ min_days | json }},
+          "maxDays": {{ max_days | json }},
+          "excludeDays": {{ exclude_days | json }},
+          "showDeliveryCutoffTime": {{ show_delivery_cutoff_time | json }},
+          "cutoffTime": {{ cutoff_time | json }},
+          "cutoffMessage": {{ cutoff_message | json }},
+          "visibility": {{ visibility | json }},
+          "collection": {{ collection | json }},
+          "types": {{ types | json }},
+          "tags": {{ tags | json }},
+          "productId": {{ product.id | json }}
+        }
+      {%- endcapture -%}
+
+      <div class="dbtfy-delivery-time__item card" data-block-settings='{{ block_settings }}' {{ block.shopify_attributes }}>
+        <div class="card__body">
+          <div class="dbtfy-delivery-time__item-content">
+            {%- if icon != blank -%}
+              <span class="{{ settings.icon }} icon" translate="no">{{ icon }}</span>
+            {% endif %}
+
+            <span class="dbtfy-delivery-time__item-text"></span>
+
+            {%- if show_delivery_cutoff_time -%}
+              &nbsp;<span class="dbtfy-delivery-time__item-cut-off"></span>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.delivery_time.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.delivery_time.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "delivery_time",
+      "name": "t:sections.addons.delivery_time.blocks.delivery_time.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.delivery_time.blocks.delivery_time.settings.header__1.content"
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "default": "local_shipping",
+          "info": "t:general.settings.icon.info"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Buy now to receive in {min} - {max} days</p>",
+          "info": "t:sections.addons.delivery_time.blocks.delivery_time.settings.text.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.delivery_time.blocks.delivery_time.settings.header__2.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_as_date",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.show_as_date.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "date_format",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.date_format.label",
+          "default": "%b %d",
+          "info": "t:sections.addons.delivery_time.blocks.delivery_time.settings.date_format.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.delivery_time.blocks.delivery_time.settings.header__3.content",
+          "info": "t:sections.addons.delivery_time.blocks.delivery_time.settings.header__3.info"
+        },
+        {
+          "type": "range",
+          "id": "min_days",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.min_days.label",
+          "min": 1,
+          "max": 60,
+          "step": 1,
+          "default": 7,
+          "unit": "day"
+        },
+        {
+          "type": "range",
+          "id": "max_days",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.max_days.label",
+          "min": 1,
+          "max": 60,
+          "step": 1,
+          "default": 14,
+          "unit": "day"
+        },
+        {
+          "type": "textarea",
+          "id": "exclude_days",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.exclude_days.label",
+          "default": "SAT, SUN",
+          "info": "t:sections.addons.delivery_time.blocks.delivery_time.settings.exclude_days.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.delivery_time.blocks.delivery_time.settings.header__4.content"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_delivery_cutoff_time",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.show_delivery_cutoff_time.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "cutoff_time",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.cutoff_time.label",
+          "default": "16:00:00",
+          "info": "t:sections.addons.delivery_time.blocks.delivery_time.settings.cutoff_time.info"
+        },
+        {
+          "type": "text",
+          "id": "cutoff_message",
+          "label": "t:sections.addons.delivery_time.blocks.delivery_time.settings.cutoff_message.label",
+          "default": "(Order within {time})",
+          "info": "t:sections.addons.delivery_time.blocks.delivery_time.settings.cutoff_message.info"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.visibility.header.content",
+          "info": "t:general.settings.visibility.header.info"
+        },
+        {
+          "type": "radio",
+          "id": "visibility",
+          "label": "t:general.settings.visibility.visibility.label",
+          "info": "t:general.settings.visibility.visibility.info",
+          "default": "all",
+          "options": [
+            {
+              "value": "all",
+              "label": "t:general.settings.visibility.visibility.options__1.label"
+            },
+            {
+              "value": "collection",
+              "label": "t:general.settings.visibility.visibility.options__2.label"
+            },
+            {
+              "value": "type",
+              "label": "t:general.settings.visibility.visibility.options__3.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:general.settings.visibility.visibility.options__4.label"
+            },
+            {
+              "value": "product",
+              "label": "t:general.settings.visibility.visibility.options__5.label"
+            }
+          ]
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.settings.visibility.collection.label"
+        },
+        {
+          "type": "text",
+          "id": "types",
+          "label": "t:general.settings.visibility.types.label",
+          "info": "t:general.settings.visibility.types.info"
+        },
+        {
+          "type": "text",
+          "id": "tags",
+          "label": "t:general.settings.visibility.tags.label",
+          "info": "t:general.settings.visibility.tags.info"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:general.settings.visibility.product.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

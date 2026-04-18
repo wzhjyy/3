@@ -1,0 +1,283 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign products_limit = settings.dbtfy_recently_viewed_products_limit
+  assign products_per_row_desktop = section.settings.products_per_row_desktop | times: 1
+  assign products_per_row_mobile = section.settings.products_per_row_mobile | times: 1
+  assign enable_slider = section.settings.enable_slider
+  assign show_arrows = section.settings.show_arrows
+  assign show_dots = section.settings.show_dots
+  assign enable_autoplay = section.settings.enable_autoplay
+  assign autoplay_speed = section.settings.autoplay_speed | times: 1000
+  assign slider_products_in_row = section.settings.slider_products_in_row | times: 1
+  assign slider_products_in_row_mobile = section.settings.slider_products_in_row_mobile | times: 1
+
+  assign show_on_desktop_bar = settings.dbtfy_recently_viewed_bar_show_desktop
+  assign show_on_mobile_bar = settings.dbtfy_recently_viewed_bar_show_mobile
+  assign bar_position = settings.dbtfy_recently_viewed_bar_position
+
+  capture visibility_class_section
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  capture visibility_class_bar
+    render 'section-visibility-class', show_on_mobile: show_on_mobile_bar, show_on_desktop: show_on_desktop_bar
+  endcapture
+
+  capture block_width
+    render 'section-block-width', section: section, type: 'block'
+  endcapture
+-%}
+
+{%- capture section_settings -%}
+  {
+    "productsPerRowDesktop": {{ products_per_row_desktop | json }},
+    "productsPerRowMobile": {{ products_per_row_mobile | json }},
+    "productsLimit": {{ products_limit | json }},
+    "enableSlider": {{ enable_slider | json }},
+    "showArrows": {{ show_arrows | json }},
+    "showDots": {{ show_dots | json }},
+    "enableAutoplay": {{ enable_autoplay | json }},
+    "autoplaySpeed": {{ autoplay_speed | json }},
+    "slidesToShow": {{ slider_products_in_row | json }},
+    "slidesToShowMobile": {{ slider_products_in_row_mobile | json }}
+  }
+{%- endcapture -%}
+
+<div class="dbtfy-recently-viewed__section section section--{{ section_style }} {{ visibility_class_section }}" data-section-settings='{{ section_settings }}'>
+  <div class="{{ container_size }}">
+    {%- render 'section-header', heading: heading, subheading: subheading -%}
+
+    <div class="row js-recently-viewed-products{% if enable_slider %} slick js-slider{% else %} gy-4{% endif %}"></div>
+  </div>
+</div>
+
+<div class="dbtfy-recently-viewed-bar dbtfy-recently-viewed-bar--{{ bar_position }} fadeIn{{ bar_position | capitalize }} {{ visibility_class_bar | replace: 'd-block', 'd-flex' | replace: 'd-md-block', 'd-md-flex' }}">
+  <div class="dbtfy-recently-viewed-bar__content">
+    {%- if heading != blank -%}
+      <h3 class="h3 text-sm text-center mb-2">
+        {{ heading }}
+      </h3>
+    {%- endif -%}
+
+    <div class="row gy-2 dbtfy-recently-viewed-bar__products js-recently-viewed-bar-products"></div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.recently_viewed.name",
+  "class": "dbtfy-recently-viewed",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.recently_viewed.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Recently viewed"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.recently_viewed.settings.header__1.content"
+    },
+    {
+      "type": "select",
+      "id": "products_per_row_desktop",
+      "label": "t:sections.addons.recently_viewed.settings.products_per_row_desktop.label",
+      "default": "4",
+      "options": [
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "products_per_row_mobile",
+      "label": "t:sections.addons.recently_viewed.settings.products_per_row_mobile.label",
+      "default": "2",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.recently_viewed.settings.header__2.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "t:sections.addons.recently_viewed.settings.enable_slider.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "t:sections.addons.recently_viewed.settings.show_arrows.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "t:sections.addons.recently_viewed.settings.show_dots.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_autoplay",
+      "label": "t:sections.addons.recently_viewed.settings.enable_autoplay.label",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "min": 3,
+      "max": 10,
+      "label": "t:sections.addons.recently_viewed.settings.autoplay_speed.label",
+      "default": 5,
+      "unit": "s"
+    },
+    {
+      "type": "select",
+      "id": "slider_products_in_row",
+      "label": "t:sections.addons.recently_viewed.settings.slider_products_in_row.label",
+      "default": "3",
+      "options": [
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        },
+        {
+          "value": "5",
+          "label": "5"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "slider_products_in_row_mobile",
+      "label": "Products in row on mobile",
+      "default": "1",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.addons.recently_viewed.presets.name",
+      "category": "t:sections.addons.recently_viewed.presets.category"
+    }
+  ]
+}
+{% endschema %}

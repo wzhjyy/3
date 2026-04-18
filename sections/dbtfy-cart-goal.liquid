@@ -1,0 +1,321 @@
+{%- liquid
+  assign goal = section.settings.goal_amount
+  assign goal_amount = section.settings.goal_amount | times: 1
+  assign icon = section.settings.icon
+  assign text = section.settings.text | escape
+  assign reached_text = section.settings.reached_text | escape
+-%}
+
+{%- capture section_settings -%}
+  {
+    "text": {{ text | json }},
+    "reachedText": {{ reached_text | json }}
+  }
+{%- endcapture -%}
+
+<div class="dbtfy-cart-goal" hidden data-section-settings='{{ section_settings }}'>
+  {%- if section.blocks.size > 0 -%}
+    {%- for block in section.blocks -%}
+      {%- for i in (1..10) -%}
+        {%- capture goal_amount_setting -%}goal_amount_{{ i }}{%- endcapture -%}
+        {%- capture region_setting -%}goal_region_{{ i }}{%- endcapture -%}
+
+        {%- liquid
+          assign current_goal_amount = block.settings[goal_amount_setting] | times: 1
+          assign current_region = block.settings[region_setting]
+        -%}
+
+        {%- capture block_settings -%}
+          {
+            "goalAmount": {{ current_goal_amount | json }},
+            "region": {{ current_region | json }}
+          }
+        {%- endcapture -%}
+
+        {%- if current_goal_amount != blank and current_region != blank -%}
+          <div class="dbtfy-cart-goal__goal" data-block-settings='{{ block_settings }}' {{ block.shopify_attributes }}>
+            <div class="dbtfy-cart-goal__goal-wrapper">
+              <p class="dbtfy-cart-goal__goal-text text-center"></p>
+
+              <div class="dbtfy-cart-goal__goal-progress progress progress--rounded mt-2">
+                <div class="dbtfy-cart-goal__goal-progress-bar progress__bar" role="progressbar" style="width: 0%">
+                  {%- if icon != blank -%}
+                    <span class="{{ settings.icon }} icon icon--svg text-secondary dbtfy-cart-goal__goal-icon" translate="no">{{ icon }}</span>
+                  {%- endif -%}
+                </div>
+              </div>
+            </div>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+  {%- endif -%}
+
+  {%- if goal != blank -%}
+    {%- capture block_settings -%}
+      {
+        "goalAmount": {{ goal_amount | json }},
+        "region": "all"
+      }
+    {%- endcapture -%}
+
+    <div class="dbtfy-cart-goal__goal" data-block-settings='{{ block_settings }}'>
+      <div class="dbtfy-cart-goal__goal-wrapper">
+        <p class="dbtfy-cart-goal__goal-text text-center"></p>
+
+        <div class="dbtfy-cart-goal__goal-progress progress progress--rounded mt-2">
+          <div class="dbtfy-cart-goal__goal-progress-bar progress__bar" role="progressbar" style="width: 0%">
+            {%- if icon != blank -%}
+              <span class="{{ settings.icon }} icon icon--svg text-secondary dbtfy-cart-goal__goal-icon" translate="no">{{ icon }}</span>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.cart_goal.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.cart_goal.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "t:general.settings.text.label",
+      "default": "You're {amount} away from FREE shipping!",
+      "info": "t:sections.addons.cart_goal.settings.text.info"
+    },
+    {
+      "type": "text",
+      "id": "goal_amount",
+      "label": "t:sections.addons.cart_goal.settings.goal_amount.label",
+      "info": "t:sections.addons.cart_goal.settings.goal_amount.info",
+      "default": "70"
+    },
+    {
+      "type": "text",
+      "id": "reached_text",
+      "label": "t:sections.addons.cart_goal.settings.reached_text.label",
+      "default": "You are eligible for FREE shipping!"
+    },
+    {
+      "type": "text",
+      "id": "icon",
+      "label": "t:general.settings.icon.label",
+      "info": "t:general.settings.icon.info",
+      "default": "local_shipping"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "goal",
+      "name": "t:sections.addons.cart_goal.blocks.goal.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__1.content",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.header__1.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__2.content",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.header__2.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__3.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_1",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_1",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__4.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_2",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_2",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__5.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_3",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_3",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__6.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_4",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_4",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__7.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_5",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_5",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__8.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_6",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_6",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__9.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_7",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_7",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__10.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_8",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_8",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__11.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_9",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_9",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.addons.cart_goal.blocks.goal.settings.header__12.content"
+        },
+        {
+          "type": "text",
+          "id": "goal_region_10",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.label",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_region.info"
+        },
+        {
+          "type": "text",
+          "id": "goal_amount_10",
+          "label": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.label",
+          "default": "70",
+          "info": "t:sections.addons.cart_goal.blocks.goal.settings.goal_amount.info"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

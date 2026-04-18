@@ -1,0 +1,467 @@
+{%- liquid
+  assign show_floating_bar_on_desktop = section.settings.show_floating_bar_on_desktop
+  assign show_floating_bar_on_mobile = section.settings.show_floating_bar_on_mobile
+  assign floating_bar_position = section.settings.floating_bar_position
+  assign floating_bar_text = 'add-ons.newsletter_popup.floating_bar_text' | t
+  assign floating_bar_icon = section.settings.floating_bar_icon
+
+  assign overlay_image = section.settings.overlay_image
+  assign width = section.settings.width
+  assign image = section.settings.image
+  assign image_position = section.settings.image_position
+  assign image_as_background = section.settings.image_as_background
+  assign heading = 'add-ons.newsletter_popup.popup_title' | t
+  assign text = 'add-ons.newsletter_popup.popup_text' | t
+  assign close_text = 'add-ons.newsletter_popup.popup_close_text' | t
+  assign icon = section.settings.icon
+  assign enable_time_trigger = section.settings.enable_time_trigger
+  assign time_trigger_timeout = section.settings.time_trigger_timeout
+  assign enable_exit_intent = section.settings.enable_exit_intent
+  assign enable_scroll_depth_trigger = section.settings.enable_scroll_depth_trigger
+  assign scroll_depth_percentage = section.settings.scroll_depth_percentage
+  assign heading_success = 'add-ons.newsletter_popup.popup_title_success' | t
+  assign text_success = 'add-ons.newsletter_popup.popup_text_success' | t
+  assign reward_button = 'add-ons.newsletter_popup.popup_reward_button' | t
+
+  assign customer_tag = section.settings.customer_tag
+  assign discount_name = section.settings.discount_name
+  assign discount_amount = section.settings.discount_amount
+  assign discount_type = section.settings.discount_type
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_floating_bar_on_mobile, show_on_desktop: show_floating_bar_on_desktop
+  endcapture
+
+  assign form_classes = ''
+
+  if settings.newsletter_app == 'omnisend'
+    assign form_classes = form_classes | append: 'omnisend-subscribe-form no-loading-state'
+  endif
+
+  if settings.newsletter_app == 'klaviyo'
+    assign customer_tag_list = customer_tag | split: ','
+    assign is_tag_present = false
+
+    for tag in customer_tag_list
+      assign current_tag = tag | lstrip | rstrip | downcase
+
+      if current_tag == 'newsletter'
+        assign is_tag_present = true
+        break
+      endif
+    else
+      assign customer_tag = customer_tag | prepend: 'newsletter'
+      assign is_tag_present = true
+    endfor
+
+    unless is_tag_present
+      assign customer_tag = customer_tag | prepend: 'newsletter, '
+    endunless
+  endif
+-%}
+
+{%- capture section_settings -%}
+  {
+    "enableTimeTrigger": {{ enable_time_trigger | json }},
+    "timeTriggerTimeout": {{ time_trigger_timeout | times: 1000 | json }},
+    "enableExitIntentTrigger": {{ enable_exit_intent | json }},
+    "enableScrollDepthTrigger": {{ enable_scroll_depth_trigger | json }},
+    "scrollDepthPercentage": {{ scroll_depth_percentage | json }},
+    "discountName": {{ discount_name | json }},
+    "discountAmount": {{ discount_amount | json }},
+    "discountType": {{ discount_type | json }}
+  }
+{%- endcapture -%}
+
+<div class="dbtfy-newsletter-popup" data-section-settings='{{ section_settings }}'>
+  <div id="newsletter-popup" class="dbtfy-newsletter-popup__modal modal modal--{{ width }} stacked-on-top-of-content" role="dialog">
+    <div class="modal__dialog">
+      <div class="modal__content overlay-content" aria-hidden="true" tabindex="-1">
+        <div class="dbtfy-newsletter-popup__rows row row-md--sm {% unless image_as_background %}{% if image != blank %} row--no-spacing{% endif %}{% endunless %}{% if image_as_background and image != blank %} overlay{% endif %}">
+          {%- liquid
+            if image == blank or width == 'sm' or image_as_background
+              assign image_width = 'col-12'
+              assign content_width = 'col-12'
+            else
+              assign image_width = 'col-lg-4'
+              assign content_width = 'col-lg-8'
+            endif
+          -%}
+
+          {%- unless image_as_background -%}
+            {%- if image != blank -%}
+              <div class="{{ image_width }}">
+                {%- capture sizes -%}(max-width: 768px) 100vw, 300px{% endcapture %}
+
+                <div class="media-wrapper media-wrapper--cover media-wrapper--{{ image_position }} dbtfy-newsletter-popup__image">
+                  {{- image | image_url: width: 300 | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+                </div>
+              </div>
+            {%- endif -%}
+          {%- endunless -%}
+
+          <div class="{{ content_width }}">
+            <div class="section">
+              <div class="container">
+                <div class="dbtfy-newsletter-popup__content d-flex align-items-center justify-content-center text-center{% if image_as_background %} media-wrapper__content{% endif %}">
+                  {%- form 'customer', class: form_classes, id: 'newsletter-popup-form' -%}
+                    {%- if form.posted_successfully? -%}
+                      <div class="dbtfy-newsletter-popup__form-success">
+                        <div class="dbtfy-newsletter-popup__text rte mb-3">
+                          {%- if heading_success != blank -%}
+                            <h3>{{ heading_success }}</h3>
+                          {%- endif -%}
+
+                          {%- if text_success != blank -%}
+                            <p>{{ text_success }}</p>
+                          {%- endif -%}
+                        </div>
+
+                        {%- if discount_name != blank -%}
+                          <div class="copy-box" tabindex="0">
+                            {{ discount_name }}
+                          </div>
+                        {%- endif -%}
+
+                        {%- if reward_button != blank -%}
+                          <button type="button" class="btn btn--primary w-100 w-md-auto dbtfy-newsletter-popup__reward mt-3" data-modal-close="#newsletter-popup">
+                            <span class="btn__text">
+                              {{ reward_button }}
+                            </span>
+                          </button>
+                        {%- endif -%}
+                      </div>
+                    {%- else -%}
+                      <div class="dbtfy-newsletter-popup__text rte mb-3">
+                        {%- if heading != blank -%}
+                          <h3>{{ heading }}</h3>
+                        {%- endif -%}
+
+                        {%- if text != blank -%}
+                          <p>{{ text }}</p>
+                        {%- endif -%}
+                      </div>
+
+                      {{ form.errors | default_errors }}
+
+                      {%- if customer_tag != blank -%}
+                        <input type="hidden" name="contact[tags]" value="{{ customer_tag }}">
+                      {%- endif -%}
+
+                      <div>
+                        <div class="input-group">
+                          <input id="newsletter-popup-input"
+                                 type="email"
+                                 placeholder="{{ 'general.newsletter_form.newsletter_placeholder' | t }}"
+                                 name="contact[email]"
+                                 pattern="^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
+                                 class="input-group__field dbtfy-newsletter-popup__input{% if settings.newsletter_app == 'omnisend' %} omnisend-subscribe-input-email{% endif %}"
+                                 value="{%- if form.email -%}{{ form.email }}{%- elsif customer -%}{{ customer.email }}{%- endif -%}"
+                                 required="required"
+                                 autocorrect="off"
+                                 autocapitalize="off">
+
+                          <button type="submit" class="btn btn--square btn--primary input-group__btn newsletter__submit" name="commit" id="Subscribe">
+                            <span class="btn__text">
+                              <span class="{{ settings.icon }}" translate="no">{{ icon }}</span>
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {%- if close_text != blank -%}
+                        <button type="button" class="text-link mt-3" data-modal-close="#newsletter-popup">
+                          <small>{{ close_text }}</small>
+                        </button>
+                      {%- endif -%}
+                    {%- endif -%}
+                  {% endform %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {%- if image_as_background and image != blank -%}
+          {%- capture sizes -%}(max-width: 768px) 100vw, 300px{% endcapture %}
+
+          <div class="media-wrapper media-wrapper--cover media-wrapper--{{ image_position }} dbtfy-newsletter-popup__image">
+            {{- image | image_url: width: 300 | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-backdrop overlay-modal">
+    {%- if overlay_image != blank -%}
+      {%- capture sizes -%}100vw{% endcapture %}
+
+      <div class="media-wrapper media-wrapper--cover media-wrapper--center-center media-wrapper--overlay-backdrop h-100 w-100">
+        {{- overlay_image | image_url: width: overlay_image.width | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- if show_floating_bar_on_desktop or show_floating_bar_on_mobile -%}
+    {%- if floating_bar_text != blank -%}
+      <div class="dbtfy-newsletter-popup__floating-bar-wrapper {{ visibility_class }}">
+        <div class="dbtfy-newsletter-popup__floating-bar dbtfy-newsletter-popup__floating-bar--{{ floating_bar_position }} stacked-on-top-of-content">
+          <div class="dbtfy-newsletter-popup__floating-bar-button btn">
+            <span>{{ floating_bar_text }}</span>
+
+            {%- if floating_bar_icon != blank -%}
+              <span class="{{ settings.icon }}" translate="no">{{ floating_bar_icon }}</span>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.newsletter_popup.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.newsletter_popup.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.newsletter_popup.settings.header__1.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_floating_bar_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_floating_bar_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "floating_bar_position",
+      "label": "t:sections.addons.newsletter_popup.settings.floating_bar_position.label",
+      "default": "right",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:sections.addons.newsletter_popup.settings.floating_bar_position.options__1.label"
+        },
+        {
+          "value": "right",
+          "label": "t:sections.addons.newsletter_popup.settings.floating_bar_position.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "floating_bar_icon",
+      "label": "t:general.settings.icon.label",
+      "default": "arrow_drop_up",
+      "info": "t:general.settings.icon.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.newsletter_popup.settings.header__2.content"
+    },
+    {
+      "type": "image_picker",
+      "id": "overlay_image",
+      "label": "t:sections.addons.newsletter_popup.settings.overlay_image.label"
+    },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "t:sections.addons.newsletter_popup.settings.width.label",
+      "default": "md",
+      "options": [
+        {
+          "label": "t:sections.addons.newsletter_popup.settings.width.options__1.label",
+          "value": "sm"
+        },
+        {
+          "label": "t:sections.addons.newsletter_popup.settings.width.options__2.label",
+          "value": "md"
+        },
+        {
+          "label": "t:sections.addons.newsletter_popup.settings.width.options__3.label",
+          "value": "lg"
+        }
+      ]
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:general.settings.image.label"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "t:sections.addons.newsletter_popup.settings.image_position.label",
+      "default": "center-center",
+      "options": [
+        {
+          "label": "t:general.settings.position.options__1.label",
+          "value": "top-left"
+        },
+        {
+          "label": "t:general.settings.position.options__2.label",
+          "value": "top-center"
+        },
+        {
+          "label": "t:general.settings.position.options__3.label",
+          "value": "top-right"
+        },
+        {
+          "label": "t:general.settings.position.options__4.label",
+          "value": "center-left"
+        },
+        {
+          "label": "t:general.settings.position.options__5.label",
+          "value": "center-center"
+        },
+        {
+          "label": "t:general.settings.position.options__6.label",
+          "value": "center-right"
+        },
+        {
+          "label": "t:general.settings.position.options__7.label",
+          "value": "bottom-left"
+        },
+        {
+          "label": "t:general.settings.position.options__8.label",
+          "value": "bottom-center"
+        },
+        {
+          "label": "t:general.settings.position.options__9.label",
+          "value": "bottom-right"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "image_as_background",
+      "label": "t:sections.addons.newsletter_popup.settings.image_as_background.label",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "icon",
+      "label": "t:general.settings.icon.label",
+      "default": "mail",
+      "info": "t:general.settings.icon.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.newsletter_popup.settings.header__3.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_time_trigger",
+      "label": "t:sections.addons.newsletter_popup.settings.enable_time_trigger.label",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "time_trigger_timeout",
+      "label": "t:sections.addons.newsletter_popup.settings.time_trigger_timeout.label",
+      "min": 5,
+      "max": 60,
+      "step": 1,
+      "default": 15,
+      "unit": "s",
+      "info": "t:sections.addons.newsletter_popup.settings.time_trigger_timeout.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_exit_intent",
+      "label": "t:sections.addons.newsletter_popup.settings.enable_exit_intent.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_scroll_depth_trigger",
+      "label": "t:sections.addons.newsletter_popup.settings.enable_scroll_depth_trigger.label",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "scroll_depth_percentage",
+      "label": "t:sections.addons.newsletter_popup.settings.scroll_depth_percentage.label",
+      "min": 5,
+      "max": 60,
+      "step": 1,
+      "default": 15,
+      "unit": "%",
+      "info": "t:sections.addons.newsletter_popup.settings.scroll_depth_percentage.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.newsletter_popup.settings.header__4.content"
+    },
+    {
+      "type": "text",
+      "id": "customer_tag",
+      "label": "t:sections.addons.newsletter_popup.settings.customer_tag.label",
+      "default": "newsletter",
+      "info": "t:sections.addons.newsletter_popup.settings.customer_tag.info"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.addons.newsletter_popup.settings.paragraph__1.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.discount.header.content",
+      "info": "t:general.settings.discount.header.info"
+    },
+    {
+      "type": "text",
+      "id": "discount_name",
+      "label": "t:general.settings.discount.name.label",
+      "placeholder": "20OFF"
+    },
+    {
+      "type": "text",
+      "id": "discount_amount",
+      "label": "t:general.settings.discount.amount.label",
+      "placeholder": "20"
+    },
+    {
+      "type": "select",
+      "id": "discount_type",
+      "label": "t:general.settings.discount.type.label",
+      "default": "%",
+      "options": [
+        {
+          "value": "%",
+          "label": "t:general.settings.discount.type.options__1.label"
+        },
+        {
+          "value": "$",
+          "label": "t:general.settings.discount.type.options__2.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

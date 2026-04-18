@@ -1,0 +1,223 @@
+{%- liquid
+  assign icon = section.settings.icon
+  assign button_label = section.settings.button_label
+  assign popup_size = section.settings.popup_size
+-%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="dbtfy-size-chart" hidden>
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign heading = block.settings.title
+        assign page_content = block.settings.page_content
+        assign visibility = block.settings.visibility
+        assign collection = block.settings.collection
+        assign types = block.settings.types
+        assign tags = block.settings.tags
+        assign product = block.settings.product
+      -%}
+
+      {%- capture block_settings -%}
+        {
+          "visibility": {{ visibility | json }},
+          "collection": {{ collection | json }},
+          "types": {{ types | json }},
+          "tags": {{ tags | json }},
+          "productId": {{ product.id | json }}
+        }
+      {%- endcapture -%}
+
+      {%- if button_label != blank and heading != blank and page_content != blank -%}
+        <div class="dbtfy-size-chart-guide" data-block-settings='{{ block_settings }}' {{ block.shopify_attributes }}>
+          <button type="button" class="dbtfy-size-chart-guide__button" data-modal-open="#size-chart-{{ block.id }}">
+            {%- if icon != blank -%}
+              <span class="{{ settings.icon }} icon" translate="no">{{ icon }}</span>
+            {% endif %}
+
+            {{ button_label }}
+          </button>
+
+          <div class="dbtfy-size-chart-guide__modal">
+            <div id="size-chart-{{ block.id }}"
+                 class="modal modal--{{ popup_size }} stacked-on-top-of-content"
+                 role="dialog">
+
+              <div class="modal__dialog container">
+                <div class="modal__content overlay-content" aria-hidden="true" tabindex="-1">
+                  {%- if heading != blank -%}
+                    <div class="modal__header">
+                      <h5 class="h5 modal__title">
+                        {%- if icon != blank -%}
+                          <span class="{{ settings.icon }} icon" translate="no">{{ icon }}</span>
+                        {% endif %}
+
+                        {{ heading }}
+                      </h5>
+
+                      <button type="button"
+                              class="modal__close btn btn--square-sm"
+                              title="{{ 'general.password_page.close' | t }}"
+                              aria-label="{{ 'general.password_page.close' | t }}"
+                              data-modal-close="#size-chart-{{ block.id }}">
+                        <span class="{{ settings.icon }}" translate="no">close</span>
+                      </button>
+                    </div>
+                  {%- endif -%}
+
+                  <div class="modal__body rte">
+                    {{ page_content.content }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="overlay-modal overlay-backdrop"></div>
+          </div>
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.size_chart.name",
+  "class": "dbtfy-size-chart",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.size_chart.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "text",
+      "id": "icon",
+      "label": "t:general.settings.icon.label",
+      "info": "t:general.settings.icon.info",
+      "default": "straighten"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:general.settings.button_label.label",
+      "default": "Size chart"
+    },
+    {
+      "type": "select",
+      "id": "popup_size",
+      "label": "t:sections.addons.size_chart.settings.popup_size.label",
+      "default": "lg",
+      "options": [
+        {
+          "value": "sm",
+          "label": "t:sections.addons.size_chart.settings.popup_size.options__1.label"
+        },
+        {
+          "value": "md",
+          "label": "t:sections.addons.size_chart.settings.popup_size.options__2.label"
+        },
+        {
+          "value": "lg",
+          "label": "t:sections.addons.size_chart.settings.popup_size.options__3.label"
+        },
+        {
+          "value": "xl",
+          "label": "t:sections.addons.size_chart.settings.popup_size.options__4.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "size_guide",
+      "name": "t:sections.addons.size_chart.blocks.size_guide.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.settings.heading.label",
+          "default": "Title"
+        },
+        {
+          "type": "page",
+          "id": "page_content",
+          "label": "t:sections.addons.size_chart.blocks.size_guide.settings.page_content.label"
+        },
+        {
+          "type": "header",
+          "content": "t:general.settings.visibility.header.content",
+          "info": "t:general.settings.visibility.header.info"
+        },
+        {
+          "type": "radio",
+          "id": "visibility",
+          "label": "t:general.settings.visibility.visibility.label",
+          "info": "t:general.settings.visibility.visibility.info",
+          "default": "all",
+          "options": [
+            {
+              "value": "all",
+              "label": "t:general.settings.visibility.visibility.options__1.label"
+            },
+            {
+              "value": "collection",
+              "label": "t:general.settings.visibility.visibility.options__2.label"
+            },
+            {
+              "value": "type",
+              "label": "t:general.settings.visibility.visibility.options__3.label"
+            },
+            {
+              "value": "tag",
+              "label": "t:general.settings.visibility.visibility.options__4.label"
+            },
+            {
+              "value": "product",
+              "label": "t:general.settings.visibility.visibility.options__5.label"
+            }
+          ]
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.settings.visibility.collection.label"
+        },
+        {
+          "type": "text",
+          "id": "types",
+          "label": "t:general.settings.visibility.types.label",
+          "info": "t:general.settings.visibility.types.info"
+        },
+        {
+          "type": "text",
+          "id": "tags",
+          "label": "t:general.settings.visibility.tags.label",
+          "info": "t:general.settings.visibility.tags.info"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:general.settings.visibility.product.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

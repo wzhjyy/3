@@ -1,0 +1,299 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign heading = section.settings.heading
+  assign subheading = section.settings.subheading
+  assign show_instagram_icon = section.settings.show_instagram_icon
+  assign access_token = section.settings.access_token
+  assign rows = section.settings.rows
+  assign images_per_row_desktop = section.settings.images_per_row_desktop
+  assign images_per_row_mobile = section.settings.images_per_row_mobile
+  
+  assign limit = rows | times: images_per_row_desktop
+  assign limit_on_mobile = rows | times: images_per_row_mobile
+
+  if heading == blank and subheading == blank and show_instagram_icon == false
+    assign no_header = true
+  endif
+
+  assign grid_column_mobile_class = 'dbtfy-instagram-feed__column--mobile-' | append: images_per_row_mobile
+  assign grid_column_desktop_class = 'dbtfy-instagram-feed__column--desktop-' | append: images_per_row_desktop
+
+  assign meta_title = 'layout.footer.social_platform' | t: name: shop.name, platform: 'Instagram'
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+-%}
+
+<style>
+  @media screen and (max-width: 768px) {
+    .dbtfy-instagram-feed[data-section-id='{{ section.id }}'] .dbtfy-instagram-feed__container .dbtfy-instagram-feed__column:nth-child({{ limit_on_mobile }}) ~ * {
+      display: none;
+    }
+  }
+</style>
+
+{%- capture template -%}
+  <div class="dbtfy-instagram-feed__column {{ grid_column_desktop_class }} {{ grid_column_mobile_class }}">
+    <a href="{% raw %}{{link}}{% endraw %}" target="_blank" class="media-wrapper media-wrapper--cover d-block hover-none" title="{{ meta_title }}" style="padding-bottom: 100%">
+      <img class="media d-block" loading="lazy" src="{% raw %}{{image}}{% endraw %}"/>
+
+      <div class="overlay">
+        <div class="media-wrapper__content p-3 text-center icon icon--lg icon--svg">
+          {%- render 'icon', icon: 'instagram' -%}
+        </div>
+      </div>
+    </a>
+  </div>
+{%- endcapture -%}
+
+{%- capture section_settings -%}
+  {
+    "accessToken": {{ access_token | json }},
+    "limit": {{ limit | json }},
+    "template": {{ template | json }}
+  }
+{%- endcapture -%}
+
+<div class="dbtfy-instagram-feed section section--{{ section_style }} {{ visibility_class }}"
+     data-section-settings='{{ section_settings }}'
+     data-section-id="{{ section.id }}">
+
+  <div class="{{ container_size }}">
+    {%- unless no_header -%}
+      <div class="row mb-4">
+        <div class="col-md-8 offset-md-2">
+          <div class="row gy-3 text-center">
+            {%- if show_instagram_icon -%}
+              <div>
+                <a class="icon icon--lg icon--svg text-secondary" target="_blank" href="{{ settings.social_instagram_link }}" title="{{ meta_title }}">
+                  {%- render 'icon', icon: 'instagram' -%}
+                </a>
+              </div>
+            {%- endif -%}
+
+            {%- if heading != blank -%}
+              <div>
+                <h2 class="h2">{{ heading | escape }}</h2>
+              </div>
+            {%- endif -%}
+
+            {%- if subheading != blank -%}
+              <p class="sm:text-lg text-break-all">{{ subheading | escape }}</p>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    {%- endunless -%}
+
+    {%- if access_token != blank -%}
+      <div class="row row-md--md gy-3 gy-md-4 dbtfy-instagram-feed__container"></div>
+    {%- else -%}
+      <div class="row row-md--md gy-3 gy-md-4">
+        {%- for i in (1..limit) -%}
+          <div class="dbtfy-instagram-feed__column {{ grid_column_desktop_class }} {{ grid_column_mobile_class }}{% if forloop.index > limit_on_mobile %} d-none d-md-block{% endif %}">
+            {%- capture current -%}{%- cycle 1, 2, 3, 4, 5, 6 -%}{%- endcapture -%}
+
+            {{ 'collection-' | append: current | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.addons.instagram_feed.name",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.instagram_feed.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "From our Instagram"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:general.settings.subheading.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.instagram_feed.settings.header__1.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_instagram_icon",
+      "label": "t:sections.addons.instagram_feed.settings.show_instagram_icon.label",
+      "info": "t:sections.addons.instagram_feed.settings.show_instagram_icon.info",
+      "default": true
+    },
+    {
+      "type": "textarea",
+      "id": "access_token",
+      "label": "t:sections.addons.instagram_feed.settings.access_token.label",
+      "info": "t:sections.addons.instagram_feed.settings.access_token.info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.addons.instagram_feed.settings.header__2.content"
+    },
+    {
+      "type": "select",
+      "id": "rows",
+      "label": "t:sections.addons.instagram_feed.settings.rows.label",
+      "default": "1",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "images_per_row_desktop",
+      "label": "t:sections.addons.instagram_feed.settings.images_per_row_desktop.label",
+      "default": "6",
+      "options": [
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        },
+        {
+          "value": "5",
+          "label": "5"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        },
+        {
+          "value": "8",
+          "label": "8"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "images_per_row_mobile",
+      "label": "t:sections.addons.instagram_feed.settings.images_per_row_mobile.label",
+      "default": "3",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.addons.instagram_feed.presets.name",
+      "category": "t:sections.addons.instagram_feed.presets.category"
+    }
+  ]
+}
+{% endschema %}

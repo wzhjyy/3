@@ -1,0 +1,131 @@
+{%- if template.name != 'cart' and cart.item_count > 0 -%}
+  {%- liquid
+    assign show_on_desktop = section.settings.show_on_desktop
+    assign show_on_mobile = section.settings.show_on_mobile
+    assign display_time = section.settings.display_time | times: 1000
+    assign interval_time = section.settings.interval_time | times: 1000
+    assign position = section.settings.position
+    assign button_style = section.settings.button_style
+    assign text = 'add-ons.cart_reminder.text' | t
+    assign button_label = 'add-ons.cart_reminder.button_label' | t
+
+    capture visibility_class
+      render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+    endcapture
+  -%}
+
+  <div class="dbtfy-cart-reminder dbtfy-cart-reminder--{{ position }} {{ visibility_class }}">
+    <div class="dbtfy-cart-reminder__container">
+      {%- render 'notification-toast',
+          toast_text: text,
+          button_style: button_style,
+          toast_button_label: button_label,
+          has_toast_image: true,
+          button_below_text: true,
+          position: position,
+          display_time: display_time,
+          interval_time: interval_time
+      -%}
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.addons.cart_reminder.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.addons.help_center.header.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.cart_reminder.content"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:general.addons.help_center.enable_disable.content"
+    },
+    {
+      "type": "header",
+      "content": "t:general.addons.settings.header.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "display_time",
+      "label": "t:sections.addons.cart_reminder.settings.display_time.label",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "default": 7,
+      "unit": "s"
+    },
+    {
+      "type": "range",
+      "id": "interval_time",
+      "label": "t:sections.addons.cart_reminder.settings.interval_time.label",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "default": 10,
+      "unit": "s"
+    },
+    {
+      "type": "select",
+      "id": "position",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:sections.addons.cart_reminder.settings.position.options__1.label"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.addons.cart_reminder.settings.position.options__2.label"
+        },
+        {
+          "value": "right",
+          "label": "t:sections.addons.cart_reminder.settings.position.options__3.label"
+        }
+      ],
+      "label": "t:sections.addons.cart_reminder.settings.position.label"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:general.settings.button_style.label",
+      "default": "btn--primary",
+      "options": [
+        {
+          "value": "",
+          "label": "t:general.settings.button_style.options__1.label"
+        },
+        {
+          "value": "btn--primary",
+          "label": "t:general.settings.button_style.options__2.label"
+        },
+        {
+          "value": "btn--outline-primary",
+          "label": "t:general.settings.button_style.options__3.label"
+        },
+        {
+          "value": "text-link",
+          "label": "t:general.settings.button_style.options__4.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

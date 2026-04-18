@@ -1,0 +1,168 @@
+{%- if predictive_search.performed -%}
+  {%- liquid
+    assign products_text = 'add-ons.smart_search.products_text' | t
+    assign collections_text = 'add-ons.smart_search.collections_text' | t
+    assign articles_text = 'add-ons.smart_search.articles_text' | t
+    assign pages_text = 'add-ons.smart_search.pages_text' | t
+    assign all_results_text = 'add-ons.smart_search.all_results_text' | t
+  -%}
+
+  {%- if predictive_search.resources.products.size > 0 -%}
+    {%- liquid
+      assign show_price = settings.dbtfy_smart_search_show_product_price
+      assign show_vendor = settings.dbtfy_smart_search_show_product_vendor
+      assign products_to_show_count = 0
+
+      for product in predictive_search.resources.products
+        assign products_to_show_count = products_to_show_count | plus: 1
+      endfor
+    -%}
+
+    {%- if products_to_show_count > 0 -%}
+      <div class="dbtfy-smart-search__section">
+        <div class="dbtfy-smart-search__section-title sticky text-accent">
+          {{ products_text }}
+        </div>
+
+        <div class="dbtfy-smart-search__content">
+          {%- for product in predictive_search.resources.products -%}
+            <div class="dbtfy-smart-search__item">
+              <a href="{{ product.url }}">
+                {%- assign image = product.media.first.preview_image -%}
+                {%- capture sizes -%}150px{% endcapture %}
+
+                <div class="dbtfy-smart-search__thumbnail-wrapper">
+                  <div class="dbtfy-smart-search__thumbnail media-wrapper w-100">
+                    {%- if image != blank -%}
+                      {{- image | image_url: width: 100 | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300' -}}
+                    {%- else -%}
+                      {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                    {%- endif -%}
+                  </div>
+                </div>
+
+                <div class="dbtfy-smart-search__info text-ellipsis">
+                  <span class="h6">{{ product.title }}</span>
+
+                  {%- if show_price -%}
+                    {%- if product.compare_at_price > product.price -%}
+                      <span class="dbtfy-smart-search__price-container text-sm text-accent">
+                        <span class="text-sale">
+                          <span class="money">{{ product.price | money }}</span>
+                        </span>
+
+                        <span class="dbtfy-smart-search__price text-strike text-muted">
+                          <span class="money">{{ product.compare_at_price | money }}</span>
+                        </span>
+                      </span>
+                    {%- else -%}
+                      <span class="dbtfy-smart-search__price-container dbtfy-smart-search__price text-sm text-accent">
+                        <span class="money">{{ product.price | money }}</span>
+                      </span>
+                    {%- endif -%}
+                  {%- endif -%}
+
+                  {%- if show_vendor and product.vendor != blank -%}
+                    <span class="dbtfy-smart-search__vendor text-sm text-muted text-italic">{{ product.vendor }}</span>
+                  {%- endif -%}
+                </div>
+              </a>
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- if predictive_search.resources.collections.size > 0 -%}
+    <div class="dbtfy-smart-search__section">
+      <div class="dbtfy-smart-search__section-title sticky text-accent">
+        {{ collections_text }}
+      </div>
+
+      <div class="dbtfy-smart-search__content">
+        {%- for collection in predictive_search.resources.collections -%}
+          <div class="dbtfy-smart-search__item">
+            <a href="{{ collection.url }}">
+              {%- assign image = collection.image -%}
+              {%- capture sizes -%}150px{% endcapture %}
+
+              <div class="dbtfy-smart-search__thumbnail-wrapper">
+                <div class="dbtfy-smart-search__thumbnail media-wrapper w-100">
+                  {%- if image != blank -%}
+                    {{- image | image_url: width: 100 | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300' -}}
+                  {%- else -%}
+                    {{ 'collection-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                  {%- endif -%}
+                </div>
+              </div>
+
+              <span class="dbtfy-smart-search__info text-ellipsis">
+                <span class="h6">{{ collection.title }}</span>
+              </span>
+            </a>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- endif -%}
+
+  {%- if predictive_search.resources.articles.size > 0 -%}
+    <div class="dbtfy-smart-search__section">
+      <div class="dbtfy-smart-search__section-title sticky text-accent">
+        {{ articles_text }}
+      </div>
+
+      <div class="dbtfy-smart-search__content">
+        {%- for article in predictive_search.resources.articles -%}
+          <div class="dbtfy-smart-search__item">
+            <a href="{{ article.url }}">
+              {%- assign image = article.image -%}
+              {%- capture sizes -%}150px{% endcapture %}
+
+              <div class="dbtfy-smart-search__thumbnail-wrapper">
+                <div class="dbtfy-smart-search__thumbnail media-wrapper w-100">
+                  {%- if image != blank -%}
+                    {{- image | image_url: width: 100 | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300' -}}
+                  {%- else -%}
+                    {{ 'collection-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                  {%- endif -%}
+                </div>
+              </div>
+
+              <span class="dbtfy-smart-search__info text-ellipsis">
+                <span class="h6">{{ article.title }}</span>
+              </span>
+            </a>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- endif -%}
+
+  {%- if predictive_search.resources.pages.size > 0 -%}
+    <div class="dbtfy-smart-search__section">
+      <div class="dbtfy-smart-search__section-title sticky text-accent">
+        {{ pages_text }}
+      </div>
+
+      <div class="dbtfy-smart-search__content">
+        {%- for page in predictive_search.resources.pages -%}
+          <div class="dbtfy-smart-search__item">
+            <a href="{{ page.url }}">
+              <span class="dbtfy-smart-search__info text-ellipsis">
+                <span class="h6">{{ page.title }}</span>
+              </span>
+            </a>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- endif -%}
+
+  <div>
+    <button type="submit" class="btn btn--banner" form="MainSearch" aria-label="{{ 'general.search.submit' | t }}" title="{{ 'general.search.submit' | t }}">
+      {{ all_results_text }} "{{ predictive_search.terms }}" <i class="{{ settings.icon }}" translate="no">keyboard_arrow_right</i>
+    </button>
+  </div>
+{%- endif -%}
