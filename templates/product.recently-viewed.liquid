@@ -1,0 +1,68 @@
+{%- liquid
+  layout none
+
+  assign product_link = product.url | within: collection
+-%}
+
+{%- capture content_for_query_string -%}{{ content_for_header }}{%- endcapture -%}
+
+{%- assign page_url = content_for_query_string |
+    split: '"pageurl":"' |
+    last | split: '"' |
+    first |
+    split: '.myshopify.com' |
+    last |
+    replace: '\/', '/' |
+    replace: '%20', ' ' |
+    replace: '\u0026', '&'
+-%}
+
+
+{%- liquid
+  for i in (1..1)
+    unless page_url contains '?'
+      break
+    endunless
+
+    assign page_query_string = page_url | split: '?' | last
+    assign parts = page_query_string | split: '&'
+
+    for part in parts
+      assign key_and_value = part | split: '='
+  
+      if key_and_value.size > 1 and key_and_value[0] == 'desktopGrid'
+        assign desktop_grid = key_and_value[1]
+      endif
+  
+      if key_and_value.size > 1 and key_and_value[0] == 'mobileGrid'
+        assign mobile_grid = key_and_value[1]
+      endif
+    endfor
+  endfor
+-%}
+
+<div>
+  <div class="dbtfy-recently-viewed-bar-product">
+    {%- assign media = product.media.first -%}
+
+    {%- if media != blank -%}
+      <a href="{{ product_link }}" class="d-block">
+        <div class="media-wrapper media-wrapper--product media-wrapper--no-background" style="padding-top: {{ 1 | divided_by: media.aspect_ratio | times: 100 }}%;">
+          {%- capture sizes -%}80px{% endcapture %}
+
+          {{- media | image_url: width: 80 | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+        </div>
+      </a>
+    {%- endif -%}
+  </div>
+
+  <div class="dbtfy-recently-viewed-product">
+    {%- liquid
+      capture block_width
+        render 'section-block-width', desktop_grid: desktop_grid, mobile_grid: mobile_grid, type: 'product'
+      endcapture
+
+      render 'product-grid-item', product: product, block_width: block_width, current: 1, products_per_row_desktop: desktop_grid, products_per_row_mobile: mobile_grid, images_loading_type: 'lazy'
+    -%}
+  </div>
+</div>

@@ -1,0 +1,21 @@
+{%- layout none -%}
+
+{%- liquid
+  capture product_collections
+    for collection in product.collections
+      echo collection.handle
+
+      unless forloop.last
+        echo ','
+      endunless
+    endfor
+  endcapture
+-%}
+
+<div id="WishlistItem-{{ product.handle }}"
+     class="dbtfy-wish-list product-item product-item--list"
+     data-product-id="{{ product.id }}"
+     data-product-collections="{{ product_collections }}">
+
+  {%- render 'product-list-item', product: product, visible: true, add_remove_button: true -%}
+</div>

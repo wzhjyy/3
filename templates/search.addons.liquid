@@ -1,0 +1,45 @@
+{%- liquid
+  layout none
+
+  assign addons_to_load = ''
+-%}
+
+{%- capture content_for_query_string -%}{{ content_for_header }}{%- endcapture -%}
+
+{%- assign page_url = content_for_query_string |
+    split: '"pageurl":"' |
+    last | split: '"' |
+    first |
+    split: '.myshopify.com' |
+    last |
+    replace: '\/', '/' |
+    replace: '%20', ' ' |
+    replace: '\u0026', '&'
+-%}
+
+{%- liquid
+  for i in (1..1)
+    unless page_url contains '?'
+      break
+    endunless
+  
+    assign page_query_string = page_url | split: '?' | last
+    assign parts = page_query_string | split: '&'
+  
+    for part in parts
+      assign key_and_value = part | split: '='
+  
+      if key_and_value.size > 1 and key_and_value[0] == 'addons'
+        assign addons_to_load = key_and_value[1]
+      endif
+    endfor
+  endfor
+  
+  assign addons_to_load = addons_to_load | split: '--'
+-%}
+
+{%- for addon in addons_to_load -%}
+  {%- assign add_script_url = addon | append: '.min.js' -%}
+
+  <script src="{{ add_script_url | asset_url }}" data-addon="{{ addon }}" defer></script>
+{%- endfor -%}

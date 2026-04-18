@@ -1,0 +1,156 @@
+{%- liquid
+  comment
+    Template only used for AJAX reference
+  endcomment
+
+  layout none
+
+  assign current_variant = product.selected_or_first_available_variant
+
+  if product.available
+    assign is_sold_out = false
+  else
+    assign is_sold_out = true
+  endif
+
+  capture product_collections
+    for collection in product.collections
+      echo collection.handle
+
+      unless forloop.last
+        echo ','
+      endunless
+    endfor
+  endcapture
+-%}
+
+<table class="dbtfy-quick-compare__table-column">
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--images"
+      data-product-id="{{ product.id }}"
+      data-product-collections="{{ product_collections }}">
+
+    <div class="dbtfy-quick-compare__images-wrapper">
+      <div class="dbtfy-quick-compare__photos product">
+        <button class="dbtfy-quick-compare__item-remove-button btn btn--outline-primary btn--square-xs"
+                data-product-handle="{{ product.handle }}"
+                aria-label="{{ 'add-ons.quick_compare.remove_from_compare_text' | t }}"
+                title="{{ 'add-ons.quick_compare.remove_from_compare_text' | t }}">
+
+          <span class="btn__text">
+            <span class="{{ settings.icon }}" translate="no">delete_outline</span>
+          </span>
+        </button>
+
+        <div class="dbtfy-quick-compare__slider row row--sm product__media-group slick{% if product.media.size == 1 %} slick-disabled{% endif %}"
+             data-product-media-group>
+
+          {%- for media in product.media -%}
+            <div class="product__media-flex-wrapper dbtfy-quick-compare__image dbtfy-quick-compare__image--{{ media.id }}{% if media == current_variant.featured_image %} dbtfy-quick-compare__image--featured{% endif %}"
+                 data-product-media-flex-wrapper
+                 data-index="{{ forloop.index0 }}">
+
+              {%- render 'media',
+                  media: media,
+                  id: media.id,
+                  loop: true,
+                  images_loading_type: 'lazy',
+                  product: product,
+                  lazy_load: true,
+                  is_square: true
+              -%}
+            </div>
+          {%- else -%}
+            <div>
+              {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            </div>
+          {%- endfor -%}
+        </div>
+
+        <div class="row row--sm product__thumbnails dbtfy-quick-compare__thumbnails mt-3 slick{% if product.images.size < 6 %} slick-disabled{% endif %}"
+             data-product-thumbnails>
+
+          {%- for media in product.media -%}
+            <div class="col-3">
+              {%- liquid
+                capture thumbnail_alt
+                  if media.media_type == 'video' or media.media_type == 'external_video'
+                    echo 'products.product.video_thumbnail_alt' | t: imageAlt: media.alt | escape
+                  elsif media.media_type == 'model'
+                    echo 'products.product.model_thumbnail_alt' | t: imageAlt: media.alt | escape
+                  else
+                    echo 'products.product.gallery_thumbnail_alt' | t: imageAlt: media.alt | escape
+                  endif
+                endcapture
+              -%}
+
+              <a class="product__thumbnail media-wrapper media-wrapper--cover media-wrapper--product"
+                 aria-label="Click to see {{ forloop.index }} media"
+                 data-product-thumbnail
+                 data-media-id="{{ media.id }}"
+                 style="padding-top: 100%;">
+
+                {%- capture sizes -%}100px{% endcapture %}
+
+                {{- media | image_url: width: media.width | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300,400,500,600,700', class: 'media' | replace: 'src=', 'data-src=' | replace: 'srcset=', 'data-srcset=' -}}
+
+                {%- if media.media_type == 'video' or media.media_type == 'external_video' or media.media_type == 'model' -%}
+                  <div class="product__thumbnail-icon">
+                    {% render 'icon', icon: media.media_type %}
+                  </div>
+                {%- endif -%}
+              </a>
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+
+      {%- render 'dbtfy-collection-addtocart', product: product, sold_out: is_sold_out, is_primary: true -%}
+
+      <a href="{{ product.url }}" class="btn--add-to-cart dbtfy-quick-compare__atc-button btn btn--primary btn--sm btn--full js-add-to-cart-button">
+      <span class="btn__text">
+        <span class="{{ settings.icon }}" translate="no">{{ settings.icon_cart }}</span>
+
+        <span class="btn__add-to-cart-text">
+          {%- if current_variant.available -%}
+            {{ 'products.product.add_to_cart' | t }}
+          {%- else -%}
+            {{ 'products.product.sold_out' | t }}
+          {%- endif -%}
+        </span>
+      </span>
+      </a>
+    </div>
+  </td>
+
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--title">
+    <a href="{{ product.url }}" class="text-link">{{ product.title }}</a>
+  </td>
+
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--price">
+    <span class="money">{{ product.price | money }}</span>
+  </td>
+
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--type">{{ product.type }}</td>
+
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--vendor">{{ product.vendor }}</td>
+
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--collections">
+    {%- for collection in product.collections -%}
+      {{ collection.title }}{% unless forloop.last %}, {% endunless %}
+    {%- endfor -%}
+  </td>
+
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--tags">
+    {%- for tag in product.tags -%}
+      {{ tag }}{% unless forloop.last %}, {% endunless %}
+    {%- endfor -%}
+  </td>
+
+  <td class="dbtfy-quick-compare__table-column-cell dbtfy-quick-compare__table-column-cell--description">
+    {%- if product.description != blank -%}
+      <div class="js-product-description">{{ product.description | strip_html | split: '[split_description]' | first | truncate: 100 }}</div>
+    {%- endif -%}
+
+    <a href="{{ product.url }}" class="d-block text-link mt-2">{{ 'products.product.view_more' | t }}</a>
+  </td>
+</table>
