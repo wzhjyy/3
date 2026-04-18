@@ -1,0 +1,17 @@
+{%- liquid
+  assign label = 'add-ons.cart_savings.label' | t
+-%}
+
+<div class="dbtfy-cart-savings" hidden>
+  <div class="row row--sm flex-nowrap">
+    <div class="flex-fill overflow-hidden">
+      <p class="text-accent text-secondary text-ellipsis">{{ label }}</p>
+    </div>
+
+    <div class="col-auto text-end">
+      <p class="text-accent text-secondary text-ellipsis">
+        <span class="money dbtfy-cart-savings__value"></span>
+      </p>
+    </div>
+  </div>
+</div>

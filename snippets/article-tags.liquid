@@ -1,0 +1,16 @@
+{%- if article.tags.size > 0 -%}
+  <ul class="inline-list{% if wrap_reverse %} flex-wrap-reverse{% endif %}" role="list">
+    {%- unless hide_label -%}
+      <li role="listitem">
+        <span class="{{ settings.icon }}" translate="no">local_offer</span>
+        {{ 'blogs.article.tags' | t }}
+      </li>
+    {%- endunless -%}
+
+    {%- for tag in article.tags -%}
+      <li role="listitem">
+        <a class="btn btn--reveal-primary btn--xs" href="{{ blog.url }}/tagged/{{ tag | handle }}">{{ tag }}</a>
+      </li>
+    {%- endfor -%}
+  </ul>
+{%- endif -%}

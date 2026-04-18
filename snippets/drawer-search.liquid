@@ -1,0 +1,25 @@
+<div id="SearchDrawer" class="drawer drawer--top overlay-content" aria-hidden="true" tabindex="-1">
+  <div class="drawer__inner">
+    <predictive-search>
+      <form action="{{ routes.search_url }}" method="get" class="search-bar {{ input_type }}" role="search" id="MainSearch">
+        <div class="drawer__inner-section">
+          <div class="row row--sm row-cols-auto align-items-center flex-nowrap">
+            <div class="flex-fill">
+              {%- render 'search-bar', search_location: 'drawer', form_tag: false -%}
+            </div>
+
+            <div>
+              <button type="button" class="btn btn--square-sm js-drawer-close" aria-label="{{ 'general.drawers.close_menu' | t }}" title="{{ 'general.drawers.close_menu' | t }}">
+                <span class="{{ settings.icon }}" translate="no" aria-hidden="true">close</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      {%- render 'dbtfy-smart-search' -%}
+    </predictive-search>
+  </div>
+</div>
+
+<div class="overlay-backdrop overlay-drawer"></div>

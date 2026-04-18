@@ -1,0 +1,74 @@
+{%- liquid
+  if empty_state
+    assign title = 'home_page.onboarding.blog_title' | t
+    assign link = '/admin/articles'
+    assign content = 'home_page.onboarding.blog_excerpt' | t
+  else
+    assign title = article.title
+    assign link = article.url
+    assign content = article.excerpt_or_content
+  endif
+
+  assign images_loading_type = images_loading_type | default: 'lazy'
+  assign number_of_comments = article.comments_count
+
+  if comment and comment.created_at
+    assign number_of_comments = article.comments_count | plus: 1
+  endif
+-%}
+
+<article class="{{ width }}">
+  <div class="card card--placeholder-dark">
+    <a href="{{ link }}">
+      {%- if article.image != blank -%}
+        {%- liquid
+          assign height_ratio = 100 | divided_by: number_of_rows
+          assign width_ratio = 100.0 | divided_by: height_ratio
+          assign maximum_image_width = settings.page_container_width | divided_by: width_ratio
+        -%}
+
+        {%- capture sizes -%}(max-width: 768px) 100vw, min({{ maximum_image_width | ceil }}px, {{ height_ratio }}vw){% endcapture %}
+
+        <div class="card__image media-wrapper" style="padding-top: 100%;">
+          {{- article.image | image_url: width: article.image.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media media--video' -}}
+        </div>
+      {%- elsif empty_state -%}
+        {{ 'lifestyle-' | append: current | placeholder_svg_tag: 'card__image placeholder-svg' }}
+      {%- else -%}
+        {{ 'image' | append: current | placeholder_svg_tag: 'card__image placeholder-svg' }}
+      {%- endif -%}
+    </a>
+
+    <div class="card__body row gy-3">
+      <a href="{{ link }}" title="{{ 'blogs.article.read_more' | t }}" class="mb-auto">
+        <div class="row gy-3">
+          {%- if request.page_type == 'blog' -%}
+            <h3 class="h3">
+              {{ title }}
+            </h3>
+          {%- else -%}
+            <h2 class="h4">
+              {{ title }}
+            </h2>
+          {%- endif -%}
+
+          {%- if content != blank -%}
+            <p>
+              {{ content | strip_html | truncatewords: settings.article_grid_max_word_count }}
+            </p>
+          {%- endif -%}
+        </div>
+      </a>
+
+      {%- if settings.article_grid_show_tags -%}
+        {%- render 'article-tags', article: article, hide_label: true, wrap_reverse: true, blog: blog -%}
+      {%- endif -%}
+    </div>
+
+    <div class="card__footer text-sm text-italic text-break-all">
+      <a href="{{ link }}" title="{{ 'blogs.article.read_more' | t }}">
+        {%- render 'blog-meta', article: article, show_author: settings.article_grid_show_author, show_date: settings.article_grid_show_date, show_comments: settings.article_grid_show_comments, number_of_comments: number_of_comments, blog: blog, empty_state: empty_state -%}
+      </a>
+    </div>
+  </div>
+</article>

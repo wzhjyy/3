@@ -1,0 +1,60 @@
+{%- liquid
+  assign show_bubble = settings.dbtfy_wish_list_show_bubble
+  assign enable_bubble_animation = settings.dbtfy_wish_list_enable_bubble_animation
+  assign show_count = settings.dbtfy_wish_list_show_count
+  assign wishlist_page = settings.dbtfy_wish_list_page
+
+  assign add_to_wishlist_text = 'add-ons.wishlist.add_to_wishlist_text' | t
+  assign empty_wishlist_text = 'add-ons.wishlist.empty_wishlist_text' | t
+  assign share_wishlist_text = 'add-ons.wishlist.share_wishlist_text' | t
+-%}
+
+{%- if type == 'page' -%}
+  <div class="dbtfy-wish-list dbtfy-wish-list--page">
+    <div class="js-wishlist-no-items text-center hidden">
+      <p>{{ empty_wishlist_text }}</p>
+      <a href="{{ settings.continue_browsing_link }}" class="btn btn--primary mt-3">{{ 'cart.general.continue_browsing_html' | t }}</a>
+    </div>
+
+    {%- render 'social-sharing', share_label: share_wishlist_text, share_button: 'btn btn--square-xs', show_icon: true, show_label: true, classes: 'mb-3 justify-content-end js-wishlist-socials hidden' -%}
+
+    <div class="js-wishlist-template card-group"></div>
+  </div>
+{%- elsif type == 'menu' -%}
+  <li class="header-menu__item {{ class }}">
+    {%- assign wishlist_page = pages[wishlist_page] -%}
+
+    {%- if wishlist_page != blank -%}
+      <a href="{{ wishlist_page.url }}" class="dbtfy-wish-list dbtfy-wish-list--icon header-menu__link header-menu__link--icon" aria-label="{{ wishlist_page.title }}" title="{{ wishlist_page.title }}">
+        <span class="{{ settings.icon }}" translate="no" aria-hidden="true">{%- if settings.icon == 'material-icons-outlined' -%}favorite_border{%- else -%}favorite{%- endif -%}</span>
+
+        {%- if show_bubble -%}
+          <span class="js-wishlist-bubble bubble bubble--visible hidden{% if enable_bubble_animation %} rubberBand infinite slow{% endif %}"></span>
+        {%- endif -%}
+
+        {%- if show_count -%}
+          <span class="js-wishlist-count header__cart-count"></span>
+        {%- endif -%}
+      </a>
+    {%- endif -%}
+  </li>
+{%- elsif type == 'button' -%}
+  <div class="dbtfy-wish-list">
+    <button class="dbtfy-wish-list__button dbtfy-wish-list__button--add dbtfy-wish-list__button--product btn btn--reveal-primary btn--xs"
+            data-product-handle="{{ product.handle }}"
+            aria-label="{{ add_to_wishlist_text }}"
+            title="{{ add_to_wishlist_text }}">
+      <span class="{{ settings.icon }}" translate="no">{%- if settings.icon == 'material-icons-outlined' -%}favorite_border{%- else -%}favorite{%- endif -%}</span>
+      <span class="dbtfy-wish-list__button-text">{{ add_to_wishlist_text }}</span>
+    </button>
+  </div>
+{%- else -%}
+  <div class="dbtfy-wish-list">
+    <button class="dbtfy-wish-list__button dbtfy-wish-list__button--add btn btn--reveal-primary btn--square-xs"
+            data-product-handle="{{ product.handle }}"
+            aria-label="{{ add_to_wishlist_text }}"
+            title="{{ add_to_wishlist_text }}">
+      <span class="{{ settings.icon }}" translate="no">{%- if settings.icon == 'material-icons-outlined' -%}favorite_border{%- else -%}favorite{%- endif -%}</span>
+    </button>
+  </div>
+{%- endif -%}

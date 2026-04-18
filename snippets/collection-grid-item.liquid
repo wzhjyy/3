@@ -1,0 +1,166 @@
+{%- liquid
+  assign enable_card = settings.collection_grid_enable_card
+  assign enable_hover_animation = settings.collection_grid_enable_hover_animation
+  assign show_title = settings.collection_grid_show_title
+  assign show_products_count = settings.collection_grid_show_products_count
+  assign show_button = settings.collection_grid_show_button
+
+  assign button_style = settings.collection_grid_button_style
+  assign button_size = settings.collection_grid_button_size
+  assign button_label = 'collections.grid.button_label' | t
+  assign empty_state = false
+
+  if collection == blank
+    assign empty_state = true
+  endif
+
+  if empty_state
+    assign collection_link = '/admin/collections'
+    assign collection_title = 'home_page.onboarding.collection_title' | t
+    assign collection_products_count = '0'
+  else
+    assign collection_link = collection.url
+    assign collection_title = collection_title | default: collection.title
+    assign collection_products_count = collection.all_products_count
+  endif
+
+  if collection_image != blank
+    assign collection_image = collection_image
+  elsif collection.image
+    assign collection_image = collection.image
+  elsif collection.products.first and collection.products.first.images != blank
+    assign collection_image = collection.products.first.featured_image
+  else
+    assign collection_image = blank
+  endif
+ 
+  case collections_count
+    when 0
+    when 1
+      assign grid_item_width = 'col-12 text-center'
+
+    when 2
+      assign grid_item_width = 'col-md-6'
+
+    when 3
+      assign grid_item_width = 'col-md-4'
+
+    when 4
+      assign grid_item_width = 'col-md-6 col-lg-3'
+
+    when 5
+      assign grid_item_width = 'col-md-6 col-lg-4 flex-fill'
+
+    when 6
+      assign grid_item_width = 'col-md-6 col-lg-3 flex-fill'
+
+    when 7
+      assign grid_item_width = 'col-md-6 col-lg-3 flex-fill'
+
+    when 8
+      assign grid_item_width = 'col-md-6 col-lg-3'
+
+    when 9
+      assign grid_item_width = 'col-md-6 col-lg-4'
+
+  endcase
+
+  unless grid_item_width
+    assign grid_item_width = 'col-md-6 col-lg-4'
+  endunless
+
+  assign collection_height = section_height | default: 'xs'
+-%}
+
+{%- capture collection_title_html -%}
+  {%- if show_title -%}
+    {%- if no_heading_tag -%}
+      <p class="h3">
+        {{ collection_title }}
+      </p>
+    {%- else -%}
+      {%- if request.page_type == 'list-collections' -%}
+        <h2 class="h3">
+          {{ collection_title }}
+        </h2>
+      {%- else -%}
+        <h3 class="h3">
+          {{ collection_title }}
+        </h3>
+      {%- endif -%}
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- unless enable_card -%}
+    {%- if show_products_count -%}
+      <p class="text-sm text-italic{% if show_title %} mt-sm-2{% endif %}">
+        {{ collection_products_count }}
+        {{ 'shopify.checkout.stock.product_column_header' | t }}
+      </p>
+    {%- endif -%}
+  {%- endunless -%}
+
+  {%- if show_button and button_label != blank -%}
+    <a href="{{ collection_link }}" class="btn {{ button_style }} {{ button_size }} mt-3">
+      {{ button_label | escape }}
+    </a>
+  {%- endif -%}
+{%- endcapture -%}
+
+<div class="{{ grid_item_width }}{% if container_size == 'container-full' %} flex-fill{% endif %}" {{ block.shopify_attributes }}>
+  {%- unless show_button or button_label == blank -%}
+    <a href="{{ collection_link }}">
+  {%- endunless -%}
+
+    {%- if enable_card -%}<div class="card">{%- endif -%}
+
+    <div class="media-wrapper media-wrapper--cover media-wrapper--{{ collection_height }} media-wrapper--{{ collection_image_alignment }}{% if enable_card %} card__image{% else %} overlay{% endif %}{% if enable_hover_animation %} media-wrapper--overlay{% endif %} {{ class }}">
+      {%- if collection_image != blank -%}
+        {%- liquid
+          assign height_ratio = 100 | divided_by: 3
+          assign width_ratio = 100.0 | divided_by: height_ratio
+          assign maximum_image_width = settings.page_container_width | divided_by: width_ratio
+        -%}
+
+        {%- capture sizes -%}(max-width: 768px) 100vw, {% if container_size == 'container-full' %}{{ height_ratio }}vw{% else %}min({{ maximum_image_width | ceil }}px, {{ height_ratio }}vw){% endif %}{% endcapture %}
+
+        {{- collection_image | image_url: width: collection_image.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+      {%- else -%}
+        {{ 'collection-' | append: current | placeholder_svg_tag: 'media placeholder-svg' }}
+      {%- endif -%}
+
+      {%- unless enable_card -%}
+        {%- if collection_title_html != blank -%}
+          <div class="media-wrapper__content p-3 flex-column text-center">
+            {{ collection_title_html }}
+          </div>
+        {%- endif -%}
+      {%- endunless -%}
+    </div>
+
+    {%- if enable_card and collection_title_html != blank -%}
+      <div class="card__body text-center">
+        {{ collection_title_html }}
+      </div>
+    {%- endif -%}
+
+    {%- if enable_card and show_products_count -%}
+      <div class="card__footer card__footer--xs">
+        {%- if show_products_count -%}
+          <p class="text-sm text-italic text-center">
+            {{ collection_products_count }}
+            {{ 'shopify.checkout.stock.product_column_header' | t }}
+          </p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- if enable_card -%}</div>{%- endif -%}
+
+  {%- unless show_button or button_label == blank -%}
+    </a>
+  {%- endunless -%}
+</div>
+
+
+

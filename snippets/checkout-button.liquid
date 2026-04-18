@@ -1,0 +1,13 @@
+<button type="submit" name="checkout" class="btn btn--primary btn--full" {% if disabled %}disabled{% endif %}>
+  <span class="btn__text">
+    {%- if settings.checkout_icon != blank -%}
+      <span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">{{ settings.checkout_icon }}</span>
+    {%- endif -%}
+
+    {{ 'cart.general.checkout' | t }}
+
+    {%- if settings.show_cart_cost_checkout -%}
+      – <span class="cart-cost" data-cart-total-value><span class="money">{{ cart.total_price | money }}</span></span>
+    {%- endif -%}
+  </span>
+</button>

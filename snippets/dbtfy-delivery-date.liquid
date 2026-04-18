@@ -1,0 +1,51 @@
+{%- liquid
+  assign required_to_checkout = settings.dbtfy_delivery_date_required
+  assign label_icon = settings.dbtfy_delivery_date_label_icon
+  assign input_icon = settings.dbtfy_delivery_date_input_icon
+  assign exclude_days = settings.dbtfy_delivery_date_exclude_days
+
+  assign label = 'add-ons.delivery_date.label' | t
+  assign placeholder = 'add-ons.delivery_date.placeholder' | t
+  assign error_message = 'add-ons.delivery_date.error_message' | t
+-%}
+
+<div class="dbtfy-delivery-date{% if position == 'cart-drawer' %} drawer__inner-section{% endif %}{% if position == 'cart-page' %} card h-auto mt-3{% endif %}">
+  <div class="{% if position == 'cart-page' %}card__body{% endif %}">
+    {%- if label != blank -%}
+      <label for="delivery-date-input-{{ position }}" class="mb-1">
+        {%- if label_icon != blank -%}
+          <span class="{{ settings.icon }} icon icon--width" translate="no" aria-hidden="true">
+            {{ label_icon }}
+          </span>
+        {%- endif -%}
+
+        {{ label }}
+      </label>
+    {%- endif -%}
+
+    <div class="input-group">
+      <input
+          {% if required_to_checkout %}required{% endif %}
+          id="delivery-date-input-{{ position }}"
+          class="dbtfy-delivery-date__input input input--sm input-group__field"
+          autocomplete="off"
+          data-exclude-days="{{ exclude_days }}"
+          data-is-required-to-checkout="{{ required_to_checkout }}"
+          type="text"
+          name="attributes[Delivery date]"
+          value="{{ cart.attributes.delivery_date }}"
+          placeholder="{{ placeholder }}"
+      />
+
+      <button type="button" class="btn dbtfy-delivery-date__clear-button" hidden>
+        <span class="{{ settings.icon }} icon dbtfy-delivery-date__icon" translate="no" aria-hidden="true">close</span>
+      </button>
+
+      <span class="{{ settings.icon }} icon dbtfy-delivery-date__icon" translate="no">{{ input_icon }}</span>
+    </div>
+
+    {%- if error_message != blank -%}
+      <p class="dbtfy-delivery-date__error-message errors mt-2" hidden></p>
+    {%- endif -%}
+  </div>
+</div>

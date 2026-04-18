@@ -1,0 +1,178 @@
+{%- if product.available and product.variants.size >= 1 -%}
+  {%- liquid
+    assign swatch_option_list = settings.dbtfy_color_swatches_section_options | split: ','
+    assign swatch_color_grid = settings.dbtfy_color_swatches_grid_options
+    assign max_colors_to_show_count = settings.dbtfy_color_swatches_grid_count
+  -%}
+
+  <div class="dbtfy-color-swatches">
+    {%- if type == 'grid' or type == 'list' -%}
+      {%- liquid
+        assign first_option = blank
+        assign first_variant = product.selected_or_first_available_variant
+        assign color_option_index = blank
+        assign swatch_option_name = swatch_color_grid | handleize
+        assign first_option_name = product.options_with_values[0].name | handleize
+        assign second_option_name = product.options_with_values[1].name | handleize
+        assign third_option_name = product.options_with_values[2].name | handleize
+
+        if first_option_name == swatch_option_name
+          assign color_option_index = 0
+        elsif second_option_name == swatch_option_name
+          assign color_option_index = 1
+        elsif third_option_name == swatch_option_name
+          assign color_option_index = 2
+        endif
+
+        if color_option_index != blank
+          assign first_option = first_variant.options[color_option_index]
+        endif
+
+        assign option_index = 0
+      -%}
+
+      {%- for option in product.options_with_values -%}
+        {%- assign option_name = option.name | handleize -%}
+
+        {%- if option_name == swatch_option_name -%}
+          {%- assign option_index = forloop.index -%}
+
+          <div class="swatch{% if position == 'center' %} justify-content-center{% endif %}" data-option-index="{{ option_index }}">
+            {%- assign options_count = option.values | size -%}
+            {%- assign general_current_ms = 'now' | date: '%L' -%}
+
+            {%- for value in option.values -%}
+              {%- assign current_ms = 'now' | date: '%L' -%}
+
+              <input id="swatch-{{ option_index }}-{{ value | handleize }}-{{ product.id }}-{{ current_ms }}"
+                     class="js-color-swatch-grid"
+                     type="radio"
+                     value="{{ value | escape }}"
+                     data-product-id="{{ product.id }}"
+                     data-index="{{ option_index }}"
+                     data-option-position="option{{ option_index }}"
+                     name="{{ option.name | handleize }}-{{ product.id }}-{{ general_current_ms }}"
+                     hidden>
+
+              <div data-value="{{ value | escape }}" class="swatch-element{% if type == 'grid' %} swatch-element--sm{% endif %}">
+                <label for="swatch-{{ option_index }}-{{ value | handleize }}-{{ product.id }}-{{ current_ms }}"
+                       class="product-option-color--{{ value | handle }} text-center text-ellipsis"
+                       style="background-color: {{ value | handle }}"></label>
+                <div class="tooltip mb-3 text-center">{{- value -}}</div>
+              </div>
+
+              {%- if forloop.index == max_colors_to_show_count -%}
+                {%- break -%}
+              {%- endif -%}
+            {%- endfor -%}
+
+            {%- if options_count > max_colors_to_show_count -%}
+              <span class="swatch-more-link text-link text-sm d-inline-flex align-items-center">
+                +{{ options_count | minus: max_colors_to_show_count }}
+              </span>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- else -%}
+      {%- for swatch_option in swatch_option_list -%}
+        {%- liquid
+          assign first_option = blank
+          assign first_variant = product.selected_or_first_available_variant
+          assign color_option_index = blank
+          assign is_color_option = false
+          assign swatch_option_name = swatch_option | handleize
+          assign first_option_name = product.options_with_values[0].name | handleize
+          assign second_option_name = product.options_with_values[1].name | handleize
+          assign third_option_name = product.options_with_values[2].name | handleize
+
+          if first_option_name == swatch_option_name
+            if swatch_option_name contains 'color' or swatch_option_name contains 'colour'
+              assign is_color_option = true
+            endif
+
+            assign color_option_index = 0
+          elsif second_option_name == swatch_option_name
+            if swatch_option_name contains 'color' or swatch_option_name contains 'colour'
+              assign is_color_option = true
+            endif
+
+            assign color_option_index = 1
+          elsif third_option_name == swatch_option_name
+            if swatch_option_name contains 'color' or swatch_option_name contains 'colour'
+              assign is_color_option = true
+            endif
+
+            assign color_option_index = 2
+          endif
+
+          if color_option_index != blank
+            if swatch_option_name contains 'color' or swatch_option_name contains 'colour'
+              assign is_color_option = true
+            endif
+
+            assign first_option = first_variant.options[color_option_index]
+          endif
+        -%}
+
+        {%- if first_option != blank -%}
+          <label class="js-swatch-label mb-1"
+                 data-product-option-label
+                 data-option-index="{{ color_option_index | plus: 1 }}"
+                 data-option-name="{{ swatch_option }}">
+                 <span>
+                   {{ swatch_option | capitalize }}: <span class="text-sub">{{ first_option }}</span>
+                 </span>
+          </label>
+        {%- endif -%}
+
+        {%- liquid
+          assign option_index = 0
+        -%}
+
+        {%- for option in product.options_with_values -%}
+          {%- assign option_name = option.name | handleize -%}
+
+          {%- if option_name == swatch_option_name -%}
+            {%- assign option_index = forloop.index -%}
+
+            <div class="swatch" data-option-index="{{ option_index }}">
+              {%- assign options_count = option.values | size -%}
+              {%- assign general_current_ms = 'now' | date: '%L' -%}
+
+              {%- for value in option.values -%}
+                {%- assign current_ms = 'now' | date: '%L' -%}
+
+                <input id="swatch-{{ option_index }}-{{ value | handleize }}-{{ product.id }}-{{ current_ms }}"
+                       class="js-color-swatch"
+                       type="radio"
+                       {% if option.selected_value == value %}checked{% endif %}
+                       value="{{ value | escape }}"
+                       data-product-id="{{ product.id }}"
+                       data-index="{{ option_index }}"
+                       data-option-position="option{{ option_index }}"
+                       name="{{ option.name | handleize }}-{{ product.id }}-{{ general_current_ms }}"
+                       hidden>
+
+                <div data-value="{{ value | escape }}" class="swatch-element">
+                  <label for="swatch-{{ option_index }}-{{ value | handleize }}-{{ product.id }}-{{ current_ms }}"
+                         class="product-option-color--{{ value | handle }} text-center text-ellipsis"
+                         {% if is_color_option %}style="background-color: {{ value | handle }}"{% endif %}></label>
+                  <div class="tooltip mb-3 text-center">{{- value -}}</div>
+                </div>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+
+  {%- if type == 'grid' or type == 'list' -%}
+    <script type="application/json" data-product-json>
+      {
+        "variants": {{ product.variants | json }}
+      }
+    </script>
+  {%- endif -%}
+{%- endif -%}

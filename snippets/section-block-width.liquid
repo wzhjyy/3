@@ -1,0 +1,79 @@
+{%- liquid
+  case type
+    when 'block'
+      if count
+        assign block_count = count
+      else
+        assign block_count = section.blocks.size
+      endif
+
+      case block_count
+        when 0
+        when 1
+          if section.settings.container_size != 'container'
+            echo 'col-12 text-center'
+          else
+            echo 'col-md-8 offset-md-2 text-center'
+          endif
+        when 2
+          echo 'col-md-6'
+        when 3
+          echo 'col-md-4'
+        when 4
+          echo 'col-md-6 col-lg-3'
+        when 5
+          echo 'col-md-6 col-lg'
+        when 6
+          echo 'col-md-6 col-lg-2'
+      endcase
+
+    when 'article'
+      case section.settings.articles_per_row
+        when '1'
+          echo 'col-md-8 offset-md-2 text-center'
+        when '2'
+          echo 'col-md-6'
+        when '3'
+          echo 'col-md-4'
+        when '4'
+          echo 'col-md-3'
+        when '5'
+          echo 'col-md-3'
+        when '6'
+          echo 'col-md-2'
+      endcase
+
+    when 'product'
+      unless desktop_grid
+        assign desktop_grid = section.settings.products_per_row_desktop
+      endunless
+
+      unless mobile_grid
+        assign mobile_grid = section.settings.products_per_row_mobile
+      endunless
+
+      case desktop_grid
+        when '2'
+          if mobile_grid == '1'
+            echo 'col-md-6'
+          else
+            echo 'col-6'
+          endif
+
+        when '3'
+          if mobile_grid == '1'
+            echo 'col-md-4'
+          else
+            echo 'col-6 col-md-4'
+          endif
+
+        when '4'
+          if mobile_grid == '1'
+            echo 'col-md-3'
+          else
+            echo 'col-6 col-md-3'
+          endif
+      endcase
+
+  endcase
+-%}

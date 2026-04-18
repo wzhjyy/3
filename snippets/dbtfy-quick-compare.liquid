@@ -1,0 +1,134 @@
+{%- liquid
+  assign button_icon = settings.dbtfy_quick_compare_button_icon
+  assign button_position_x = settings.dbtfy_quick_compare_button_position_x
+
+  assign show_title = settings.dbtfy_quick_compare_show_title
+  assign show_price = settings.dbtfy_quick_compare_show_price
+  assign show_type = settings.dbtfy_quick_compare_show_type
+  assign show_vendor = settings.dbtfy_quick_compare_show_vendor
+  assign show_collections = settings.dbtfy_quick_compare_show_collections
+  assign show_tags = settings.dbtfy_quick_compare_show_tags
+  assign show_short_description = settings.dbtfy_quick_compare_show_description
+
+  assign add_to_quick_compare_text = 'add-ons.quick_compare.add_to_compare_text' | t
+  assign modal_title = 'add-ons.quick_compare.title_modal' | t
+-%}
+
+{%- if type == 'page' -%}
+  <div class="dbtfy-quick-compare">
+    <button type="button" class="dbtfy-quick-compare__sticky-button dbtfy-quick-compare__sticky-button--{{ button_position_x }} stacked-on-top-of-content btn btn--square">
+      <span class="dbtfy-quick-compare__icon-bubble" hidden>
+        <span class="dbtfy-quick-compare__count"></span>
+      </span>
+
+      <span class="{{ settings.icon }} dbtfy-quick-compare__sticky-button-icon" translate="no" aria-hidden="true">{{ button_icon }}</span>
+    </button>
+  </div>
+{%- elsif type == 'grid' -%}
+  <div class="dbtfy-quick-compare">
+    <button class="dbtfy-quick-compare__icon dbtfy-quick-compare__add-button btn btn--reveal-primary btn--square-xs"
+            data-product-handle="{{ product.handle }}"
+            aria-label="{{ add_to_quick_compare_text }}"
+            title="{{ add_to_quick_compare_text }}">
+
+        <span class="btn__text">
+          <span class="{{ settings.icon }}" translate="no">{{ button_icon }}</span>
+        </span>
+    </button>
+  </div>
+{%- elsif type == 'markup' -%}
+  <div class="dbtfy-quick-compare">
+    <div id="quick-compare" class="modal dbtfy-quick-compare__modal stacked-on-top-of-content" role="dialog">
+      <div class="modal__dialog">
+        <div class="modal__content overlay-content" aria-hidden="true" tabindex="-1">
+          <div class="modal__header">
+            {%- if modal_title != blank -%}
+              <h4 class="h4 modal__title">{{ modal_title }}</h4>
+            {%- endif -%}
+
+            <button type="button" class="modal__close btn btn--square-sm"
+                    title="{{ 'general.password_page.close' | t }}"
+                    aria-label="{{ 'general.password_page.close' | t }}"
+                    data-modal-close="#quick-compare">
+
+              <span class="{{ settings.icon }}" translate="no">close</span>
+            </button>
+          </div>
+
+          <div class="modal__body">
+            <div class="dbtfy-quick-compare__no-item text-center" hidden>
+              <p>{{ 'add-ons.quick_compare.empty_table' | t }}</p>
+
+              <a href="{{ settings.continue_browsing_link }}" class="btn btn--primary mt-3">{{ 'cart.general.continue_browsing_html' | t }}</a>
+            </div>
+
+            <div class="dbtfy-quick-compare__table-wrapper">
+              <table class="dbtfy-quick-compare__table">
+                <tbody>
+                  <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--images">
+                    <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.images_cell' | t }}</td>
+                  </tr>
+
+                  {%- if show_title -%}
+                    <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--title">
+                      <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.title_cell' | t }}</td>
+                    </tr>
+                  {%- endif -%}
+
+                  {%- if show_price -%}
+                    <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--price">
+                      <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.price_cell' | t }}</td>
+                    </tr>
+                  {%- endif -%}
+
+                  {%- if show_type -%}
+                    <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--type">
+                      <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.type_cell' | t }}</td>
+                    </tr>
+                  {%- endif -%}
+
+                  {%- if show_vendor -%}
+                    <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--vendor">
+                      <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.vendor_cell' | t }}</td>
+                    </tr>
+                  {%- endif -%}
+
+                  {%- if show_collections -%}
+                    <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--collections">
+                      <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.collections_cell' | t }}</td>
+                    </tr>
+                  {%- endif -%}
+
+                  {%- if show_tags -%}
+                    <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--tags">
+                      <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.tags_cell' | t }}</td>
+                    </tr>
+                  {%- endif -%}
+
+                  {%- if show_short_description -%}
+                    <tr class="dbtfy-quick-compare__row dbtfy-quick-compare__row--description">
+                      <td class="dbtfy-quick-compare__cell">{{ 'add-ons.quick_compare.short_description_cell' | t }}</td>
+                    </tr>
+                  {%- endif -%}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay-modal overlay-backdrop"></div>
+  </div>
+{%- else -%}
+  <div class="dbtfy-quick-compare">
+    <button class="btn btn--reveal-primary btn--xs dbtfy-quick-compare__add-button"
+            data-product-handle="{{ product.handle }}"
+            aria-label="{{ add_to_quick_compare_text }}"
+            title="{{ add_to_quick_compare_text }}">
+      <span class="{{ settings.icon }}" translate="no">{{ button_icon }}</span>
+
+      <span class="dbtfy-quick-compare__add-button-text">{{ add_to_quick_compare_text }}</span>
+    </button>
+  </div>
+{%- endif -%}

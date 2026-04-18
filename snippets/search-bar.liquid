@@ -1,0 +1,50 @@
+{%- capture form_content -%}
+  {%- liquid
+    assign search_type = ''
+
+    if settings.enable_search_by_products
+      assign search_type = search_type | append: ',' | append: 'product'
+    endif
+
+    if settings.enable_search_by_articles
+      assign search_type = search_type | append: ',' | append: 'article'
+    endif
+
+    if settings.enable_search_by_pages
+      assign search_type = search_type | append: ',' | append: 'page'
+    endif
+  -%}
+
+  <div class="input-group">
+    <input type="search"
+           name="q"
+           value="{{ search.terms | escape }}"
+           placeholder="{{ 'general.search.placeholder' | t }}"
+           class="input-group__field"
+           aria-label="{{ 'general.search.placeholder' | t }}"
+           required="required"
+           {%- if search_location == 'drawer' -%}data-focus{%- endif -%}>
+
+    <input type="hidden" name="type" value="{{ search_type | remove_first: ',' }}" />
+    <input type="hidden" name="options[prefix]" value="last" aria-hidden="true" />
+
+    <button type="submit" class="btn btn--primary btn--square input-group__btn" aria-label="{{ 'general.search.submit' | t }}" title="{{ 'general.search.submit' | t }}">
+      <span class="btn__text">
+        <span class="{{ settings.icon }}" translate="no" aria-hidden="true">search</span>
+      </span>
+    </button>
+  </div>
+
+  {%- if has_smart_search -%}
+    {%- render 'dbtfy-smart-search', type: 'page' -%}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- if form_tag -%}
+  <form action="{{ routes.search_url }}" method="get" class="search-bar {{ input_type }}" role="search" id="MainSearch">
+    {{ form_content }}
+  </form>
+{%- else -%}
+  {{ form_content }}
+{%- endif -%}
+

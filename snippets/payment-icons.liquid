@@ -1,0 +1,43 @@
+{%- liquid
+  assign has_icons = false
+
+  if shop.enabled_payment_types.size > 0
+    assign has_icons = true
+  endif
+
+  for icon in (1..4)
+    assign index = forloop.index
+    assign icon_id = 'payment_icon_' | append: index
+    assign image = settings[icon_id]
+
+    if image != blank
+      assign has_icons = true
+      break
+    endif
+  endfor
+-%}
+
+{%- if has_icons -%}
+  <div class="payment-icons">
+    <ul class="inline-list{% if classes != blank %} {{ classes }}{% endif %}">
+      <span class="visually-hidden">{{ 'general.payment.method' | t }}</span>
+
+      {%- for type in shop.enabled_payment_types -%}
+        <li>{{ type | payment_type_svg_tag: class: 'payment-icon' }}</li>
+      {%- endfor -%}
+
+      {%- for icon in (1..4) -%}
+        {%- capture icon_id -%}payment_icon_{{ forloop.index }}{%- endcapture -%}
+        {%- assign image = settings[icon_id] -%}
+        {%- assign image_width = settings.payment_icon_size | times: image.aspect_ratio | ceil -%}
+        {%- assign image_title = image | split: '.' | first | replace: '-', ' ' | capitalize -%}
+
+        {%- if image != blank -%}
+          <li>
+            {{- image | image_url: width: image.width | image_tag: loading: 'lazy', sizes: '100px', widths: '20,30,40,50,60,70,80,90,100,120,140,160', class: 'payment-icon payment-icon--custom', title: image_title -}}
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+  </div>
+{%- endif -%}

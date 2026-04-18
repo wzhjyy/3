@@ -1,0 +1,41 @@
+{%- if paginate.pages > 1 -%}
+  {%- assign current_page = 1 -%}
+
+  <div class="mt-3 {{ class }}" role="navigation">
+    {%- render 'dbtfy-infinite-scroll', paginate: paginate -%}
+
+    <div class="pagination inline-list justify-content-center">
+      {%- if paginate.previous -%}
+        <a href="{{ paginate.previous.url }}" class="previous btn btn--square-sm" rel="prev" aria-label="{{ 'general.pagination.previous' | t }}" title="{{ 'general.pagination.previous' | t }}">
+          <span class="{{ settings.icon }}" translate="no" aria-hidden="true">arrow_back</span>
+        </a>
+      {%- endif -%}
+
+      {%- for part in paginate.parts -%}
+        {%- if part.title != current_page -%}
+          <span class="align-self-center">...</span>
+        {%- endif -%}
+
+        {%- if part.is_link -%}
+          <a href="{{ part.url }}" class="page btn btn--square-sm" title="{{ 'general.pagination.go_to_page' | t: page: part.title }}">
+            {{- part.title -}}
+          </a>
+        {%- else -%}
+          {%- if part.title == paginate.current_page -%}
+            <span class="page current btn btn--primary btn--square-sm">
+              {{- part.title -}}
+            </span>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- assign current_page = current_page | plus: 1 -%}
+      {%- endfor -%}
+
+      {%- if paginate.next -%}
+        <a href="{{ paginate.next.url }}" class="next btn btn--square-sm" rel="next" aria-label="{{ 'general.pagination.next' | t }}" title="{{ 'general.pagination.next' | t }}">
+          <span class="{{ settings.icon }}" translate="no" aria-hidden="true">arrow_forward</span>
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}

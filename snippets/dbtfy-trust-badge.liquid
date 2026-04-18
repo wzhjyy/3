@@ -1,0 +1,29 @@
+{%- liquid
+  assign position_in_cart = settings.dbtfy_trust_badge_position_in_cart
+  assign make_text_small = settings.dbtfy_trust_badge_make_text_small
+  assign image = settings.dbtfy_trust_badge_image
+  assign image_width = settings.dbtfy_trust_badge_image_width
+  assign text = 'add-ons.trust_badge.text' | t
+  assign text_position = settings.dbtfy_trust_badge_text_position
+-%}
+
+<div class="dbtfy-trust-badge{% if position == 'cart-drawer' or position == 'cart-page' %}{% if position_in_cart == 'below-checkout-button' %} mt-3{% endif %}{% endif %}{% if position == 'cart-drawer' and position_in_cart == 'separate-section' %} drawer__inner-section{% endif %}">
+  <div class="row gy-2">
+    {%- if text != blank -%}
+      <p class="{% if text_position == 'below' %}order-1{% endif %}{% if make_text_small %} text-sm{% endif %}">
+        {{ text }}
+      </p>
+    {%- endif -%}
+
+    {%- if image != blank -%}
+      <div class="d-flex justify-content-center">
+        {%- capture sizes -%}{{ image_width }}px{% endcapture %}
+        {%- capture style -%}max-width: {{ image_width }}px{% endcapture %}
+
+        {{- image | image_url: width: image.width | image_tag: loading: 'lazy', sizes: sizes, widths: '100,200,300,400,500', style: style, class: 'w-100' -}}
+      </div>
+    {%- else -%}
+      {%- render 'payment-icons', classes: 'justify-content-center' -%}
+    {%- endif -%}
+  </div>
+</div>

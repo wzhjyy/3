@@ -1,0 +1,30 @@
+{%- liquid
+  assign type = settings.dbtfy_infinite_scroll_type
+  assign button_style = settings.dbtfy_infinite_scroll_button_style
+  assign loading_image = settings.dbtfy_infinite_scroll_loading_image
+  assign next_url = paginate.next.url
+  assign loading_text = 'add-ons.infinite_scroll.load_more' | t
+  assign paginate_next_text = 'general.pagination.next' | t
+
+  unless loading_text
+    assign loading_text = paginate_next_text
+  endunless
+-%}
+
+<div class="dbtfy-infinite-scroll">
+  <div class="js-pagination-buttons">
+    {%- if paginate.next -%}
+      <div class="text-center">
+        {%- if type == 'click' -%}
+          <a href="{{ next_url }}" class="btn {{ button_style }}">
+            <span class="btn__text">
+              {{ loading_text }}
+            </span>
+          </a>
+        {%- else -%}
+          <a href="{{ next_url }}" aria-label="{{ loading_text }}" {% if loading_image != blank %}data-loading-image="{{ loading_image | image_url: width: 200 }}"{% endif %}></a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>

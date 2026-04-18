@@ -1,0 +1,37 @@
+{%- liquid
+  assign icon = settings.dbtfy_inventory_quantity_icons
+  assign text = 'add-ons.inventory_quantity.text_html' | t
+  assign in_stock_text = 'add-ons.inventory_quantity.in_stock_text' | t
+-%}
+
+<div class="dbtfy-inventory-quantity text-ellipsis">
+  {%- if icon != blank -%}
+    <span class="{{ settings.icon }}" translate="no">{{ icon }}</span>
+  {%- endif -%}
+
+  {%- for variant in product.variants -%}
+    {%- if variant.inventory_quantity > 0 and variant.inventory_management == 'shopify' -%}
+      <span class="dbtfy-inventory-quantity__item"
+            data-variant-id="{{ variant.id }}"
+            data-origin-quantity="{{ variant.inventory_quantity }}"
+            hidden>
+
+        <span class="dbtfy-inventory-quantity__threshold dbtfy-inventory-quantity__threshold--less">
+          {%- capture quantity -%}
+            <strong class="dbtfy-inventory-quantity__quantity">{{ variant.inventory_quantity }}</strong>
+          {%- endcapture -%}
+
+          {%- if text != blank -%}
+            <span>{{ 'add-ons.inventory_quantity.text_html' | t: quantity: quantity }}</span>
+          {%- endif -%}
+        </span>
+
+        {%- if in_stock_text != blank -%}
+          <span class="dbtfy-inventory-quantity__threshold dbtfy-inventory-quantity__threshold--more">
+            {{ in_stock_text }}
+          </span>
+        {%- endif -%}
+      </span>
+    {%- endif -%}
+  {%- endfor -%}
+</div>

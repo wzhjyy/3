@@ -1,0 +1,207 @@
+{%- liquid
+  assign button_icon = settings.dbtfy_collection_filters_button_icon
+  assign button_label = 'add-ons.collection_filters.label' | t
+  assign clear_all_label = 'add-ons.collection_filters.clear_filters' | t
+  assign remove_filter_label = 'add-ons.collection_filters.remove_filter' | t
+  assign products_count_visibility = settings.dbtfy_collection_filters_products_count_visibility
+  assign show_unavailable_options = settings.dbtfy_collection_filters_show_unavailable_options
+
+  assign active_values_count = 0
+
+  for filter in collection.filters
+    if filter.type == 'price_range'
+      if filter.max_value.value != blank or filter.min_value.value != blank
+        assign active_values_count = active_values_count | plus: 1
+      endif
+    else
+      for active_value in filter.active_values
+        assign active_values_count = active_values_count | plus: 1
+      endfor
+    endif
+  endfor
+
+  assign sort_by = collection.sort_by | default: collection.default_sort_by
+
+  if collection.url
+    assign collection_url = collection.url
+  else
+    assign terms = collection.terms | escape
+    assign collection_url = '?q=' | append: terms | append: '&options%5Bprefix%5D=last&sort_by=' | append: sort_by
+  endif
+-%}
+
+{%- if type == 'button' -%}
+  <div class="dbtfy-collection-filters me-auto w-100 w-md-auto">
+    <button type="button" class="js-drawer-open-button-left collection-filters-btn btn btn--sm w-100 w-md-auto" aria-controls="CollectionFiltersDrawer">
+      <span class="btn__text">
+        {%- if button_icon != blank -%}
+          <span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">{{ button_icon }}</span>
+        {%- endif -%}
+
+        <span>{{ button_label }}</span>
+      </span>
+    </button>
+  </div>
+{%- elsif type == 'drawer' -%}
+  <div id="CollectionFiltersDrawer"
+       class="drawer drawer--left overlay-content dbtfy-collection-filters-drawer"
+       aria-hidden="true"
+       tabindex="-1">
+
+    <div class="drawer__header">
+      <div class="drawer__title">
+        {%- if button_icon != blank -%}
+          <span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">{{ button_icon }}</span>
+        {%- endif -%}
+
+        <span {% if button_icon != blank %}class="ms-1"{% endif %}>
+          {%- if button_label != blank -%}
+            {{ button_label }}
+          {%- else -%}
+            {{ 'general.drawers.navigation' | t }}
+          {%- endif -%}
+        </span>
+      </div>
+
+      <div class="drawer__close">
+        <button type="button" class="btn btn--square-sm js-drawer-close" aria-label="{{ 'general.drawers.close_menu' | t }}" title="{{ 'general.drawers.close_menu' | t }}">
+          <span class="{{ settings.icon }}" translate="no" aria-hidden="true">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="drawer__inner">
+      <form class="dbtfy-collection-filters-drawer__form">
+        {%- if active_values_count > 0 -%}
+          <div class="drawer__inner-section">
+            <div class="row gy-2-5">
+              {%- for filter in collection.filters -%}
+                {%- for value in filter.active_values -%}
+                  <div>
+                    <a href="{{ value.url_to_remove }}" class="btn btn--primary btn--xs dbtfy-collection-filters-drawer__remove"
+                       role="button"
+                       aria-label="{{ remove_filter_label | t: name: filter.label }}">
+                      {{ filter.label }}: {{ value.label | escape }}
+
+                      <span class="{{ settings.icon }} icon" translate="no">close</span>
+                      <span class="visually-hidden">{{ clear_all_label }}</span>
+                    </a>
+                  </div>
+                {%- endfor -%}
+
+                {%- if filter.type == 'price_range' -%}
+                  {%- if filter.min_value.value != null or filter.max_value.value != null -%}
+                    <div>
+                      <a href="{{ filter.url_to_remove }}" class="btn btn--primary btn--xs dbtfy-collection-filters-drawer__remove" role="button">
+                        {%- if filter.min_value.value -%}
+                          {{ filter.min_value.value | money }}
+                        {%- else -%}
+                          {{ 0 | money }}
+                        {%- endif -%}
+                        -
+                        {%- if filter.max_value.value -%}
+                          {{ filter.max_value.value | money }}
+                        {%- else -%}
+                          {{ filter.range_max | money }}
+                        {%- endif -%}
+
+                        <span class="{{ settings.icon }} icon" translate="no">close</span>
+                        <span class="visually-hidden">{{ clear_all_label }}</span>
+                      </a>
+                    </div>
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endif -%}
+
+        {%- for filter in collection.filters -%}
+          {%- liquid
+            assign show_group = false
+
+            for value in filter.values
+              if value.count > 0 or value.active or show_unavailable_options
+                assign show_group = true
+              endif
+            endfor
+
+            if filter.type == 'price_range'
+              assign show_group = true
+            endif
+          -%}
+
+          {%- if show_group -%}
+            <div class="drawer__inner-section">
+              <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                <h6 class="h6">{{ filter.label | escape }}</h6>
+              </div>
+
+              {%- case filter.type -%}
+                {%- when 'boolean' -%}
+                {%- when 'list' -%}
+                  <ul class="dbtfy-collection-filters-drawer__list">
+                    {%- for value in filter.values -%}
+                      <li class="{% if value.count == 0 and value.active == false and show_unavailable_options == false %}d-none{% else %}d-flex align-items-center justify-content-between{% endif %}">
+                        <div class="checkbox w-100">
+                          <input type="checkbox"
+                                 class="dbtfy-collection-filters-drawer__checkbox"
+                                 name="{{ value.param_name }}"
+                                 value="{{ value.value }}"
+                                 id="Filter-{{ filter.param_name | escape }}-{{ forloop.index }}"
+                              {% if value.active %}
+                                checked
+                              {% endif %}
+                              {% if value.count == 0 and value.active == false %}
+                                disabled
+                              {% endif %}>
+
+                          <label for="Filter-{{ filter.param_name | escape }}-{{ forloop.index }}"
+                                 class="d-flex justify-content-between w-100{% if value.count == 0 and value.active == false %} disabled{% endif %}">
+                            {{ value.label | escape }}
+
+                            {%- if products_count_visibility == 'only_available' -%}
+                              {%- if value.count > 0 or value.active -%}
+                                <span class="ms-2">
+                                  ({{ value.count }})
+                                </span>
+                              {%- endif -%}
+                            {%- elsif products_count_visibility == 'all' -%}
+                              <span class="ms-2{% if value.count == 0 and value.active == false %} disabled{% endif %}">
+                                ({{ value.count }})
+                              </span>
+                            {%- endif -%}
+                          </label>
+                        </div>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+
+                {%- when 'price_range' -%}
+                  {%- render 'price-range', filter: filter -%}
+              {%- endcase -%}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+
+        <select id="sortBy" name="sort_by" data-sort-by hidden>
+          {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
+
+          {%- for option in collection.sort_options -%}
+            <option value="{{ option.value }}"{% if sort_by == option.value %} selected="selected"{% endif %}>{{ option.name }}</option>
+          {%- endfor -%}
+        </select>
+      </form>
+    </div>
+
+    {%- if active_values_count > 0 -%}
+      <div class="drawer__footer">
+        <a href="{{ collection_url }}" class="btn btn--full justify-content-center dbtfy-collection-filters-drawer__remove" role="button">
+          {{ clear_all_label }}
+        </a>
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="overlay-backdrop overlay-drawer"></div>
+{%- endif -%}

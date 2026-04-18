@@ -1,0 +1,47 @@
+{%- liquid
+  assign classes = ''
+
+  # TEMPLATE NAME
+  assign page_type_handle = request.page_type | handle
+  assign classes = classes | append: 'template-' | append: page_type_handle
+
+  # SECTION PADDING
+  assign classes = classes | append: ' section-padding-' | append: settings.section_padding_size_on_desktop
+
+  # UPPERCASE BUTTON
+  if settings.uppercase_button
+    assign classes = classes | append: ' button-uppercase'
+  endif
+
+  # ENABLE TRANSPARENT BACKGROUND ON PRODUCT GRID
+  if settings.product_grid_enable_transparent_background
+    assign classes = classes | append: ' product-grid-transparent-background'
+  endif
+
+  # ENABLE BUTTON OUTLINE
+  if settings.enable_button_hover_outline
+    assign classes = classes | append: ' button-hover-outline'
+  endif
+
+  # ENABLE PAGE TITLE BACKGROUND
+  if settings.enable_page_title_background
+    assign classes = classes | append: ' page-title-background'
+  endif
+
+  # ENABLE HOVER TRANSITIONS
+  if settings.enable_hover_transitions
+    assign classes = classes | append: ' enable-hover-transitions'
+  endif
+
+  # SHOW MORE PAYMENT OPTIONS BUTTON
+  if settings.show_more_payment_options_button
+    assign classes = classes | append: ' show-more-payment-options-button'
+  endif
+
+  # HAS CUSTOM BUY IT NOW TEXT
+  if settings.custom_buy_now_text != blank
+    assign classes = classes | append: ' has-custom-buy-it-now-text'
+  endif
+
+  echo classes
+-%}

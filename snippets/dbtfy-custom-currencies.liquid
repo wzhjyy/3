@@ -1,0 +1,29 @@
+{%- liquid
+  assign currency = shop.currency
+
+  if localization.country.currency.iso_code != blank
+    assign currency = localization.country.currency.iso_code
+  endif
+-%}
+
+<div class="dbtfy-custom-currencies">
+  <label for="currency-list-{{ section.id }}" class="mb-1">
+    {{ 'general.currency.dropdown_label' | t }}
+  </label>
+
+  <select id="currency-list-{{ section.id }}"
+          class="currency-code select select--sm dbtfy-custom-currencies__select"
+          name="dbtfy-custom-currencies">
+
+    <option value="{{ currency }}" selected="selected">{{ currency }}</option>
+
+    {%- capture codes -%},USD,EUR,GBP,CAD,ARS,AUD,ILS,BBD,BDT,BSD,BHD,BRL,BOB,BND,BGN,MMK,KYD,CLP,CNY,COP,CRC,HRK,CZK,DKK,DOP,XCD,EGP,XPF,FJD,GHS,GTQ,GYD,GEL,HKD,HUF,ISK,INR,IDR,NIS,JMD,JPY,JOD,KZT,KES,KWD,LVL,LTL,MXN,MYR,MUR,MDL,MAD,MNT,MZN,ANG,NZD,NGN,NOK,OMR,PKR,PYG,PEN,PHP,PLN,QAR,RON,RUB,SAR,RSD,SCR,SGD,SYP,ZAR,KRW,LKR,SEK,CHF,TWD,THB,TZS,TTD,TRY,TND,UAH,AED,UYU,VEB,VND,ZMK,{%- endcapture -%}
+    {%- assign supported_codes = settings.dbtfy_custom_currencies_supported_currencies | split: ' ' -%}
+
+    {%- for code in supported_codes -%}
+      {%- if code != currency and codes contains code -%}
+        <option value="{{ code }}">{{ code }}</option>
+      {%- endif -%}
+    {%- endfor -%}
+  </select>
+</div>

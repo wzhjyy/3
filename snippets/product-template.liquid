@@ -1,0 +1,1050 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign product = all_products[section.settings.product] | default: product
+  assign show_divider_on_mobile = section.settings.show_divider_on_mobile
+  assign enable_fading_effect = section.settings.enable_fading_effect
+  assign enable_video_looping = section.settings.enable_video_looping
+  assign gallery_layout = section.settings.gallery_layout
+  assign image_size = section.settings.image_size
+  assign images_loading_type = section.settings.images_loading_type
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  assign empty_state = false
+
+  if product == blank
+    assign empty_state = true
+  endif
+
+
+  assign id = section.id
+  assign current_variant = product.selected_or_first_available_variant
+  assign featured_media = current_variant.featured_media | default: product.featured_media
+  assign days_product_price_valid_until = 10 | times: 86400
+
+  if empty_state
+    assign sku = '12345'
+    assign title = 'home_page.onboarding.product_title' | t
+    assign compare_at_price = 2999
+    assign price = 1999
+  else
+    assign sku = current_variant.sku
+    assign title = product.title
+    assign compare_at_price = current_variant.compare_at_price
+    assign price = current_variant.price
+  endif
+
+
+  assign enable_history_state = settings.product_grid_enable_history_state
+
+  assign is_on_sale = false
+
+  if compare_at_price > price
+    assign is_on_sale = true
+  endif
+
+
+  assign is_sold_out = true
+
+  if product.available
+    assign is_sold_out = false
+  endif
+
+
+  assign is_stacked_layout = false
+
+  if gallery_layout == 'stacked'
+    assign is_stacked_layout = true
+  endif
+
+
+  assign enable_slider = false
+
+  if product.media.size > 1
+    assign enable_slider = true
+  endif
+
+
+  assign has_first_3d_model = false
+  assign first_3d_model = product.media | where: 'media_type', 'model' | first
+
+  if first_3d_model
+    assign has_first_3d_model = true
+  endif
+
+
+  assign show_block_above_image = false
+
+  for block in section.blocks
+    case block.type
+      when 'title'
+        assign position = block.settings.position
+
+        if position == 'above'
+          assign show_block_above_image = true
+        endif
+
+      when 'price'
+        assign position = block.settings.position
+
+        if position == 'above'
+          assign show_block_above_image = true
+        endif
+
+    endcase
+  endfor
+
+
+  assign product_gallery_width = 'col-lg-5'
+  assign product_meta_width = 'col-lg-7'
+
+  case image_size
+    when 'md'
+      assign product_gallery_width = 'col-lg-6'
+      assign product_meta_width = 'col-lg-6'
+
+    when 'lg'
+    assign product_gallery_width = 'col-lg-7'
+    assign product_meta_width = 'col-lg-5'
+
+  endcase
+
+
+  assign picker_type = ''
+
+  for block in section.blocks
+    case block.type
+      when 'variant_picker'
+        assign picker_type = block.settings.type
+
+    endcase
+  endfor
+
+
+  assign form_id = 'AddToCartForm--' | append: section.id
+
+  assign has_quantity_picker = false
+
+  capture product_collections
+    for collection in product.collections
+      echo collection.handle
+
+      unless forloop.last
+        echo ','
+      endunless
+    endfor
+  endcapture
+
+
+  assign size_chart_block = section.blocks | where: 'type', 'size_chart' | first
+-%}
+
+{%- capture section_settings -%}
+  {
+    "sectionId": {{ section.id | json }},
+    "isStackedLayout": {{ is_stacked_layout | json }},
+    "enableFadingEffect": {{ enable_fading_effect | json }},
+    "hasModel": {{ has_first_3d_model | json }},
+    "enableHistoryState": {{ enable_history_state | json }},
+    "pickerType": {{ picker_type | json }}
+  }
+{%- endcapture -%}
+
+{%- for block in section.blocks -%}
+  {%- case block.type -%}
+    {%- when 'title' -%}
+      {%- liquid
+        assign enlarge_title = block.settings.enlarge_title
+      -%}
+
+      {%- capture title_markup -%}
+        {%- if product and template.name != 'product' -%}
+          <a href="{{ product.url }}">
+        {%- endif -%}
+
+        <{% if is_featured %}h2{% else %}h1{% endif %} class="h1{% if enlarge_title %} page-title{% endif %}">
+          {{- title -}}
+        </{% if is_featured %}h2{% else %}h1{% endif %}>
+
+        {%- if product and template.name != 'product' -%}
+          </a>
+        {%- endif -%}
+      {%- endcapture -%}
+
+    {%- when 'description' -%}
+      {%- liquid
+        assign enable_split_description = block.settings.enable_split_description
+        assign is_to_split_description = false
+
+        if enable_split_description and product.description != blank and product.description contains '[split_description]'
+          assign is_to_split_description = true
+        endif
+      -%}
+
+    {%- when 'price' -%}
+      {%- capture price_markup -%}
+        <div class="product-price-container text-accent text-lg{% if current_variant.unit_price_measurement %} product-price-container--unit-available{% endif %}" data-product-price-container>
+          <span class="{% if is_on_sale %}on-sale text-sale{% endif %}"
+                itemprop="price"
+                content="{{ price | divided_by: 100.0 }}"
+                data-product-price
+                {% if is_on_sale %}
+                  aria-label="{{ 'products.general.sale_price' | t }}"
+                {% else %}
+                  aria-label="{{ 'products.general.regular_price' | t }}"
+                {% endif %}>
+            <span class="money">{{ price | money }}</span>
+          </span>
+
+          <span class="text-muted text-strike{% unless is_on_sale %} hidden{% endunless %}"
+                data-product-price-compare
+                aria-label="{{ 'products.general.regular_price' | t }}">
+          </span>
+
+          {%- render 'dbtfy-discount-saved', product: product -%}
+
+          <div class="product-price-container__unit">
+            {%- capture unit_price_separator -%}
+              <span aria-hidden="true">/</span><span class="visually-hidden">&nbsp;{{ 'general.accessibility.unit_price_separator' | t }}&nbsp;</span>
+            {%- endcapture -%}
+
+            {%- capture unit_price_base_unit -%}
+              <span data-unit-price-base-unit>
+                {%- liquid
+                  if current_variant.unit_price_measurement
+                    if current_variant.unit_price_measurement.reference_value != 1
+                      echo current_variant.unit_price_measurement.reference_value
+                    endif
+
+                    echo current_variant.unit_price_measurement.reference_unit
+                  endif
+                -%}
+              </span>
+            {%- endcapture -%}
+
+            <span>
+              <span class="visually-hidden">{{ 'products.general.unit_price' | t }}</span>
+              <span data-unit-price><span class="money"></span>{{ current_variant.unit_price | money }}</span>{{- unit_price_separator -}}{{- unit_price_base_unit -}}
+            </span>
+          </div>
+        </div>
+      {%- endcapture -%}
+
+  {%- endcase -%}
+{%- endfor -%}
+
+<div class="product section section--{{ section_style }} {{ visibility_class }}"
+     data-section-type="product"
+     data-section-id="{{ section.id }}"
+     data-section-settings='{{ section_settings }}'
+     data-product-id="{{ product.id }}"
+     data-product-handle="{{ product.handle }}"
+     data-product-collections="{{ product_collections }}"
+     itemscope
+     itemtype="http://schema.org/Product">
+
+  <meta itemprop="url" content="{{ shop.url }}{{ product.url }}">
+  <meta itemprop="image" content="{{ product.featured_media | image_url: width: product.featured_media.width }}">
+  <meta itemprop="productID" content="{{ product.id }}">
+  <meta itemprop="name" content="{{ title }}">
+  <meta itemprop="price" content="{{ price | divided_by: 100.0 }}">
+  <meta itemprop="priceValidUntil" content="{{ 'now' | date: '%s' | plus: days_product_price_valid_until | date: '%Y-%m-%d' }}">
+
+  <div class="{{ container_size }}">
+    <div class="row gy-3 gy-lg-0">
+      {%- if show_block_above_image -%}
+        <div class="mb-3">
+          <div class="row gy-3 gy-lg-0 d-lg-none">
+            {%- for block in section.blocks -%}
+              {%- case block.type -%}
+                {%- when 'title' -%}
+                  {%- liquid
+                    assign position = block.settings.position
+                  -%}
+
+                  {%- if position == 'above' -%}
+                    <div>
+                      {{ title_markup }}
+                    </div>
+                  {%- endif -%}
+
+                {%- when 'star_rating' -%}
+                  {%- if position == 'above' -%}
+                    <div class="product__reviews">
+                      {%- render 'review-badge', product: product, position: 'product_page' -%}
+                    </div>
+                  {%- endif -%}
+
+                {%- when 'price' -%}
+                  {%- liquid
+                    assign position = block.settings.position
+                  -%}
+
+                  {%- if position == 'above' -%}
+                    {{ price_markup }}
+                  {%- endif -%}
+              {%- endcase -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      {%- endif -%}
+
+      <div class="{{ product_gallery_width }}">
+        {%- if product.media.size > 0 -%}
+          <div class="product__gallery{% if enable_slider %} product__gallery--slider{% if is_stacked_layout %} product__gallery--slider-mobile{% endif %}{% endif %} sticky sticky--lg"
+               data-product-gallery>
+
+            <div class="row row--sm gy-3 product__media-group{% unless is_stacked_layout %} product__media-group--single-xr{% endunless %}{% if enable_slider %} slick{% endif %}"
+                 data-product-media-group>
+
+              {%- assign first_media = true -%}
+
+              {%- for media in product.media -%}
+                {%- liquid
+                  assign is_featured = false
+
+                  if media == featured_media
+                    assign is_featured = true
+                  endif
+
+                  capture thumbnail_alt
+                    if media.media_type == 'video' or media.media_type == 'external_video'
+                      echo 'products.product.video_thumbnail_alt' | t: imageAlt: media.alt | escape
+                    elsif media.media_type == 'model'
+                      echo 'products.product.model_thumbnail_alt' | t: imageAlt: media.alt | escape
+                    else
+                      echo 'products.product.gallery_thumbnail_alt' | t: imageAlt: media.alt | escape
+                    endif
+                  endcapture
+                -%}
+
+                <div data-thumbnail-alt="{{ media.alt }}" {% if is_stacked_layout and product.selected_or_first_available_variant.featured_media.alt != media.alt %}style="display:none;"{% endif %} class="{{ media.alt }} product__media-flex-wrapper" data-product-media-flex-wrapper>
+                  <div class="product__media-flex">
+                    {%- render 'media',
+                        media: media,
+                        id: id,
+                        loop: enable_video_looping,
+                        is_featured: is_featured,
+                        images_loading_type: images_loading_type,
+                        product: product,
+                        lazy_load: false,
+                        index: forloop.index0
+                    -%}
+
+                    {%- liquid
+                      if is_stacked_layout
+                        assign xr_id = false
+
+                        if first_media and has_first_3d_model
+                          assign xr_id = first_3d_model.id
+                        elsif media.media_type == 'model'
+                          assign xr_id = media.id
+                        endif
+
+                        if xr_id
+                          render 'xr-button', model_id: xr_id, multi: true
+                        endif
+
+                        assign first_media = false
+                      endif
+                    -%}
+                  </div>
+                </div>
+              {%- endfor -%}
+            </div>
+
+            {%- if has_first_3d_model -%}
+              {%- render 'xr-button', model_id: first_3d_model.id, multi: false -%}
+            {%- endif -%}
+
+            {%- if product.media.size > 1 -%}
+              <div class="product__thumbnails row row--sm mt-3{% if is_stacked_layout %} d-lg-none{% endif %}{% if enable_slider %} slick{% endif %}{% if product.media.size <= 5 %} slick-disabled{% endif %}"
+                   data-product-thumbnails>
+
+                {% for media in product.media %}
+                  <div class="col-2" data-thumbnail-alt="{{ media.alt }}">
+                    {%- liquid
+                      capture thumbnail_alt
+                        if media.media_type == 'video' or media.media_type == 'external_video'
+                          echo 'products.product.video_thumbnail_alt' | t: imageAlt: media.alt | escape
+                        elsif media.media_type == 'model'
+                          echo 'products.product.model_thumbnail_alt' | t: imageAlt: media.alt | escape
+                        else
+                          echo 'products.product.gallery_thumbnail_alt' | t: imageAlt: media.alt | escape
+                        endif
+                      endcapture
+                    -%}
+
+                    <button type="button" aria-label="Click to see {{ forloop.index }} media" class="product__thumbnail media-wrapper media-wrapper--cover media-wrapper--product{% if media == featured_media %} product__thumbnail--active{% endif %}"
+                       data-product-thumbnail
+                       data-media-id="{{ section.id }}-{{ media.id }}"
+                       style="padding-top: 100%;">
+
+                      {%- assign width_ratio = 100.0 | divided_by: 20 -%}
+                      {%- assign maximum_image_width = settings.page_container_width | divided_by: width_ratio -%}
+
+                      {%- capture sizes -%}min({{ maximum_image_width | ceil }}px, 20vw){% endcapture %}
+
+                      {{- media | image_url: width: media.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '200,300,400,500,600,700', class: 'media' | replace: 'src=', 'data-src=' | replace: 'srcset=', 'data-srcset=' -}}
+
+                      {%- if media.media_type == 'video' or media.media_type == 'external_video' or media.media_type == 'model' -%}
+                        <div class="product__thumbnail-icon">
+                          {% render 'icon', icon: media.media_type %}
+                        </div>
+                      {%- endif -%}
+                    </button>
+                  </div>
+                {% endfor %}
+              </div>
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+        {%- endif -%}
+
+        {%- if show_divider_on_mobile -%}
+          <hr class="hr hr--divider hr--rev mt-4 d-lg-none">
+        {%- endif -%}
+      </div>
+
+      <div class="{{ product_meta_width }}">
+        <div class="product__meta sticky sticky--lg{% if is_sold_out %} product__meta--sold-out{% endif %}" itemprop="offers" itemscope itemtype="http://schema.org/Offer" data-product-meta>
+          {%- liquid
+            assign product_description = product.description | strip_html | replace: '[split_description]', '' | newline_to_br | split: '<br />'
+            assign filtered_description = ''
+
+            for line in product_description
+              if line != blank
+                assign filtered_description = filtered_description | append: line
+              endif
+            endfor
+          -%}
+
+          <meta itemprop="url" content="{{ shop.url }}{{ product.url }}">
+          <meta itemprop="description" content="{{ filtered_description | escape }}">
+          <meta itemprop="priceCurrency" content="{{ cart.currency.iso_code }}">
+          <link itemprop="availability" href="http://schema.org/{%- if product.available -%}InStock{%- else -%}OutOfStock{%- endif -%}">
+
+          {%- if current_variant.inventory_quantity > 0 and current_variant.inventory_management == 'shopify' -%}
+            <meta itemprop="inventoryLevel" content="{{ current_variant.inventory_quantity }}">
+          {%- endif -%}
+
+          <div class="row gy-3">
+            {%- for block in section.blocks -%}
+              {%- case block.type -%}
+                {%- when '@app' -%}
+                  {%- render block -%}
+
+                {%- when 'properties' -%}
+                  {%- liquid
+                    assign show_vendor = block.settings.show_vendor
+                    assign show_type = block.settings.show_type
+                    assign show_sku = block.settings.show_sku
+                    assign show_icons = block.settings.show_icons
+                    assign show_labels = block.settings.show_labels
+
+                    assign show_properties = false
+
+                    if show_vendor and product.vendor != blank
+                      assign show_properties = true
+                    elsif show_type and product.type != blank
+                      assign show_properties = true
+                    elsif show_sku
+                      assign show_properties = true
+                    endif
+                  -%}
+
+                  {%- if show_properties -%}
+                    <ul class="inline-list">
+                      {%- if show_vendor and product.vendor != blank -%}
+                        <li>
+                          <a href="{{ product.vendor | url_for_vendor }}" class="text-sm">
+                            {%- if show_icons -%}
+                              <span class="{{ settings.icon }} icon icon--middle" translate="no">store</span>
+                            {%- endif -%}
+
+                            {%- if show_labels -%}
+                              <span>Vendor: </span>
+                            {%- endif -%}
+
+                            <span itemprop="brand">{{ product.vendor }}</span>
+                          </a>
+                        </li>
+                      {%- endif -%}
+
+                      {%- if show_type and product.type != blank -%}
+                        <li>
+                          <a href="{{ product.type | url_for_type }}" class="text-sm">
+                            {%- if show_icons -%}
+                              <span class="{{ settings.icon }} icon icon--middle" translate="no">folder</span>
+                            {%- endif -%}
+
+                            {%- if show_labels -%}
+                              <span>Type: </span>
+                            {%- endif -%}
+
+                            <span>{{ product.type }}</span>
+                          </a>
+                        </li>
+                      {%- endif -%}
+
+                      {%- if show_sku -%}
+                        <li>
+                        <span class="text-sm"{% if sku == blank %} hidden{% endif %}>
+                          {%- if show_icons -%}
+                            <span class="{{ settings.icon }} icon icon--middle" translate="no">settings</span>
+                          {%- endif -%}
+
+                          {%- if show_labels -%}
+                            <span>SKU: </span>
+                          {%- endif -%}
+
+                          <span data-product-sku itemprop="sku">{{ sku }}</span>
+                        </span>
+                        </li>
+                      {%- endif -%}
+                    </ul>
+                  {%- endif -%}
+
+                {%- when 'title' -%}
+                  {%- liquid
+                    assign position = block.settings.position
+                  -%}
+
+                  {%- if position == 'above' -%}
+                    <div class="d-none d-lg-block">
+                  {%- endif -%}
+
+                    {{ title_markup }}
+
+                  {%- if position == 'above' -%}
+                    </div>
+                  {%- endif -%}
+
+                {%- when 'star_rating' -%}
+                  <div class="product__reviews{% if position == 'above' %} d-none d-lg-block{% endif %}">
+                    {%- render 'review-badge', product: product, position: 'product_page' -%}
+                  </div>
+
+                {%- when 'description' -%}
+                  {%- liquid
+                    assign show_as_separate_section = block.settings.show_as_separate_section
+                    assign text_alignment = block.settings.text_alignment
+                    assign text_alignment_mobile = block.settings.text_alignment_mobile
+                  -%}
+
+                  {%- unless empty_state -%}
+                    {%- if show_as_separate_section == false or is_to_split_description -%}
+                      <div class="rte {{ text_alignment }} {{ text_alignment_mobile }} js-product-description">
+                        {%- if is_to_split_description -%}
+                          {%- assign first_part = product.description | split: '<p>[split_description]</p>' | first -%}
+
+                          {%- unless first_part contains '[split_description]' -%}
+                            {{ first_part }}
+                          {%- else -%}
+                            {{ product.description | split: '[split_description]' | first }}
+                          {%- endunless -%}
+                        {%- else -%}
+                          {{ product.description | replace: '<p>[split_description]</p>', '' | replace: '[split_description]', '' }}
+                        {%- endif -%}
+                      </div>
+                    {%- endif -%}
+                  {%- endunless -%}
+
+                {%- when 'price' -%}
+                  {%- liquid
+                    assign position = block.settings.position
+                  -%}
+
+                  {%- if position == 'above' -%}
+                    <div class="d-none d-lg-block">
+                  {%- endif -%}
+
+                    {{ price_markup }}
+
+                  {%- if position == 'above' -%}
+                    </div>
+                  {%- endif -%}
+
+                {%- when 'wish_list' -%}
+                  <div class="dbtfy-wish-list-container" hidden>
+                    {%- render 'dbtfy-wish-list', type: 'button', product: product -%}
+                  </div>
+
+                {%- when 'quick_compare' -%}
+                  <div class="dbtfy-quick-compare-container" hidden>
+                    {%- render 'dbtfy-quick-compare', product: product -%}
+                  </div>
+
+                {%- when 'bullet_points' -%}
+                  <div class="dbtfy-product-bullet-points-container" hidden></div>
+
+                {%- when 'size_chart' -%}
+                  {%- if block.settings.position == 'separate-block' -%}
+                    <div class="dbtfy-size-chart-container" hidden></div>
+                  {%- endif -%}
+
+                {%- when 'color_swatches' -%}
+                  <div class="dbtfy-color-swatches-container">
+                    {%- render 'dbtfy-color-swatches', product: product, id: section.id -%}
+                  </div>
+
+                {%- when 'product_swatches' -%}
+                  <div class="dbtfy-product-swatches-container" hidden></div>
+
+                {%- when 'variant_picker' -%}
+                  {%- liquid
+                    assign type = block.settings.type
+                    assign size_label_list = size_chart_block.settings.option_name | replace: ', ', ',' | downcase | split: ','
+                  -%}
+
+                  {%- unless empty_state -%}
+                    <div>
+                      {%- unless product.has_only_default_variant -%}
+                        <div class="row gy-3">
+                          {%- for option in product.options_with_values -%}
+                            {%- liquid
+                              assign index = forloop.index
+                              assign option_name = option.name | escape
+                              assign option_name_downcase = option_name | downcase
+                              assign first_option_value = current_variant.options[forloop.index0] | escape
+
+                              assign is_color_option = false
+
+                              if product.available and product.variants.size >= 1
+                                assign swatch_list = settings.dbtfy_color_swatches_section_options | split: ','
+
+                                for swatch in swatch_list
+                                  assign swatch_option_name = swatch | handleize
+                                  assign current_option_name = option.name | handleize
+
+                                  if current_option_name == swatch_option_name
+                                    assign is_color_option = true
+                                  endif
+                                endfor
+                              endif
+
+                              assign first_option_value = current_variant.options[forloop.index0] | escape
+                            -%}
+
+                            <div data-product-option{% if is_color_option %} data-product-option-color{% endif %}>
+                              <label class="d-flex align-items-center justify-content-between mb-1"
+                                     for="ProductSelect-option-{{ forloop.index0 }}"
+                                     data-product-option-label
+                                     data-option-index="{{ index }}"
+                                     data-option-name="{{ option_name }}">
+                                <span>
+                                  {{ option_name }}: <span class="text-sub">{{ first_option_value }}</span>
+                                </span>
+
+                                {%- if size_chart_block != blank and size_chart_block.settings.position == 'next-to-size' and size_label_list contains option_name_downcase -%}
+                                  <span class="ms-2">
+                                    <span class="dbtfy-size-chart-container" hidden></span>
+                                  </span>
+                                {%- endif -%}
+                              </label>
+
+                              {%- if type == 'radio' -%}
+                                <fieldset class="single-option-radio inline-list"
+                                          id="ProductSelect-option-{{ forloop.index0 }}">
+
+                                  {%- for value in option.values -%}
+                                    {%- liquid
+                                      assign variant_label_state = true
+
+                                      if product.options.size == 1
+                                        unless product.variants[forloop.index0].available
+                                          assign variant_label_state = false
+                                        endunless
+                                      endif
+                                    -%}
+
+                                    <input type="radio"
+                                           data-product-option-selector
+                                        {% if option.selected_value == value -%} checked="checked"{% endif %}
+                                           value="{{ value | escape }}"
+                                           data-index="option{{ index }}"
+                                           name="option{{ option.position }}"
+                                           id="ProductSelect-option-{{ section.id }}-{{ option_name | handleize }}-{{ value | escape }}">
+
+                                    <label for="ProductSelect-option-{{ section.id }}-{{ option_name | handleize }}-{{ value | escape }}"{% unless variant_label_state %} class="text-strike"{% endunless %}>{{ value | escape }}</label>
+                                  {%- endfor -%}
+                                </fieldset>
+                              {%- else -%}
+                                <select name="option{{ option.position }}"
+                                        data-product-option-selector
+                                        class="select select--sm select--full"
+                                        id="ProductSelect-option-{{ forloop.index0 }}"
+                                        data-index="option{{ index }}">
+
+                                  {%- for value in option.values -%}
+                                    <option value="{{ value | escape }}"{% if option.selected_value == value %} selected="selected"{% endif %}>{{ value | escape }}</option>
+                                  {%- endfor -%}
+                                </select>
+                              {%- endif -%}
+                            </div>
+                          {%- endfor -%}
+                        </div>
+                      {%- endunless -%}
+
+                      <select name="id"
+                              form="{{ form_id }}"
+                              data-product-master-select
+                              id="MainProductSelect-{{ product.id }}"
+                              class="d-none product-form__item"
+                              data-section-id="{{ section.id }}">
+
+                        {%- for variant in product.variants -%}
+                          {%- liquid
+                            assign product_qty = 0
+
+                            if variant.inventory_management == 'shopify'
+                              if variant.inventory_policy == 'continue'
+                                assign product_qty = 99999
+                              else
+                                if variant.inventory_quantity > 0
+                                  assign product_qty = variant.inventory_quantity
+                                else
+                                  assign product_qty = 0
+                                endif
+                              endif
+                            else
+                              assign product_qty = 99999
+                            endif
+                          -%}
+
+                          {%- capture variant_settings -%}
+                            {
+                              "sku": {{ variant.sku | json }},
+                              "image": {% if variant.image != blank %}{{ variant.image | image_url: width: 100 | json }}{% else %}null{% endif %},
+                              "inventoryPolicy": {{ variant.inventory_policy | json }},
+                              "inventoryQuantity": {{ product_qty | json }},
+                              "productQty": {{ product_qty | json }},
+                              "option1": {{ variant.option1 | json }},
+                              "option2": {{ variant.option2 | json }},
+                              "option3": {{ variant.option3 | json }}
+                            }
+                          {%- endcapture -%}
+
+                          <option
+                              {% if variant == product.selected_or_first_available_variant %}selected="selected"{% endif %}
+                              {% unless variant.available %}disabled="disabled"{% endunless %}
+                              value="{{ variant.id }}"
+                              data-variant-settings='{{ variant_settings }}'>
+
+                            {%- if variant.available -%}
+                              {{ variant.title }} - {{ variant.price | money_with_currency }}
+                            {%- else -%}
+                              {{ variant.title }} - {{ 'products.product.sold_out' | t }}
+                            {%- endif -%}
+                          </option>
+                        {%- endfor -%}
+                      </select>
+                    </div>
+                  {%- endunless -%}
+
+                {%- when 'quantity_selector' -%}
+                  {%- assign has_quantity_picker = true -%}
+
+                  {%- unless empty_state -%}
+                    <div class="product__quantity">
+                      {%- capture quantity_id -%}product-{{ section.id }}-{{ product.id }}{%- endcapture -%}
+
+                      <div class="mb-1 d-flex justify-content-between">
+                        <label class="me-2" for="{{ quantity_id }}">
+                          {{ 'products.product.quantity' | t }}
+                        </label>
+
+                        {%- render 'dbtfy-inventory-quantity', product: product -%}
+                      </div>
+
+                      <div data-product-quantity>
+                        {%- render 'quantity-selector', type: 'product', id: quantity_id, form_id: form_id -%}
+                      </div>
+                    </div>
+                  {%- endunless -%}
+
+                {%- when 'customizable_products' -%}
+                  <div class="dbtfy-customizable-products-container" hidden></div>
+
+                {%- when 'buy_buttons' -%}
+                  {%- unless empty_state -%}
+                    {%- liquid
+                      assign form_classes = 'product__form'
+
+                      if product.has_only_default_variant
+                        assign form_classes = form_classes | append: ' product__form--no-variants'
+                      endif
+                    -%}
+
+{%- form 'product', product, class: form_classes, id: form_id, data-product-form: '' -%}
+                      <div>
+                        <button type="submit" name="add" id="AddToCart--{{ section.id }}" class="btn btn--primary btn--full js-product-add-to-cart dbtfy-add-to-cart-animation-button"{% unless current_variant.available %} disabled="disabled"{% endunless %} data-product-add-to-cart>
+                          <span class="btn__text">
+                            <span class="d-inline-block me-1" style="vertical-align: sub" aria-hidden="true">
+                              {%- if settings.cart_custom_icon != blank -%}
+                                {{- settings.cart_custom_icon | image_url: width: settings.cart_custom_icon.width | image_tag: loading: 'lazy', sizes: '64px', widths: '32,64', style: 'width: 100%; max-width: 20px; max-height: 20px; transform: translateY(1px);' -}}
+                              {%- else -%}
+                                {%- render 'icon', icon: settings.cart_icon -%}
+                              {%- endif -%}
+                            </span>
+
+                            <span data-product-add-to-cart-text>
+                              {%- liquid
+                                if current_variant.available
+                                  echo 'products.product.add_to_cart' | t
+                                else
+                                  echo 'products.product.sold_out' | t
+                                endif
+                              -%}
+                            </span>
+                          </span>
+                        </button>
+
+                        {%- if settings.show_dynamic_checkout_buttons -%}
+                          <div class="mt-2">
+                            {{ form | payment_button }}
+                          </div>
+                        {%- endif -%}
+                      </div>
+                    {%- endform -%}
+                  {%- else -%}
+                    <div>
+                      <button type="button" class="btn btn--primary btn--full">
+                        <span class="d-inline-block me-1" style="vertical-align: sub" aria-hidden="true">
+                          {%- if settings.cart_custom_icon != blank -%}
+                            {{- settings.cart_custom_icon | image_url: width: settings.cart_custom_icon.width | image_tag: loading: 'lazy', sizes: '64px', widths: '32,64', style: 'width: 100%; max-width: 20px; max-height: 20px; transform: translateY(1px);' -}}
+                          {%- else -%}
+                            {%- render 'icon', icon: settings.cart_icon -%}
+                          {%- endif -%}
+                        </span>
+
+                        <span>
+                          {{ 'products.product.add_to_cart' | t }}
+                        </span>
+                      </button>
+                    </div>
+                  {%- endunless -%}
+
+                {%- when 'back_in_stock' -%}
+                  <div class="dbtfy-back-in-stock-container">
+                    {%- render 'dbtfy-back-in-stock', product: product, current_variant: current_variant -%}
+                  </div>
+
+                {%- when 'trust_badge' -%}
+                  <div class="dbtfy-trust-badge-container">
+                    {%- render 'dbtfy-trust-badge', position: 'product-page' -%}
+                  </div>
+
+                {%- when 'upsell_bundles' -%}
+                  <div class="dbtfy-upsell-bundles-container" hidden></div>
+
+                {%- when 'delivery_time' -%}
+                  <div class="dbtfy-delivery-time-container" hidden></div>
+
+                {%- when 'product_tabs' -%}
+                  <div class="dbtfy-product-tabs-container" hidden></div>
+
+                {%- when 'tags' -%}
+                  {%- liquid
+                    assign show_icon = block.settings.show_icon
+                    assign show_label = block.settings.show_label
+                  -%}
+
+                  {%- if product.tags.size > 0 -%}
+                    <ul class="inline-list">
+                      {%- if show_icon or show_label -%}
+                        <li>
+                          {%- if show_icon -%}
+                            <span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">local_offer</span>
+                          {%- endif -%}
+
+                          {%- if show_label -%}
+                            {{ 'blogs.article.tags' | t }}
+                          {%- endif -%}
+                        </li>
+                      {%- endif -%}
+
+                      {%- for tag in product.tags -%}
+                        <li>
+                          <a class="btn btn--reveal-primary btn--xs" href="/collections/all/{{ tag | handleize }}">{{ tag }}</a>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endif -%}
+
+                {%- when 'collections' -%}
+                  {%- liquid
+                    assign show_icon = block.settings.show_icon
+                    assign show_label = block.settings.show_label
+                  -%}
+
+                  {%- if product.collections.size > 0 -%}
+                    <ul class="inline-list">
+                      {%- if show_icon or show_label -%}
+                        <li>
+                          {%- if show_icon -%}
+                            <span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">layers</span>
+                          {%- endif -%}
+
+                          {%- if show_label -%}
+                            {{ 'collections.general.catalog_title' | t }}
+                          {%- endif -%}
+                        </li>
+                      {%- endif -%}
+
+                      {%- for collection in product.collections -%}
+                        <li>
+                          <a class="btn btn--reveal-primary btn--xs" href="{{ collection.url }}">{{ collection.title }}</a>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endif -%}
+
+                {%- when 'sharing_icons' -%}
+                  {%- liquid
+                    assign show_icon = block.settings.show_icon
+                    assign show_label = block.settings.show_label
+                  -%}
+
+                  {%- render 'social-sharing', share_button: 'btn btn--square-xs', show_icon: show_icon, show_label: show_label -%}
+
+                {%- when 'social_discount' -%}
+                  <div class="dbtfy-social-discount-container" hidden></div>
+
+                {%- when 'button' -%}
+                  {%- liquid
+                    assign button_label = block.settings.button_label
+                    assign button_link = block.settings.button_link
+                    assign button_style = block.settings.button_style
+                  -%}
+      
+                  {%- if button_label != blank and button_link != blank -%}
+                    <div>
+                      <a href="{{ button_link }}" class="btn {{ button_style }}">{{ button_label }}</a>
+                    </div>
+                  {%- endif -%}
+      
+
+                {%- when 'full_details' -%}
+                  {%- unless empty_state -%}
+                    <a class="text-link" href="{{ product.url }}" data-product-full-details>
+                      {{ 'products.product.full_details' | t }}
+                      <span class="{{ settings.icon }}" translate="no" aria-hidden="true">arrow_forward</span>
+                    </a>
+                  {%- endunless -%}
+
+              {%- endcase -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="product__tabs-content" hidden>
+    <div class="product__tab-content product__tab-content--description">
+      {%- liquid
+        if is_to_split_description
+          assign second_part = product.description | split: '<p>[split_description]</p>' | last
+
+          unless second_part contains '[split_description]'
+            echo second_part
+          else
+            echo product.description | split: '[split_description]' | last
+          endunless
+        else
+          echo product.description | replace: '<p>[split_description]</p>', '' | replace: '[split_description]', ''
+        endif
+      -%}
+    </div>
+  </div>
+
+  {%- unless empty_state -%}
+    <script type="application/json" data-product-json>
+      {
+        "available": {{ product.available | json }},
+        "collections": {{ product.collections | json }},
+        "compare_at_price": {{ product.compare_at_price | json }},
+        "compare_at_price_max": {{ product.compare_at_price_max | json }},
+        "compare_at_price_min": {{ product.compare_at_price_min | json }},
+        "compare_at_price_varies": {{ product.compare_at_price_varies | json }},
+        "content": {{ product.content | json }},
+        "created_at": {{ product.created_at | json }},
+        "description": {{ product.description | json }},
+        "featured_image": {{ product.featured_image | json }},
+        "first_available_variant_compare_at_price": {{ product.selected_or_first_available_variant.compare_at_price | json }},
+        "handle": {{ product.handle | json }},
+        "id": {{ product.id | json }},
+        "images": {{ product.images | json }},
+        "media": {{ product.media | json }},
+        "options": {{ product.options | json }},
+        "options_with_values": {
+          {% for product_option in product.options_with_values %}
+            "option{{ product_option.position }}": {{ product_option.values | json }}{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        },
+        "price": {{ product.price | json }},
+        "price_max": {{ product.price_max | json }},
+        "price_min": {{ product.price_min | json }},
+        "price_varies": {{ product.price_varies | json }},
+        "published_at": {{ product.published_at | json }},
+        "requires_selling_plan": {{ product.requires_selling_plan | json }},
+        "selling_plan_groups": {{ product.selling_plan_groups | json }},
+        "tags": {{ product.tags | json }},
+        "title": {{ product.title | json }},
+        "type": {{ product.type | json }},
+        "variants": {{ product.variants | json }},
+        "vendor": {{ product.vendor | json }},
+        "has_only_default_variant": {{ product.has_only_default_variant | json }}
+      }
+    </script>
+
+    <script type="application/json" id="ModelJson-{{ section.id }}">
+      {{ product.media | where: 'media_type', 'model' | json }}
+    </script>
+  {%- endunless -%}
+</div>
+
+{%- for block in section.blocks -%}
+  {%- case block.type -%}
+    {%- when 'description' -%}
+      {%- liquid
+        assign show_as_separate_section = block.settings.show_as_separate_section
+        assign block_style = block.settings.block_style
+        assign container_size = block.settings.container_size
+        assign text_alignment = block.settings.text_alignment
+        assign text_alignment_mobile = block.settings.text_alignment_mobile
+      -%}
+
+      {%- if show_as_separate_section or is_to_split_description -%}
+        <div class="section section--{{ block_style }}">
+          <div class="{{ container_size }}">
+            <div class="rte {{ text_alignment }} {{ text_alignment_mobile }} js-product-description">
+              {%- if is_to_split_description -%}
+                {%- assign second_part = product.description | split: '<p>[split_description]</p>' | last -%}
+
+                {%- unless second_part contains '[split_description]' -%}
+                  {{ second_part }}
+                {%- else -%}
+                  {{ product.description | split: '[split_description]' | last }}
+                {%- endunless -%}
+              {%- else -%}
+                {{ product.description | replace: '<p>[split_description]</p>', '' | replace: '[split_description]', '' }}
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+      {%- endif -%}
+
+  {%- endcase -%}
+{%- endfor -%}
+
+{%- if template.name == 'product' -%}
+  {%- render 'dbtfy-sticky-addtocart', product: product, current_variant: current_variant, enable_quantity: has_quantity_picker -%}
+{%- endif -%}

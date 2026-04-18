@@ -1,0 +1,17 @@
+{%- if heading != blank or subheading != blank -%}
+  <div class="row mb-4">
+    <div class="col-md-8 offset-md-2">
+      <div class="row gy-3 text-center{% if container == 'container-full' %} px-2-5{% endif %}">
+        {%- if heading != blank -%}
+          <div>
+            <h2 class="h2{% if enlarge %} page-title{% endif %}">{{ heading | escape }}</h2>
+          </div>
+        {%- endif -%}
+
+        {%- if subheading != blank -%}
+          <p class="sm:text-lg text-break-all rte">{{ subheading }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+{%- endif -%}

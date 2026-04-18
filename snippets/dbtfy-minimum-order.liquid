@@ -1,0 +1,20 @@
+{%- liquid
+  assign icon = settings.dbtfy_minimum_order_icon
+-%}
+
+
+{%- capture section_settings -%}
+  {
+    "cartTotal": {{ cart.total_price | json }}
+  }
+{%- endcapture -%}
+
+<div class="dbtfy-minimum-order text-sm" data-section-settings='{{ section_settings }}' hidden>
+  <div class="d-flex">
+    {%- if icon != blank -%}
+      <span class="{{ settings.icon }} icon icon--width text-secondary" translate="no" aria-hidden="true">{{ icon }}</span>
+    {%- endif -%}
+
+    <p class="dbtfy-minimum-order__message">{{ minimum_order_text }}</p>
+  </div>
+</div>

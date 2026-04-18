@@ -1,0 +1,18 @@
+{%- liquid
+  if show_on_desktop == nil and show_on_mobile == nil
+  else
+    assign visibility_class = 'd-none'
+
+    if show_on_mobile
+      assign visibility_class = 'd-block'
+
+      unless show_on_desktop
+        assign visibility_class = visibility_class | append: ' d-md-none'
+      endunless
+    elsif show_on_desktop
+      assign visibility_class = 'd-none d-md-block'
+    endif
+
+    echo visibility_class
+  endif
+-%}

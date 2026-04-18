@@ -1,0 +1,69 @@
+{%- liquid
+  assign show_language_selector = false
+  if settings.show_language_selector and localization.available_languages.size > 1
+    assign show_language_selector = true
+  endif
+
+  assign show_country_selector = false
+  if settings.show_country_selector and localization.available_countries.size > 1
+    assign show_country_selector = true
+  endif
+
+  if toggle_class == blank
+    assign toggle_class = 'btn btn--sm'
+  endif
+
+  assign form_id = 'localization_form--' | append: position
+-%}
+
+{%- if show_language_selector or show_country_selector -%}
+  {%- form 'localization', id: form_id, class: 'form form--vertical' -%}
+    <div class="dropdown">
+      <button type="button"
+              id="localization-toggle--{{ section.id }}"
+              class="dropdown__toggle {{ toggle_class }}"
+              title="{{ 'general.language.dropdown_label' | t }}/{{ 'general.currency.dropdown_label' | t }}"
+              aria-label="{{ 'general.language.dropdown_label' | t }}/{{ 'general.currency.dropdown_label' | t }}"
+              aria-controls="localization-menu--{{ section.id }}"
+              aria-haspopup="true"
+              aria-expanded="false">
+        <span class="{{ settings.icon }}" translate="no" aria-hidden="true">language</span>
+      </button>
+
+      <div id="localization-menu--{{ position }}" class="dropdown__menu dropdown__menu--body {{ menu_class }}{% if position == 'footer' %} dropdown__menu--up{% endif %}" aria-labelledby="localization-toggle--{{ section.id }}">
+        {%- if show_language_selector -%}
+          <label for="lang-list-{{ section.id }}" class="mb-1">{{ 'general.language.dropdown_label' | t }}</label>
+          <select id="lang-list-{{ section.id }}" class="select select--sm" name="language_code">
+            {%- for language in localization.available_languages -%}
+              <option value="{{ language.iso_code }}" {% if language.iso_code == localization.language.iso_code %}selected="selected"{% endif %}>
+                {{ language.endonym_name | capitalize }}
+              </option>
+            {%- endfor -%}
+          </select>
+        {%- endif -%}
+
+        {%- render 'dbtfy-custom-currencies' -%}
+
+        {%- if show_country_selector -%}
+          <div class="country-selector">
+            <label for="country-list-{{ section.id }}" class="mb-1">{{ 'general.country.dropdown_label' | t }}</label>
+            <select id="country-list-{{ section.id }}" class="select select--sm" name="country_code">
+              {%- for country in localization.available_countries -%}
+                <option value="{{ country.iso_code }}" data-currency-code="{{ country.currency.iso_code }}" data-country-code="{{ country.iso_code }}" {% if country.iso_code == localization.country.iso_code %}selected="selected"{% endif %}>
+                  {{ country.name }} ({{ country.currency.iso_code }}{% if country.currency.symbol %} {{ country.currency.symbol }}{% endif %})
+                </option>
+              {%- endfor -%}
+            </select>
+          </div>
+        {%- endif -%}
+
+        <button type="submit" class="btn btn--primary btn--sm btn--full">
+          <span class="btn__text">
+            <span class="{{ settings.icon }}" translate="no" aria-hidden="true">sync</span>
+            {{ 'general.localization.submit_label' | t }}
+          </span>
+        </button>
+      </div>
+    </div>
+  {%- endform -%}
+{%- endif -%}

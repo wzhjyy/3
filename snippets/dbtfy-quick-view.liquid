@@ -1,0 +1,25 @@
+{%- liquid
+  assign show_on_desktop = settings.dbtfy_quick_view_show_on_desktop
+  assign show_on_mobile = settings.dbtfy_quick_view_show_on_mobile
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+-%}
+
+{%- if type == 'container' -%}
+  <div class="dbtfy-quick-view dbtfy-quick-view--container">
+    <div class="dbtfy-quick-view__content {{ visibility_class }}"></div>
+  </div>
+{%- else -%}
+  <div class="dbtfy-quick-view">
+    <div class="dbtfy-quick-view__content {{ visibility_class }}">
+      <button class="dbtfy-quick-view__icon btn btn--reveal-primary btn--square-xs"
+              data-product-handle="{{ product.handle }}">
+        <span class="btn__text">
+          <span class="{{ settings.icon }}" translate="no">remove_red_eye</span>
+        </span>
+      </button>
+    </div>
+  </div>
+{%- endif -%}

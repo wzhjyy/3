@@ -1,0 +1,190 @@
+{%- liquid
+  assign show_star_rating = settings.dbtfy_sticky_addtocart_show_star_rating
+  assign enable_animation = settings.dbtfy_sticky_addtocart_enable_animation
+  assign simplify_on_mobile = settings.dbtfy_sticky_addtocart_simplify_on_mobile
+  assign position = settings.dbtfy_sticky_addtocart_position
+  assign trigger_type = settings.dbtfy_sticky_addtocart_trigger_type
+  assign scroll_depth_percentage = settings.dbtfy_sticky_addtocart_scroll_depth_percentage
+
+  capture product_collections
+    for collection in product.collections
+      echo collection.handle
+
+      unless forloop.last
+        echo ','
+      endunless
+    endfor
+  endcapture
+-%}
+
+{%- capture section_settings -%}
+  {
+    "productHandle": {{ product.handle | json }},
+    "position": {{ position | json }},
+    "triggerType": {{ trigger_type | json }},
+    "scrollDepthPercentage": {{ scroll_depth_percentage | json }}
+  }
+{%- endcapture -%}
+
+{%- capture form_id -%}sticky-atc-{{ product.id }}{%- endcapture -%}
+
+{%- if product != blank -%}
+  <div class="dbtfy-sticky-addtocart dbtfy-sticky-addtocart--{{ position }}"
+       data-product-id="{{ product.id }}"
+       data-product-collections="{{ product_collections }}"
+       data-section-settings='{{ section_settings }}'>
+
+    <div class="dbtfy-sticky-addtocart__bar stacked-on-top-of-content">
+      <div class="dbtfy-sticky-addtocart__container container">
+        {%- form 'product', product, id: form_id -%}
+          <div class="row row--sm row-cols-auto align-items-center flex-nowrap dbtfy-sticky-addtocart__row">
+            <div class="{% if simplify_on_mobile %}d-none d-md-block{% endif %}">
+              {%- if product.has_only_default_variant -%}
+                {%- assign media = product.media.first -%}
+
+                <div class="dbtfy-sticky-addtocart__image d-block media-wrapper{% if media != blank %} media-wrapper--product{% endif %}"
+                     style="padding-top: 100%;">
+                  {%- if media != blank -%}
+                    {{- media | image_url: width: 100 | image_tag: loading: 'lazy', sizes: sizes, widths: '100,200', class: 'media' -}}
+                  {%- else -%}
+                    {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg media' }}
+                  {%- endif -%}
+                </div>
+              {%- else -%}
+                {%- liquid
+                  assign first_variant = product.selected_or_first_available_variant
+                  assign media = product.media.first
+
+                  if first_variant.image
+                    assign media = first_variant.image
+                  endif
+                -%}
+
+                <div class="dbtfy-sticky-addtocart__image d-block media-wrapper{% if media != blank %} media-wrapper--product{% endif %}"
+                     style="padding-top: 100%;">
+                  {%- if media != blank -%}
+                    {{- media | image_url: width: 100 | image_tag: loading: 'lazy', sizes: sizes, widths: '100,200', class: 'media' -}}
+                  {%- else -%}
+                    {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg media' }}
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+            </div>
+
+            <div class="d-none d-md-block flex-fill text-ellipsis">
+              <h5 class="w-100 mb-1 text-ellipsis h5">{{ product.title }}</h5>
+
+              <div class="text-accent d-flex align-items-center">
+                <span class="dbtfy-sticky-addtocart__price dbtfy-sticky-addtocart__price--total{% if position == 'top' %} tooltip-wrapper--bottom{% endif %}">
+                  <span class="money"></span>
+                </span>
+
+                <span class="dbtfy-sticky-addtocart__price dbtfy-sticky-addtocart__price--compare text-accent text-muted text-strike ms-2{% if position == 'top' %} tooltip-wrapper--bottom{% endif %}">
+                  <span class="money"></span>
+                </span>
+
+                <span class="dbtfy-discount-saved badge dbtfy-sticky-addtocart__discount-saved ms-2">
+                  <span class="{{ settings.icon }}" translate="no">local_offer</span>
+                  <span class="dbtfy-sticky-addtocart__discount-saved-text{% if position == 'top' %} tooltip-wrapper--bottom{% endif %}"></span>
+                </span>
+              </div>
+            </div>
+
+            {%- if show_star_rating -%}
+              <div class="text-end flex-grow-0 d-none d-md-block dbtfy-sticky-addtocart__reviews-wrapper">
+                {%- render 'review-badge', product: product, position: 'product_grid' -%}
+              </div>
+            {%- endif -%}
+
+            <div class="flex-fill dbtfy-sticky-addtocart__select-wrapper{% if simplify_on_mobile %} d-none d-md-block{% endif %}"
+                 {% if product.has_only_default_variant %}hidden{% endif %}>
+              <select class="select select--sm dbtfy-sticky-addtocart__select w-100 w-md-auto text-ellipsis"
+                      name="id">
+
+                {%- for variant in product.variants -%}
+                  {%- liquid
+                    assign product_qty = 0
+
+                    if variant.inventory_management == 'shopify'
+                      if variant.inventory_policy == 'continue'
+                        assign product_qty = 99999
+                      else
+                        if variant.inventory_quantity > 0
+                          assign product_qty = variant.inventory_quantity
+                        else
+                          assign product_qty = 0
+                        endif
+                      endif
+                    else
+                      assign product_qty = 99999
+                    endif
+                  -%}
+
+                  {%- capture variant_settings -%}
+                    {
+                      "title": {{ variant.title | escape | json }},
+                      "price": {{ variant.price | json }},
+                      "comparePrice": {{ variant.compare_at_price | default: 0 | json }},
+                      "sku": {{ variant.sku | json }},
+                      "image": {% if variant.image != blank %}{{ variant.image | image_url: width: 100 | json }}{% else %}null{% endif %},
+                      "inventoryPolicy": {{ variant.inventory_policy | json }},
+                      "inventoryQuantity": {{ product_qty | json }},
+                      "productQty": {{ product_qty | json }},
+                      "option1": {{ variant.option1 | json }},
+                      "option2": {{ variant.option2 | json }},
+                      "option3": {{ variant.option3 | json }}
+                    }
+                  {%- endcapture -%}
+
+                  <option
+                      {% if variant == product.selected_or_first_available_variant %}selected="selected"{% endif %}
+                    {% unless variant.available %}disabled="disabled"{% endunless %}
+                      value="{{ variant.id }}"
+                      data-variant-settings='{{ variant_settings }}'>
+
+                    {%- if variant.available -%}
+                      {{ variant.title }} - {{ variant.price | money_with_currency }}
+                    {%- else -%}
+                      {{ variant.title }} - {{ 'products.product.sold_out' | t }}
+                    {%- endif -%}
+                  </option>
+                {%- endfor -%}
+              </select>
+            </div>
+
+            {%- if enable_quantity -%}
+              <div class="dbtfy-sticky-addtocart__quantity d-none d-md-block">
+                {%- render 'quantity-selector', type: 'product', form_id: form_id -%}
+              </div>
+            {%- endif -%}
+
+            <div class="text-right dbtfy-sticky-addtocart__button-wrapper{% if simplify_on_mobile or product.has_only_default_variant %} flex-fill{% endif %}">
+              <button type="submit"
+                      class="btn btn--primary w-100 w-md-auto text-ellipsis dbtfy-sticky-addtocart__button js-add-to-cart-button{% if enable_animation %} dbtfy-add-to-cart-animation-button{% endif %}"
+                      data-product-add-to-cart
+                      {% unless current_variant.available %}disabled="disabled"{% endunless %}>
+                <span class="btn__text">
+                  <span class="d-inline-block me-1" style="vertical-align: sub" aria-hidden="true">
+                    {%- if settings.cart_custom_icon != blank -%}
+                      {{- settings.cart_custom_icon | image_url: width: settings.cart_custom_icon.width | image_tag: loading: 'lazy', sizes: '64px', widths: '32,64', style: 'width: 100%; max-width: 20px; max-height: 20px; transform: translateY(1px);' -}}
+                    {%- else -%}
+                      {%- render 'icon', icon: settings.cart_icon -%}
+                    {%- endif -%}
+                  </span>
+
+                  <span data-product-add-to-cart-text>
+                    {%- if current_variant.available -%}
+                      {{ 'products.product.add_to_cart' | t }}
+                    {%- else -%}
+                      {{ 'products.product.sold_out' | t }}
+                    {%- endif -%}
+                  </span>
+                </span>
+              </button>
+            </div>
+          </div>
+        {%- endform -%}
+      </div>
+    </div>
+  </div>
+{% endif %}

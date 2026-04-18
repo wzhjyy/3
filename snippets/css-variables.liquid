@@ -1,0 +1,945 @@
+{%- capture direction -%}{% render 'direction' %}{%- endcapture -%}
+
+<style>
+  :root {
+    /*
+      _TABLE_OF_CONTENT (Quick Navigation == Double click + Ctrl+F + Enter)
+
+      _Fonts
+        _Initialization
+        _Body
+        _Heading
+        _Accent
+        _Icon
+      _Spacing
+        _Spacer
+        _Gutter
+      _General
+        _Page
+        _Utilities
+        _Container
+        _Zindex
+        _Borders
+        _Buttons
+        _Inputs
+        _Dropdown
+        _Transitions
+        _Animations
+        _Shadows
+        _Overlay
+      _Sections
+        _Header
+        _Footer
+        _Drawer
+        _Slideshow
+        _Collection_grid
+      _Components
+        _Back_to_top_button
+      _Others
+        _Social_media
+        _Translations
+      _Addons
+        _Product_image_crop
+        _Newsletter_popup
+    */
+
+    /*============================================================================
+      _Fonts
+    ============================================================================*/
+
+    /*================ _Initialization ================*/
+    {%- liquid
+      assign heading_font = settings.heading_font
+      assign text_font = settings.text_font
+      assign accent_font = settings.accent_font
+      assign icons = settings.icon | split: '-'
+      assign icon_font = ''
+
+      for icon in icons
+        assign icon_capitalized = icon | capitalize
+
+        unless forloop.last
+          assign icon_font = icon_font | append: icon_capitalized | append: ' '
+        else
+          assign icon_font = icon_font | append: icon_capitalized
+        endunless
+      endfor
+    -%}
+    /*================ END _Initialization ================*/
+
+    /*================ _Body ================*/
+    {%- liquid
+      assign text_font_size = settings.text_font_size
+      assign text_font_size_lg = text_font_size | times: 1.2 | floor
+      assign text_font_size_sm = text_font_size | times: 0.8 | floor
+      assign text_font_size_xs = text_font_size | times: 0.6 | floor
+      assign text_line_height = 1.5
+      assign text_font_letter_spacing = settings.text_font_letter_spacing
+    -%}
+
+    --text-font-family: {{ text_font.family }}, {{ text_font.fallback_families }};
+    --text-font-weight: {{ text_font.weight }};
+    --text-font-style: {{ text_font.style }};
+    --text-font-size: {{ text_font_size }}px;
+    --text-font-size-lg: {{ text_font_size_lg }}px;
+    --text-font-size-sm: {{ text_font_size_sm }}px;
+    --text-font-size-xs: {{ text_font_size_xs }}px;
+    --text-line-height: {{ text_line_height }};
+    --text-letter-spacing: {% if direction == 'rtl' %}0{% else %}{{ text_font_letter_spacing }}px{% endif %};
+    /*================ END _Body ================*/
+
+    /*================ _Heading ================*/
+    {%- liquid
+      assign page_link_color = settings.page_link_color
+      assign heading_font_size = settings.heading_font_size
+      assign heading_font_size_big = settings.heading_font_size_big
+      assign heading_text_transform = settings.heading_text_transform
+      assign heading_letter_spacing = settings.heading_letter_spacing
+      assign heading_bg_color = page_link_color | color_modify: 'alpha', opacity_percentage
+
+      assign heading_1_font_size = heading_font_size
+      assign heading_2_font_size = heading_font_size | times: 0.8 | floor
+      assign heading_3_font_size = heading_font_size | times: 0.7 | floor
+      assign heading_4_font_size = heading_font_size | times: 0.6 | floor
+      assign heading_5_font_size = heading_font_size | times: 0.5 | floor
+      assign heading_6_font_size = text_font_size
+    -%}
+
+    --heading-font-family: {{ heading_font.family }}, {{ heading_font.fallback_families }};
+    --heading-font-size: {{ heading_font_size }}px;
+    --heading-font-size-big: {{ heading_font_size_big }}px;
+    --heading-font-weight: {{ heading_font.weight }};
+    --heading-font-style: {{ heading_font.style }};
+    --heading-text-transform: {{ heading_text_transform }};
+    --heading-letter-spacing: {% if direction == 'rtl' %}0{% else %}{{ heading_letter_spacing }}px{% endif %};
+    --heading-alignment: center;
+    --heading-bg-color: {{ heading_bg_color }};
+    --heading-0-font-size: 40px;
+    --heading-1-font-size: {{ heading_1_font_size }}px;
+    --heading-2-font-size: {{ heading_2_font_size }}px;
+    --heading-3-font-size: {{ heading_3_font_size }}px;
+    --heading-4-font-size: {{ heading_4_font_size }}px;
+    --heading-5-font-size: {{ heading_5_font_size }}px;
+    --heading-6-font-size: {{ heading_6_font_size }}px;
+    /*================ END _Heading ================*/
+
+    /*================ _Accent ================*/
+    {%- liquid
+      assign accent_text_transform = settings.accent_text_transform
+      assign accent_letter_spacing = settings.accent_letter_spacing
+    -%}
+
+    --accent-font-family: {{ accent_font.family }}, {{ accent_font.fallback_families }};
+    --accent-font-weight: {{ accent_font.weight }};
+    --accent-font-style: {{ accent_font.style }};
+    --accent-text-transform: {{ accent_text_transform }};
+    --accent-letter-spacing: {% if direction == 'rtl' %}0{% else %}{{ accent_letter_spacing }}px{% endif %};
+    /*================ END _Accent ================*/
+
+    /*================ _Icon ================*/
+    {%- liquid
+      assign icon_select_url = 'icon-select.svg' | asset_url | json
+      assign icon_select_overlay_url = 'icon-select-overlay.svg' | asset_url | json
+      assign icon_select_footer_url = 'icon-select-footer.svg' | asset_url | json
+      assign icon_payment_size = settings.payment_icon_size
+      assign page_headings_color = settings.page_heading_color
+      assign icon_placeholder_color = page_headings_color | color_modify: 'alpha', opacity_percentage
+    -%}
+
+    --icon-font: {{ icon_font }};
+    --icon-font-size-xl: 48px;
+    --icon-font-size-lg: 36px;
+    --icon-font-size-md: 24px;
+    --icon-font-size-sm: 18px;
+    --icon-font-size-xs: 12px;
+    --icon-loading: 'cached';
+    --icon-select-url: url({{ icon_select_url }});
+    --icon-select-overlay-url: url({{ icon_select_overlay_url }});
+    --icon-select-footer-url: url({{ icon_select_footer_url }});
+    --icon-payment-size: {{ icon_payment_size }}px;
+    --icon-placeholder-color: {{ icon_placeholder_color }}px;
+    /*================ END _Icon ================*/
+
+
+    /*============================================================================
+      _Spacing
+    ============================================================================*/
+
+    /*================ _Spacer ================*/
+    {%- liquid
+      assign spacer = text_font_size
+      assign spacer_lg = text_font_size | times: 1.5 | floor
+      assign spacer_sm = text_font_size | times: 0.5 | floor
+      assign spacer_xs = text_font_size | times: 0.25 | floor
+    -%}
+
+    --spacer: {{ spacer }}px;
+    --spacer-lg: {{ spacer_lg }}px;
+    --spacer-sm: {{ spacer_sm }}px;
+    --spacer-xs: {{ spacer_xs }}px;
+    /*================ END _Spacer ================*/
+
+    /*================ _Gutter ================*/
+    {%- liquid
+      assign gutter = 30
+      assign gutter_lg = gutter | times: 2
+      assign gutter_sm = 16
+      assign gutter_xs = gutter_sm | divided_by: 2
+    -%}
+
+    --gutter: {{ gutter }}px;
+    --gutter-lg: {{ gutter_lg }}px;
+    --gutter-sm: {{ gutter_sm }}px;
+    --gutter-xs: {{ gutter_xs }}px;
+    /*================ END _Gutter ================*/
+
+
+    /*============================================================================
+      _General
+    ============================================================================*/
+
+    /*================ _Page ================*/
+    --page-background: {{ settings.page_background.rgb }};
+    --page-accent-background: {{ settings.page_accent_background.rgb }};
+    --page-border: {{ settings.page_border_color.rgb }};
+    --page-heading: {{ settings.page_heading_color.rgb }};
+    --page-text: {{ settings.page_text_color.rgb }};
+    --page-button-background: {{ settings.page_button_background.rgb }};
+    --page-button-text: {{ settings.page_button_text_color.rgb }};
+    --page-link: {{ settings.page_link_color.rgb }};
+    --page-input-background: {{ settings.page_input_background.rgb }};
+    --page-error: {{ settings.page_error_color.rgb }};
+    --page-sale: {{ settings.page_sale_color.rgb }};
+    /*================ END _Page ================*/
+
+    /*================ _Utilities ================*/
+    {%- liquid
+      assign opacity = 0.6
+      assign opacity_percentage = opacity | times: 100
+      assign page_background = settings.page_background
+      assign page_text_color = settings.page_text_color
+      assign color_text_muted = page_background | color_mix: page_text_color, opacity_percentage
+      assign scale = 1.3
+      assign scroll_bar_width = 16.5
+    -%}
+
+    --opacity: {{ opacity }};
+    --text-muted-color: {{ color_text_muted }};
+    --scale: {{ scale }};
+    --scroll-bar-width: {{ scroll_bar_width }}px;
+    /*================ END _Utilities ================*/
+
+    /*================ _Container ================*/
+    --page-container-width: {{ settings.page_container_width }}px;
+    /*================ END _Container ================*/
+
+    /*================ _Zindex ================*/
+    {%- liquid
+      assign zindex_base = 0
+      assign zindex_increment = 3
+      assign zindex_over_body = zindex_base | plus: zindex_increment
+      assign zindex_header = zindex_over_body | plus: zindex_increment
+      assign zindex_drawer = settings.overlay_z_index
+      assign zindex_drawer_overlay = zindex_drawer | minus: zindex_increment
+      assign zindex_drawer_under_overlay = zindex_drawer_overlay | minus: zindex_increment
+      assign zindex_modal = zindex_drawer | plus: zindex_increment | plus: zindex_increment
+      assign zindex_modal_overlay = zindex_drawer | plus: zindex_increment
+    -%}
+
+    --zindex-base: {{ zindex_base }};
+    --zindex-increment: {{ zindex_increment }};
+    --zindex-over-body: {{ zindex_over_body }};
+    --zindex-header: {{ zindex_header }};
+    --zindex-drawer: {{ zindex_drawer }};
+    --zindex-drawer-overlay: {{ zindex_drawer_overlay }};
+    --zindex-drawer-under-overlay: {{ zindex_drawer_under_overlay }};
+    --zindex-modal: {{ zindex_modal }};
+    --zindex-modal-overlay: {{ zindex_modal_overlay }};
+    /*================ END _Zindex ================*/
+
+    /*================ _Borders ================*/
+    {%- liquid
+      assign border_width = settings.border_width
+      assign border_style = 'solid'
+      assign border_color = settings.page_border_color
+      assign border_radius = settings.border_radius
+      assign border_radius_sm = 3
+      assign border_radius_is_circle = border_radius | append: 'px'
+    
+      if border_radius == 30
+        assign border_radius_is_circle = '50%'
+      endif
+    -%}
+
+    --border-width: {{ border_width }}px;
+    --border-radius: {{ border_radius }}px;
+    --border-radius-sm: {{ border_radius_sm }}px;
+    --border-radius-circle: 50%;
+    --border-radius-is-circle: {{ border_radius_is_circle }};
+    --borders: {{ border_width }}px {{ border_style }} {{ border_color }};
+    /*================ END _Borders ================*/
+
+    /*================ _Buttons ================*/
+    {%- liquid
+      assign button_spacing_x = settings.button_padding_x
+      assign button_spacing_x_sm = 10
+      assign button_spacing_x_xs = 8
+      assign button_spacing_y = settings.button_padding_y
+      assign button_spacing_y_sm = 6
+      assign button_spacing_y_xs = 4
+    
+      assign button_bg_color = settings.page_input_background | color_to_hex
+      assign button_primary_bg_color = settings.page_button_background | color_to_hex
+
+      assign arrow_bg_color = settings.page_background | color_to_hex
+      assign custom_buy_it_now_text = settings.custom_buy_now_text
+    -%}
+
+    --button-horizontal-padding: {{ button_spacing_x }}px;
+    --button-horizontal-padding-sm: {{ button_spacing_x_sm }}px;
+    --button-horizontal-padding-xs: {{ button_spacing_x_xs }}px;
+    --button-vertical-padding: {{ button_spacing_y }}px;
+    --button-vertical-padding-sm: {{ button_spacing_y_sm }}px;
+    --button-vertical-padding-xs: {{ button_spacing_y_xs }}px;
+    --default-button-background-hover: {{ button_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --default-button-border-color-hover: {{ button_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --default-button-box-shadow-hover: {{ button_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --default-button-background-active: {{ button_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --default-button-border-color-active: {{ button_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --primary-button-background-hover: {{ button_primary_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --primary-button-border-color-hover: {{ button_primary_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --primary-button-box-shadow-hover: {{ button_primary_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --primary-button-background-active: {{ button_primary_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --primary-button-border-color-active: {{ button_primary_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --primary-outline-button-box-shadow-hover: {{ button_primary_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --primary-reveal-button-box-shadow-hover: {{ button_primary_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+
+    --arrow-background-hover: {{ arrow_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --arrow-border-color-hover: {{ arrow_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --arrow-box-shadow-hover: {{ arrow_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --arrow-background-active: {{ arrow_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+    --arrow-border-color-active: {{ arrow_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')' }};
+
+    --custom-buy-it-now-text: "{{ custom_buy_it_now_text }}";
+    /*================ END _Buttons ================*/
+
+    /*================ _Inputs ================*/
+    {%- liquid
+      assign input_border_width = border_width | times: 2
+    
+      assign input_spacing_inner = text_font_size | times: text_line_height
+      assign input_spacing_inner_xs = text_font_size_sm | times: text_line_height
+    
+      assign input_paddings_inner = button_spacing_y | times: 2
+      assign input_paddings_inner_sm = button_spacing_y_sm | times: 2
+      assign input_paddings_inner_xs = button_spacing_y_xs | times: 2
+    
+      assign input_height_inner = input_spacing_inner | plus: input_paddings_inner | floor
+      assign input_height_inner_sm = input_spacing_inner | plus: input_paddings_inner_sm | floor
+      assign input_height_inner_xs = input_spacing_inner_xs | plus: input_paddings_inner_xs | floor
+    
+      assign input_height = input_height_inner | plus: input_border_width
+      assign input_height_sm = input_height_inner_sm | plus: input_border_width
+      assign input_height_xs = input_height_inner_xs | plus: input_border_width
+
+      assign input_bg_color = settings.page_input_background | color_to_hex
+      assign input_bg_color_brightness = input_bg_color | color_brightness
+      assign input_bg_color_hover = input_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign input_border_color_hover = input_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign input_shadow_color_hover = input_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign input_bg_color_active = input_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign input_border_color_active = input_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if input_bg_color_brightness < 50
+        assign input_shadow_color_hover = input_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    -%}
+
+    --input-height-inner: {{ input_height_inner }}px;
+    --input-height-inner-sm: {{ input_height_inner_sm }}px;
+    --input-height-inner-xs: {{ input_height_inner_xs }}px;
+    --input-height: {{ input_height }}px;
+    --input-height-sm: {{ input_height_sm }}px;
+    --input-height-xs: {{ input_height_xs }}px;
+    --input-bg-color-hover: {{ input_bg_color_hover }};
+    --input-border-color-hover: {{ input_border_color_hover }};
+    --input-shadow-color-hover: {{ input_shadow_color_hover }};
+    --input-bg-color-active: {{ input_bg_color_active }};
+    --input-border-color-active: {{ input_border_color_active }};
+    /*================ END _Inputs ================*/
+
+    /*================ _Dropdown ================*/
+    {%- liquid
+      assign dropdown_min_width = 175
+      assign dropdown_max_width = 250
+      assign dropdown_padding = gutter_xs
+    -%}
+
+    --dropdown-min-width: {{ dropdown_min_width }}px;
+    --dropdown-max-width: {{ dropdown_max_width }}px;
+    --dropdown-padding: {{ dropdown_padding }}px;
+    /*================ END _Dropdown ================*/
+
+    /*================ _Transitions ================*/
+    {%- liquid
+      assign transition_timing = 'ease'
+      assign transition_duration = 0.6
+      assign transition_duration_fast = 0.3
+      assign transition_duration_slow = 1
+    -%}
+
+    --transition-timing: {{ transition_timing }};
+    --transition-duration: {{ transition_duration }}s;
+    --transition-duration-fast: {{ transition_duration_fast }}s;
+    --transition-duration-slow: {{ transition_duration_slow }}s;
+    --transition: all {{ transition_duration_fast }}s {{ transition_timing }};
+    --transition-drawers: all {{ transition_duration }}s {{ transition_timing }};
+    --transition-hover: opacity {{ transition_duration_fast }}s {{ transition_timing }},
+                        background {{ transition_duration_fast }}s {{ transition_timing }},
+                        border {{ transition_duration_fast }}s {{ transition_timing }},
+                        box-shadow {{ transition_duration_fast }}s {{ transition_timing }};
+    /*================ END _Transitions ================*/
+
+    /*================ _Animations ================*/
+    --animation-duration: {{ transition_duration }}s;
+    --animation-offset: {{ spacer }}px;
+    /*================ END _Animations ================*/
+
+    /*================ _Shadows ================*/
+    {%- liquid
+      assign page_bg_color = settings.page_background | color_to_hex
+      assign page_bg_color_brigtness = page_bg_color | color_brightness
+      assign shadow_base_color = '#FFF'
+      assign shadow_opacity = 0.07
+    
+      if page_bg_color_brigtness > 50
+        assign shadow_base_color = '#000'
+      endif
+    
+      assign shadow_color = shadow_base_color | color_modify: "alpha", shadow_opacity
+    -%}
+
+    --shadow: 0px 0px 40px {{ shadow_color }};
+    /*================ END _Shadows ================*/
+
+    /*================ _Overlay ================*/
+    --overlay-background: {{ settings.overlay_background.rgb }};
+    --overlay-text-color: {{ settings.overlay_text_color.rgb }};
+    --overlay-opacity: {{ settings.overlay_opacity | divided_by: 100.0 }};
+    /*================ END _Overlay ================*/
+
+    /*============================================================================
+      _Sections
+    ============================================================================*/
+
+    /*================ _Header ================*/
+    --header-background: {{ settings.header_background.rgb }};
+    --header-border-color: {{ settings.header_border_color.rgb }};
+    --header-text-color: {{ settings.header_text_color.rgb }};
+    --header-menu-font-size: {{ settings.header_menu_font_size }}px;
+    --header-height-desktop: {{ settings.header_height_desktop }}px;
+    --header-height-mobile: {{ settings.header_height_mobile }}px;
+    /*================ END _Header ================*/
+
+    /*================ _Footer ================*/
+    {%- liquid
+      assign footer_background = settings.footer_background | color_to_hex
+      assign footer_text = settings.footer_text_color | color_to_hex
+      assign footer_text_muted = footer_background | color_mix: footer_text, opacity_percentage
+      assign footer_text_muted = footer_text_muted | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      assign footer_bg_color = settings.footer_background | color_to_hex
+      assign footer_bg_color_brightness = footer_bg_color | color_brightness
+      assign footer_bg_color_hover = footer_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_border_color_hover = footer_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_shadow_color_hover = footer_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_bg_color_active = footer_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_border_color_active = footer_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if footer_bg_color_brightness < 50
+        assign footer_shadow_color_hover = footer_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    
+      assign footer_input_bg_color = settings.footer_input_background | color_to_hex
+      assign footer_input_bg_color_brightness = footer_input_bg_color | color_brightness
+      assign footer_input_bg_color_hover = footer_input_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_input_border_color_hover = footer_input_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_input_shadow_color_hover = footer_input_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_input_bg_color_active = footer_input_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_input_border_color_active = footer_input_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if footer_input_bg_color_brightness < 50
+        assign footer_input_shadow_color_hover = footer_input_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    
+      assign footer_primary_button_bg_color = settings.footer_button_background | color_to_hex
+      assign footer_primary_button_bg_color_brightness = footer_primary_button_bg_color | color_brightness
+      assign footer_primary_button_bg_color_hover = footer_primary_button_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_button_border_color_hover = footer_primary_button_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_button_shadow_color_hover = footer_primary_button_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_button_bg_color_active = footer_primary_button_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_button_border_color_active = footer_primary_button_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if footer_primary_button_bg_color_brightness < 50
+        assign footer_primary_button_shadow_color_hover = footer_primary_button_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    
+      assign footer_primary_outline_button_bg_color = settings.footer_button_background | color_to_hex
+      assign footer_primary_outline_button_bg_color_brightness = footer_primary_outline_button_bg_color | color_brightness
+      assign footer_primary_outline_button_bg_color_hover = footer_primary_outline_button_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_outline_button_border_color_hover = footer_primary_outline_button_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_outline_button_shadow_color_hover = footer_primary_outline_button_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_outline_button_bg_color_active = footer_primary_outline_button_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign footer_primary_outline_button_border_color_active = footer_primary_outline_button_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if footer_primary_outline_button_bg_color_brightness < 50
+        assign footer_primary_outline_button_shadow_color_hover = footer_primary_outline_button_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    -%}
+
+    --footer-background: {{ settings.footer_background.rgb }};
+    --footer-accent-background: {{ settings.footer_accent_background.rgb }};
+    --footer-border: {{ settings.footer_border_color.rgb }};
+    --footer-text: {{ settings.footer_text_color.rgb }};
+    --footer-button-background: {{ settings.footer_button_background.rgb }};
+    --footer-button-text: {{ settings.footer_button_text_color.rgb }};
+    --footer-link: {{ settings.footer_link_color.rgb }};
+    --footer-input-background: {{ settings.footer_input_background.rgb }};
+    --footer-error: {{ settings.footer_error_color.rgb }};
+    --footer-sale: {{ settings.footer_sale_color.rgb }};
+
+    --footer-text-muted: {{ footer_text_muted }};
+
+    --footer-bg-color-hover: {{ footer_bg_color_hover }};
+    --footer-border-color-hover: {{ footer_border_color_hover }};
+    --footer-shadow-color-hover: {{ footer_shadow_color_hover }};
+    --footer-bg-color-active: {{ footer_bg_color_active }};
+    --footer-border-color-active: {{ footer_border_color_active }};
+      
+    --footer-input-bg-color-hover: {{ footer_input_bg_color_hover }};
+    --footer-input-border-color-hover: {{ footer_input_border_color_hover }};
+    --footer-input-shadow-color-hover: {{ footer_input_shadow_color_hover }};
+    --footer-input-bg-color-active: {{ footer_input_bg_color_active }};
+    --footer-input-border-color-active: {{ footer_input_border_color_active }};
+
+    --footer-primary-button-bg-color-hover: {{ footer_primary_button_bg_color_hover }};
+    --footer-primary-button-border-color-hover: {{ footer_primary_button_border_color_hover }};
+    --footer-primary-button-shadow-color-hover: {{ footer_primary_button_shadow_color_hover }};
+    --footer-primary-button-bg-color-active: {{ footer_primary_button_bg_color_active }};
+    --footer-primary-button-border-color-active: {{ footer_primary_button_border_color_active }};
+
+    --footer-primary-outline-button-bg-color-hover: {{ footer_primary_outline_button_bg_color_hover }};
+    --footer-primary-outline-button-border-color-hover: {{ footer_primary_outline_button_border_color_hover }};
+    --footer-primary-outline-button-shadow-color-hover: {{ footer_primary_outline_button_shadow_color_hover }};
+    --footer-primary-outline-button-bg-color-active: {{ footer_primary_outline_button_bg_color_active }};
+    --footer-primary-outline-button-border-color-active: {{ footer_primary_outline_button_border_color_active }};
+    /*================ END _Footer ================*/
+
+    /*================ _Drawer ================*/
+    {%- liquid
+      assign drawer_background = settings.drawer_background | color_to_hex
+      assign drawer_text = settings.drawer_text_color
+      assign drawer_text_muted = drawer_background | color_mix: drawer_text, opacity_percentage
+      assign drawer_text_muted = drawer_text_muted | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      assign drawer_bg_color = settings.drawer_background | color_to_hex
+      assign drawer_bg_color_brightness = drawer_bg_color | color_brightness
+      assign drawer_bg_color_hover = drawer_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_border_color_hover = drawer_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_shadow_color_hover = drawer_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_bg_color_active = drawer_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_border_color_active = drawer_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if drawer_bg_color_brightness < 50
+        assign drawer_shadow_color_hover = drawer_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    
+      assign drawer_input_bg_color = settings.drawer_input_background | color_to_hex
+      assign drawer_input_bg_color_brightness = drawer_input_bg_color | color_brightness
+      assign drawer_input_bg_color_hover = drawer_input_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_input_border_color_hover = drawer_input_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_input_shadow_color_hover = drawer_input_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_input_bg_color_active = drawer_input_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_input_border_color_active = drawer_input_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if drawer_input_bg_color_brightness < 50
+        assign drawer_input_shadow_color_hover = drawer_input_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    
+      assign drawer_primary_button_bg_color = settings.drawer_button_background | color_to_hex
+      assign drawer_primary_button_bg_color_brightness = drawer_primary_button_bg_color | color_brightness
+      assign drawer_primary_button_bg_color_hover = drawer_primary_button_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_button_border_color_hover = drawer_primary_button_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_button_shadow_color_hover = drawer_primary_button_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_button_bg_color_active = drawer_primary_button_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_button_border_color_active = drawer_primary_button_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if drawer_primary_button_bg_color_brightness < 50
+        assign drawer_primary_button_shadow_color_hover = drawer_primary_button_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    
+      assign drawer_primary_outline_button_bg_color = settings.drawer_button_background | color_to_hex
+      assign drawer_primary_outline_button_bg_color_brightness = drawer_primary_outline_button_bg_color | color_brightness
+      assign drawer_primary_outline_button_bg_color_hover = drawer_primary_outline_button_bg_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_outline_button_border_color_hover = drawer_primary_outline_button_bg_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_outline_button_shadow_color_hover = drawer_primary_outline_button_bg_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_outline_button_bg_color_active = drawer_primary_outline_button_bg_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign drawer_primary_outline_button_border_color_active = drawer_primary_outline_button_bg_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    
+      if drawer_primary_outline_button_bg_color_brightness < 50
+        assign drawer_primary_outline_button_shadow_color_hover = drawer_primary_outline_button_bg_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      endif
+    -%}
+      
+    --drawer-background: {{ settings.drawer_background.rgb }};
+    --drawer-accent-background: {{ settings.drawer_accent_background.rgb }};
+    --drawer-border: {{ settings.drawer_border_color.rgb }};
+    --drawer-text: {{ settings.drawer_text_color.rgb }};
+    --drawer-button-background: {{ settings.drawer_button_background.rgb }};
+    --drawer-button-text: {{ settings.drawer_button_text_color.rgb }};
+    --drawer-link: {{ settings.drawer_link_color.rgb }};
+    --drawer-input-background: {{ settings.drawer_input_background.rgb }};
+    --drawer-error: {{ settings.drawer_error_color.rgb }};
+    --drawer-sale: {{ settings.drawer_sale_color.rgb }};
+    --drawer-overlay: {{ settings.drawer_overlay_background.rgb }};
+    --drawer-overlay-opacity: {{ settings.drawer_overlay_opacity | divided_by: 100.0 }};
+
+    --drawer-text-muted: {{ drawer_text_muted }};
+
+    --drawer-bg-color-hover: {{ drawer_bg_color_hover }};
+    --drawer-border-color-hover: {{ drawer_border_color_hover }};
+    --drawer-shadow-color-hover: {{ drawer_shadow_color_hover }};
+    --drawer-bg-color-active: {{ drawer_bg_color_active }};
+    --drawer-border-color-active: {{ drawer_border_color_active }};
+
+    --drawer-input-bg-color-hover: {{ drawer_input_bg_color_hover }};
+    --drawer-input-border-color-hover: {{ drawer_input_border_color_hover }};
+    --drawer-input-shadow-color-hover: {{ drawer_input_shadow_color_hover }};
+    --drawer-input-bg-color-active: {{ drawer_input_bg_color_active }};
+    --drawer-input-border-color-active: {{ drawer_input_border_color_active }};
+
+    --drawer-primary-button-bg-color-hover: {{ drawer_primary_button_bg_color_hover }};
+    --drawer-primary-button-border-color-hover: {{ drawer_primary_button_border_color_hover }};
+    --drawer-primary-button-shadow-color-hover: {{ drawer_primary_button_shadow_color_hover }};
+    --drawer-primary-button-bg-color-active: {{ drawer_primary_button_bg_color_active }};
+    --drawer-primary-button-border-color-active: {{ drawer_primary_button_border_color_active }};
+
+    --drawer-primary-outline-button-bg-color-hover: {{ drawer_primary_outline_button_bg_color_hover }};
+    --drawer-primary-outline-button-border-color-hover: {{ drawer_primary_outline_button_border_color_hover }};
+    --drawer-primary-outline-button-shadow-color-hover: {{ drawer_primary_outline_button_shadow_color_hover }};
+    --drawer-primary-outline-button-bg-color-active: {{ drawer_primary_outline_button_bg_color_active }};
+    --drawer-primary-outline-button-border-color-active: {{ drawer_primary_outline_button_border_color_active }};
+    /*================ END _Drawer ================*/
+
+    /*================ _Slideshow ================*/
+    --slideshow-height-xl: 100vh;
+    --slideshow-height-lg: 600px;
+    --slideshow-height-md: 500px;
+    --slideshow-height-sm: 400px;
+    --slideshow-height-xs: 300px;
+    --slideshow-height-xl-mobile: 100vh;
+    --slideshow-height-lg-mobile: 500px;
+    --slideshow-height-md-mobile: 400px;
+    --slideshow-height-sm-mobile: 300px;
+    --slideshow-height-xs-mobile: 200px;
+    /*================ END _Slideshow ================*/
+
+    /*================ _Collection_grid ================*/
+    --collection-grid-height-xl: 500px;
+    --collection-grid-height-lg: 400px;
+    --collection-grid-height-md: 300px;
+    --collection-grid-height-sm: 200px;
+    --collection-grid-height-xs: 100px;
+    /*================ END _Collection_grid ================*/
+
+
+    /*============================================================================
+      _Components
+    ============================================================================*/
+
+    /*================ _Back_to_top_button ================*/
+    {%- liquid
+      assign back_to_top_color = settings.page_background | color_to_hex
+      assign back_to_top_bg_color_brightness = back_to_top_color | color_brightness
+      assign back_to_top_bg_color_hover = back_to_top_color | color_darken: 7.5
+      assign back_to_top_border_color_hover = back_to_top_color | color_darken: 10
+      assign back_to_top_shadow_color_hover = back_to_top_color | color_darken: 20
+      assign back_to_top_bg_color_active = back_to_top_color | color_darken: 12.5
+      assign back_to_top_border_color_active = back_to_top_color | color_darken: 15
+    
+      if back_to_top_bg_color_brightness < 50
+        assign back_to_top_shadow_color_hover = back_to_top_color | color_lighten: 20
+      endif
+    -%}
+
+    --back-to-top-bg-color-hover: {{ back_to_top_bg_color_hover }};
+    --back-to-top-border-color-hover: {{ back_to_top_border_color_hover }};
+    --back-to-top-shadow-color-hover: {{ back_to_top_shadow_color_hover }};
+    --back-to-top-bg-color-active: {{ back_to_top_bg_color_active }};
+    --back-to-top-border-color-active: {{ back_to_top_border_color_active }};
+    /*================ END _Back_to_top_button ================*/
+
+
+    /*================ _Payment_icons ================*/
+    --payment-icon-size: {{ settings.payment_icon_size }}px;
+    /*================ END _Payment_icons ================*/
+
+
+    /*============================================================================
+      _Others
+    ============================================================================*/
+
+    /*================ _Social_media ================*/
+    {%- liquid
+      assign instagram_color = '#e1306c'
+      assign snapchat_color = '#fffc00'
+      assign google_color = '#dd4b39'
+      assign tumblr_color = '#35465c'
+      assign youtube_color = '#ff0000'
+      assign vimeo_color = '#1ab7ea'
+    
+      assign facebook_color = '#3b5998'
+      assign facebook_bg_color_hover = facebook_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign facebook_border_color_hover = facebook_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign facebook_shadow_color_hover = facebook_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign facebook_bg_color_active = facebook_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign facebook_border_color_active = facebook_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+
+    --social-facebook-color: {{ facebook_color }};
+    --social-facebook-bg-color-hover: {{ facebook_bg_color_hover }};
+    --social-facebook-border-color-hover: {{ facebook_border_color_hover }};
+    --social-facebook-shadow-color-hover: {{ facebook_shadow_color_hover }};
+    --social-facebook-bg-color-active: {{ facebook_bg_color_active }};
+    --social-facebook-border-color-active: {{ facebook_border_color_active }};
+
+
+    {%- liquid
+      assign twitter_color = '#1da1f2'
+      assign twitter_bg_color_hover = twitter_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign twitter_border_color_hover = twitter_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign twitter_shadow_color_hover = twitter_color | color_darken: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign twitter_bg_color_active = twitter_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign twitter_border_color_active = twitter_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+
+    --social-twitter-color: {{ twitter_color }};
+    --social-twitter-bg-color-hover: {{ twitter_bg_color_hover }};
+    --social-twitter-border-color-hover: {{ twitter_border_color_hover }};
+    --social-twitter-shadow-color-hover: {{ twitter_shadow_color_hover }};
+    --social-twitter-bg-color-active: {{ twitter_bg_color_active }};
+    --social-twitter-border-color-active: {{ twitter_border_color_active }};
+
+
+    {%- liquid
+      assign pinterest_color = '#bd081c'
+      assign pinterest_bg_color_hover = pinterest_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign pinterest_border_color_hover = pinterest_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign pinterest_shadow_color_hover = pinterest_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign pinterest_bg_color_active = pinterest_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign pinterest_border_color_active = pinterest_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+
+    --social-pinterest-color: {{ pinterest_color }};
+    --social-pinterest-bg-color-hover: {{ pinterest_bg_color_hover }};
+    --social-pinterest-border-color-hover: {{ pinterest_border_color_hover }};
+    --social-pinterest-shadow-color-hover: {{ pinterest_shadow_color_hover }};
+    --social-pinterest-bg-color-active: {{ pinterest_bg_color_active }};
+    --social-pinterest-border-color-active: {{ pinterest_border_color_active }};
+
+    {%- # 优化：注释放弃了较少使用的社媒复杂的 hover 计算，如果需要可以自行解除注释 -%}
+    {%- comment -%}
+    {%- liquid
+      assign whatsapp_color = '#25d366'
+      assign whatsapp_bg_color_hover = whatsapp_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign whatsapp_border_color_hover = whatsapp_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign whatsapp_shadow_color_hover = whatsapp_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign whatsapp_bg_color_active = whatsapp_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign whatsapp_border_color_active = whatsapp_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+    --social-whatsapp-color: {{ whatsapp_color }};
+    --social-whatsapp-bg-color-hover: {{ whatsapp_bg_color_hover }};
+    --social-whatsapp-border-color-hover: {{ whatsapp_border_color_hover }};
+    --social-whatsapp-shadow-color-hover: {{ whatsapp_shadow_color_hover }};
+    --social-whatsapp-bg-color-active: {{ whatsapp_bg_color_active }};
+    --social-whatsapp-border-color-active: {{ whatsapp_border_color_active }};
+
+    {%- liquid
+      assign linkedin_color = '#0e76a8'
+      assign linkedin_bg_color_hover = linkedin_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign linkedin_border_color_hover = linkedin_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign linkedin_shadow_color_hover = linkedin_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign linkedin_bg_color_active = linkedin_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign linkedin_border_color_active = linkedin_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+    --social-linkedin-color: {{ linkedin_color }};
+    --social-linkedin-bg-color-hover: {{ linkedin_bg_color_hover }};
+    --social-linkedin-border-color-hover: {{ linkedin_border_color_hover }};
+    --social-linkedin-shadow-color-hover: {{ linkedin_shadow_color_hover }};
+    --social-linkedin-bg-color-active: {{ linkedin_bg_color_active }};
+    --social-linkedin-border-color-active: {{ linkedin_border_color_active }};
+
+    {%- liquid
+      assign reddit_color = '#ff4500'
+      assign reddit_bg_color_hover = reddit_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign reddit_border_color_hover = reddit_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign reddit_shadow_color_hover = reddit_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign reddit_bg_color_active = reddit_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign reddit_border_color_active = reddit_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+    --social-reddit-color: {{ reddit_color }};
+    --social-reddit-bg-color-hover: {{ reddit_bg_color_hover }};
+    --social-reddit-border-color-hover: {{ reddit_border_color_hover }};
+    --social-reddit-shadow-color-hover: {{ reddit_shadow_color_hover }};
+    --social-reddit-bg-color-active: {{ reddit_bg_color_active }};
+    --social-reddit-border-color-active: {{ reddit_border_color_active }};
+
+    {%- liquid
+      assign messenger_color = '#0078ff'
+      assign messenger_bg_color_hover = messenger_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign messenger_border_color_hover = messenger_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign messenger_shadow_color_hover = messenger_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign messenger_bg_color_active = messenger_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign messenger_border_color_active = messenger_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+    --social-messenger-color: {{ messenger_color }};
+    --social-messenger-bg-color-hover: {{ messenger_bg_color_hover }};
+    --social-messenger-border-color-hover: {{ messenger_border_color_hover }};
+    --social-messenger-shadow-color-hover: {{ messenger_shadow_color_hover }};
+    --social-messenger-bg-color-active: {{ messenger_bg_color_active }};
+    --social-messenger-border-color-active: {{ messenger_border_color_active }};
+    {%- endcomment -%}
+
+    --social-instagram-color: {{ instagram_color }};
+    --social-snapchat-color: {{ snapchat_color }};
+    --social-google-color: {{ google_color }};
+    --social-tumblr-color: {{ tumblr_color }};
+    --social-youtube-color: {{ youtube_color }};
+    --social-vimeo-color: {{ vimeo_color }};
+    /*================ END _Social_media ================*/
+
+    /*================ _Translations ================*/
+    --text-buy-now: {{ settings.buy_now_text | json }};
+    /*================ END _Translations ================*/
+
+    /*============================================================================
+      _Addons
+    ============================================================================*/
+
+    /*================ _Announcement_bar ================*/
+    --announcement-background: {{ settings.announcement_background.rgb }};
+    --announcement-text-color: {{ settings.announcement_text_color.rgb }};
+    /*================ END _Announcement_bar ================*/
+
+    {%- # 优化：已经禁用了 Page Transition 插件，注释其变量计算 -%}
+    {%- comment -%}
+    /*================ _Page_transition ================*/
+    --page-transition-logo-width: {{ settings.dbtfy_page_transition_width }}px;
+    /*================ END _Page_transition ================*/
+    {%- endcomment -%}
+
+    /*================ _Product_image_crop ================*/
+    {%- liquid
+      assign product_image_crop_position = settings.dbtfy_product_image_crop_position
+      assign product_image_crop_ratio = settings.dbtfy_product_image_crop_ratio
+      assign product_image_crop_ratio_percentage = 100
+    
+      case product_image_crop_ratio
+        when '16:9'
+          assign product_image_crop_ratio_percentage = 56.25
+      
+        when '3:2'
+          assign product_image_crop_ratio_percentage = 66.666
+      
+        when '4:3'
+          assign product_image_crop_ratio_percentage = 75
+      
+        when '1:1'
+          assign product_image_crop_ratio_percentage = 100
+      
+        when '3:4'
+          assign product_image_crop_ratio_percentage = 133.333
+      
+        when '2:3'
+          assign product_image_crop_ratio_percentage = 150
+    
+      endcase
+    -%}
+
+    --product-image-crop-ratio: {{ product_image_crop_ratio_percentage }}%;
+    --product-image-crop-position: {{ product_image_crop_position }};
+    /*================ END _Product_image_crop ================*/
+
+    /*================ _Newsletter_popup ================*/
+    {%- liquid
+      assign newsletter_popup_color = settings.page_heading_color | color_to_hex
+      assign newsletter_popup_bg_color_hover = newsletter_popup_color | color_darken: 7.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign newsletter_popup_border_color_hover = newsletter_popup_color | color_darken: 10 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign newsletter_popup_shadow_color_hover = newsletter_popup_color | color_lighten: 20 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign newsletter_popup_bg_color_active = newsletter_popup_color | color_darken: 12.5 | color_to_rgb | remove: 'rgb(' | remove: ')'
+      assign newsletter_popup_border_color_active = newsletter_popup_color | color_darken: 15 | color_to_rgb | remove: 'rgb(' | remove: ')'
+    -%}
+
+    --newsletter-popup-color: {{ newsletter_popup_color }};
+    --newsletter-popup-bg-color-hover: {{ newsletter_popup_bg_color_hover }};
+    --newsletter-popup-border-color-hover: {{ newsletter_popup_border_color_hover }};
+    --newsletter-popup-shadow-color-hover: {{ newsletter_popup_shadow_color_hover }};
+    --newsletter-popup-bg-color-active: {{ newsletter_popup_bg_color_active }};
+    --newsletter-popup-border-color-active: {{ newsletter_popup_border_color_active }};
+    /*================ END _Newsletter_popup ================*/
+
+    {%- # 优化：已经禁用了 Quick Compare 插件，注释其变量计算 -%}
+    {%- comment -%}
+    /*================ Quick_compare ================*/
+    --quick-compare-button-position-y: {{ settings.dbtfy_quick_compare_button_position_y }}%;
+    /*================ END Quick_compare ================*/
+    {%- endcomment -%}
+  }
+
+  /* 核心 LCP 优化点：强行将 fallback 改为 swap，防止“文字白屏”闪烁 */
+  /* Typography (heading) */
+  {{ settings.heading_font | font_face: font_display: 'swap' }}
+
+  /* Typography (body) */
+  {{ settings.text_font | font_face: font_display: 'swap' }}
+
+  /* Typography (accent) */
+  {{ settings.accent_font | font_face: font_display: 'swap' }}
+
+  .{{ settings.icon }} {
+      font-family: {{ icon_font }};
+      font-weight: normal;
+      font-style: normal;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: "liga";
+      -webkit-font-smoothing: antialiased;
+      vertical-align: bottom;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      font-size: 0;
+  }
+
+  .font-icons-loaded .{{ settings.icon }} {
+      opacity: 1;
+      visibility: visible;
+      font-size: inherit;
+  }
+
+  [dir='rtl']:root {
+    --transform-logical-flip: -1;
+    --transform-origin-start: right;
+    --transform-origin-end: left;
+  }
+
+  [dir='rtl'] .{{ settings.icon }} {
+      transform: scaleX(-1);
+      filter: FlipH;
+      -ms-filter: 'FlipH';
+  }
+</style>

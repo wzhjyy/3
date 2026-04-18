@@ -1,0 +1,59 @@
+{%- if type == 'product' -%}
+  <div class="product-quantity">
+    <button class="btn btn--square-sm product-quantity__button product-quantity__button--minus" type="button" data-product-quantity-button data-product-quantity-button-minus aria-label="{{ 'cart.general.reduce_quantity' | t }}" title="{{ 'cart.general.reduce_quantity' | t }}">
+      <span class="btn__text">
+        <span class="{{ settings.icon }}" translate="no" aria-hidden="true">remove</span>
+      </span>
+    </button>
+
+    <input type="number" class="input input--sm input--full product-quantity__input" form="{{ form_id }}" id="{{ id }}" name="quantity" data-product-quantity-input value="1" min="1">
+
+    <button class="btn btn--square-sm product-quantity__button product-quantity__button--plus" type="button" data-product-quantity-button data-product-quantity-button-plus aria-label="{{ 'cart.general.increase_quantity' | t }}" title="{{ 'cart.general.increase_quantity' | t }}">
+      <span class="{{ settings.icon }}" translate="no" aria-hidden="true">add</span>
+    </button>
+  </div>
+{%- endif -%}
+
+{%- if type == 'cart' -%}
+  {%- liquid
+    assign item_inventory_management = item.variant.inventory_management
+    assign item_inventory_quantity = item.variant.inventory_quantity
+    assign item_inventory_policy = item.variant.inventory_policy
+    assign quantity = item.quantity
+  -%}
+
+  <div class="product-quantity">
+    <button class="btn btn--square-sm product-quantity__button product-quantity__button--minus" type="button" data-product-quantity-button data-product-quantity-button-minus aria-label="{{ 'cart.general.reduce_quantity' | t }}" title="{{ 'cart.general.reduce_quantity' | t }}">
+      <span class="btn__text">
+        <span class="{{ settings.icon }}" translate="no" aria-hidden="true">remove</span>
+      </span>
+    </button>
+
+    <input
+        type="number"
+        name="updates[]"
+        id="updates_{{ item.key }}"
+        class="input input--sm input--full product-quantity__input product-quantity__input--cart"
+        value="{{ quantity }}"
+        min="0"
+        max="{{ item_inventory_quantity }}"
+        form="{{ form_id }}"
+        data-product-quantity-input
+        data-id="{{ item.key }}"
+    />
+
+    <button class="btn btn--square-sm product-quantity__button product-quantity__button--plus" type="button" data-product-quantity-button data-product-quantity-button-plus aria-label="{{ 'cart.general.increase_quantity' | t }}" title="{{ 'cart.general.increase_quantity' | t }}"
+        {%- if item_inventory_management == 'shopify' -%}
+          {%- unless item_inventory_policy == 'continue' -%}
+            {%- if item_inventory_quantity <= quantity -%}
+              disabled="disabled"
+            {%- endif -%}
+          {%- endunless -%}
+        {%- endif -%}
+    >
+        <span class="btn__text">
+          <span class="{{ settings.icon }}" translate="no" aria-hidden="true">add</span>
+        </span>
+    </button>
+  </div>
+{%- endif -%}

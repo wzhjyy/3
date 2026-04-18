@@ -1,0 +1,21 @@
+<div id="{{ comment.id }}" class="card">
+  <div class="card__body">
+    <div class="row row--sm flex-nowrap align-items-center mb-2">
+      <div class="col-auto">
+        <span class="btn btn--square">
+          {{ comment.author | first }}
+        </span>
+      </div>
+
+      <div class="flex-fill overflow-hidden">
+        <h5 class="h5 text-ellipsis mb-1">{{ comment.author }}</h5>
+        <span class="{{ settings.icon }} icon" translate="no">calendar_today</span>
+        <time datetime="{{ comment.created_at | date: '%Y-%m-%d' }}">{{ comment.created_at | date: format: 'month_day_year' }}</time>
+      </div>
+    </div>
+
+    <div class="rte sm:text-lg" itemtype="http://schema.org/CreativeWork" itemprop="comment">
+      {{ comment.content }}
+    </div>
+  </div>
+</div>

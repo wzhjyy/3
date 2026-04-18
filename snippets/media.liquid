@@ -1,0 +1,150 @@
+{% capture media_id %}{{ id }}-{{ media.id }}{% endcapture %}
+
+{%- liquid
+  assign display_zoom_icon = true
+
+  if settings.dbtfy_full_screen_zoom_type == 'full_screen'
+    if media.media_type == 'external_video'
+      assign display_zoom_icon = false
+    endif
+  else
+    if media.media_type == 'model' or media.media_type == 'video' or media.media_type == 'external_video'
+      assign display_zoom_icon = false
+    endif
+  endif
+-%}
+
+{%- capture zoom_button -%}
+  <div class="dbtfy-product-zooming">
+    <button data-image-index="{{ index }}" type="button" class="dbtfy-product-zooming__button btn-zoom-{{ id }} btn-zoom">
+      <span class="dbtfy-product-zooming__icon zoom-icon icon icon--md me-0"></span>
+    </button>
+  </div>
+{%- endcapture -%}
+
+<div class="product__media-wrapper{% if is_featured %} featured-media{% endif %}"
+     data-product-media-wrapper
+     data-media-id="{{ media_id }}"
+     {% if media.media_type == 'model' %} data-product-media-type-model{% endif %}
+     {% if media.media_type == 'video' or media.media_type == 'external_video' %} data-product-media-type-video{% endif %}
+>
+
+  {%- case media.media_type -%}
+    {%- when 'image' -%}
+      {%- liquid
+        assign width_ratio = 100.0 | divided_by: 100
+        assign maximum_image_width = settings.page_container_width | divided_by: width_ratio
+        assign zoom_image_width = media.width | times: 2
+        assign zoom_image_height = media.height | times: 2
+      -%}
+
+      {%- capture sizes -%}(max-width: 768px) 100vw, min({{ maximum_image_width | ceil }}px, 100vw){% endcapture %}
+
+      <div class="media-wrapper media-wrapper--product media-wrapper--no-background{% if is_square %} media-wrapper--cover media-wrapper--center-center{% endif %}"
+           style="padding-top: {% if is_square %}100%{% else %}{{ 1 | divided_by: media.aspect_ratio | times: 100 }}%;{% endif %}"
+           data-zoom-image="{{ media | image_url: width: zoom_image_width, height: zoom_image_height }}"
+           data-zoom-image-width="{{ zoom_image_width }}"
+           data-zoom-image-height="{{ zoom_image_height }}">
+
+        {%- if lazy_load -%}
+          {{- media | image_url: width: media.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' | replace: 'src=', 'data-src=' | replace: 'srcset=', 'data-srcset=' -}}
+        {%- else -%}
+          {{- media | image_url: width: media.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+        {%- endif -%}
+      </div>
+
+      {%- if display_zoom_icon -%}
+        {{ zoom_button }}
+      {%- endif -%}
+
+    {%- when 'external_video' -%}
+      <div class="media-wrapper media-wrapper--product media-wrapper--no-background">
+        {%- if media.host == 'youtube' -%}
+          {%- capture video_image_url -%}https://i.ytimg.com/vi_webp/{{ media.external_id }}/hqdefault.webp{%- endcapture -%}
+
+          <img src="{{ video_image_url }}"
+               data-video-src="https://www.youtube.com/watch?v={{ media.external_id }}"
+               loading="{{ images_loading_type }}"
+               alt="{{ product.title }}"
+               class="media media-wrapper__video-preview media-wrapper__video-preview--image">
+
+          <lite-youtube videoid="{{ media.external_id }}"
+                        class="media media-wrapper__video-preview media-wrapper__video-preview--video"
+                        data-style="background-image: url('{{ video_image_url }}');">
+          </lite-youtube>
+
+          <div class="product__thumbnail-icon product__thumbnail-icon--lg">
+            {%- render 'icon', icon: media.media_type -%}
+          </div>
+        {%- elsif media.host == 'vimeo' -%}
+          <img src="{{ video_image_url }}"
+               data-video-src="https://vimeo.com/{{ media.external_id }}"
+               loading="{{ images_loading_type }}"
+               alt="{{ product.title }}"
+               class="media media-wrapper__video-preview media-wrapper__video-preview--image">
+
+          <lite-vimeo videoid="{{ media.external_id }}"
+                      class="media media-wrapper__video-preview media-wrapper__video-preview--video">
+          </lite-vimeo>
+
+          <div class="product__thumbnail-icon product__thumbnail-icon--lg">
+            {%- render 'icon', icon: media.media_type -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+    {%- when 'video' -%}
+      {%- assign width_ratio = 100.0 | divided_by: 100 -%}
+      {%- assign maximum_image_width = settings.page_container_width | divided_by: width_ratio -%}
+
+      {%- capture sizes -%}(max-width: 768px) 100vw, min({{ maximum_image_width | ceil }}px, 100vw){% endcapture %}
+
+      <div class="media-wrapper media-wrapper--product media-wrapper--no-background">
+        {%- assign last_source = media.sources | last -%}
+
+        <img src="{{ media.preview_image | image_url: width: 600 }}"
+             data-video-src="{{ last_source.url }}"
+             loading="{{ images_loading_type }}"
+             alt="{{ product.title }}"
+             class="media media-wrapper__video-preview media-wrapper__video-preview--image">
+
+        <video playsinline="playsinline"
+               controls="controls"
+               {% if loop %}loop="loop"{% endif %}
+               data-image-set
+               class="media media--video media-wrapper__video-preview media-wrapper__video-preview--video"
+               preload="metadata"
+               aria-label="{{ product.title }}">
+
+          {%- for source in media.sources -%}
+            <source src="{{ source.url }}" type="{{ source.mime_type }}" />
+          {%- endfor -%}
+
+          {{ media.preview_image | image_url: width: 600 | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', alt: product.title }}
+        </video>
+
+        <div class="product__thumbnail-icon product__thumbnail-icon--lg">
+          {%- render 'icon', icon: media.media_type -%}
+        </div>
+      </div>
+
+      {%- if display_zoom_icon -%}
+        {{ zoom_button }}
+      {%- endif -%}
+
+    {%- when 'model' -%}
+      <div class="media-wrapper media-wrapper--no-background"
+           style="padding-top: 100%;">
+        {{- media | model_viewer_tag: reveal: 'auto', toggleable: false, class: 'media', data-model-id: media.id, id: model_id -}}
+
+        <div class="product__thumbnail-icon product__thumbnail-icon--lg">
+          {%- render 'icon', icon: media.media_type -%}
+        </div>
+      </div>
+
+      {%- if display_zoom_icon -%}
+        {{ zoom_button }}
+      {%- endif -%}
+
+  {%- endcase -%}
+</div>

@@ -1,0 +1,138 @@
+{%- liquid
+  assign sold_out = true
+
+  if product.available
+    assign sold_out = false
+  endif
+
+  assign variant = product.selected_or_first_available_variant
+  assign product_link = product.url | within: collection
+-%}
+
+{%- unless sold_out -%}
+  {%- if type == 'image' -%}
+    <div class="{{ grid_item_width }} dbtfy-upsell-bundles__image-wrapper dbtfy-upsell-bundles__image-wrapper--selected{% if item == 'first' %} dbtfy-upsell-bundles__image-wrapper--current{% endif %}"
+         data-index="{{ index }}"
+         data-product-id="{{ product.id }}">
+
+      {%- unless product.has_only_default_variant -%}
+        {%- for variant in product.variants -%}
+          {%- if variant.available -%}
+            {%- liquid
+              assign media = product.media.first.preview_image
+
+              if variant.image
+                assign media = variant.image
+              endif
+            -%}
+
+            {%- capture sizes -%}300px{% endcapture %}
+
+            <a href="{% unless item == 'first' %}{{ product_link }}{% else %}#{% endunless %}"
+               class="dbtfy-upsell-bundles__image media-wrapper{% if media != blank %} media-wrapper--product{% endif %}"
+               style="padding-top: {{ 1 | divided_by: media.aspect_ratio | times: 100 }}%;"
+               {% unless variant == product.selected_or_first_available_variant %}hidden{% endunless %}
+               data-index="{{ index }}"
+               data-variant-id="{{ variant.id }}">
+
+              {%- if media != blank -%}
+                {{- media | image_url: width: 300 | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300,400', class: 'media' -}}
+              {%- else -%}
+                {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg media' }}
+              {%- endif -%}
+            </a>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- else -%}
+        {%- liquid
+          assign media = product.media.first.preview_image
+        -%}
+
+        {%- capture sizes -%}300px{% endcapture %}
+
+        <a {% unless item == 'first' %}href="{{ product_link }}"{% endunless %}
+           class="dbtfy-upsell-bundles__image media-wrapper{% if media != blank %} media-wrapper--product{% endif %}"
+           style="padding-top: {{ 1 | divided_by: media.aspect_ratio | times: 100 }}%;">
+
+          {%- if media != blank -%}
+            {{- media | image_url: width: 300 | image_tag: loading: 'lazy', sizes: sizes, widths: '200,300,400', class: 'media' -}}
+          {%- else -%}
+            {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg media' }}
+          {%- endif -%}
+        </a>
+      {%- endunless -%}
+    </div>
+  {%- endif -%}
+
+  {%- if type == 'form' -%}
+    <div class="dbtfy-upsell-bundles__form-wrapper{% if item == 'first' %} dbtfy-upsell-bundles__form-wrapper--current{% endif %}"
+         data-index="{{ index }}"
+         data-product-id="{{ product.id }}">
+
+      <div class="checkbox me-2 w-100 w-md-auto mw-100">
+        <input id="upsellBundleCheckbox-{{ product.id }}-{{ index }}"
+               class="dbtfy-upsell-bundles__checkbox"
+               data-index="{{ index }}"
+               type="checkbox"
+               value="{{ product.id }}"
+               checked>
+
+        <label for="upsellBundleCheckbox-{{ product.id }}-{{ index }}" class="text-ellipsis">
+          {%- if item == 'first' and current_product_label != blank -%}
+            <strong>{{ current_product_label }} </strong>
+          {%- endif -%}
+
+          <span>{{ product.title }}</span>
+
+          {%- if show_star_rating -%}
+            &nbsp;
+            {%- render 'review-badge', product: product, position: 'product_grid' -%}
+          {%- endif -%}
+        </label>
+      </div>
+
+      {%- form 'product', product, class: 'dbtfy-upsell-bundles__form dbtfy-upsell-bundles__form--active mt-2 w-100 w-md-auto' -%}
+        <select class="select select--sm dbtfy-upsell-bundles__select mb-2 me-md-2 w-100 w-md-auto"
+                data-index="{{ index }}"
+                name="id[]"
+                {%- if product.has_only_default_variant -%}hidden{%- endif -%}>
+
+          {%- for variant in product.variants -%}
+            {%- if variant.available -%}
+              {%- capture variant_settings -%}
+                {
+                  "price": {{ variant.price | json }},
+                  "comparePrice": {{ variant.compare_at_price | default: 0 | json }},
+                  "option1": {{ variant.option1 | json }},
+                  "option2": {{ variant.option2 | json }},
+                  "option3": {{ variant.option3 | json }}
+                }
+              {%- endcapture -%}
+
+              <option {% if variant == product.selected_or_first_available_variant %}selected="selected"{% endif %}
+                      value="{{ variant.id }}"
+                      data-variant-settings='{{ variant_settings }}'>
+                {{ variant.title | escape }}
+              </option>
+            {%- endif -%}
+          {%- endfor -%}
+        </select>
+
+        <div class="dbtfy-upsell-bundle-price-wrapper text-accent mb-2">
+          {%- for variant in product.variants -%}
+            {%- if variant == product.selected_or_first_available_variant -%}
+              <span class="dbtfy-upsell-bundles__item-price dbtfy-upsell-bundles__item-price--current {% if variant.compare_at_price > variant.price %}text-sale{% endif %}"><span class="money">{{ variant.price | money }}</span></span>
+              <span class="dbtfy-upsell-bundles__item-price dbtfy-upsell-bundles__item-price--compare text-muted text-strike" {% unless variant.compare_at_price %}style='display: none;'{% endunless %} >
+                <span class="money">{{ variant.compare_at_price | money }}</span>
+              </span>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      {%- endform -%}
+
+      {% comment %}<form data-id="{{ product.id }}" id="upsellBundles-{{ product.id }}-{{ index }}" autocomplete="off" action="/cart/add" method="post" class="form-upsell_bundles active-upsell_bundles" enctype="multipart/form-data">{% endcomment %}
+        {% comment %}{% endcomment %}
+      {% comment %}</form>{% endcomment %}
+    </div>
+  {%- endif -%}
+{%- endunless -%}

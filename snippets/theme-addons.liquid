@@ -1,0 +1,13 @@
+{%- liquid
+  # 1. 禁用页面过渡动画 (解除人为的视觉延迟)
+  # render 'dbtfy-page-transition'
+  
+  # 2. 禁用快速对比功能 (精简 DOM 树和无用的 JS 执行)
+  # render 'dbtfy-quick-compare', type: 'page'
+  # render 'dbtfy-quick-compare', type: 'markup'
+  
+  # 3. 快速预览 (Quick View) 
+  # 建议：如果你发现用户极少在列表页直接弹窗购买，而是喜欢点进产品详情页看大图，建议也加 # 注释掉。
+  # 目前暂时为你保留：
+  render 'dbtfy-quick-view', type: 'container'
+-%}

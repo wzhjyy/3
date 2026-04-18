@@ -1,0 +1,17 @@
+{%- liquid
+  assign logo = settings.dbtfy_page_transition_logo
+  assign width = settings.dbtfy_page_transition_width
+-%}
+
+<div class="dbtfy-page-transition dbtfy-page-transition--no-logo">
+  <div class="dbtfy-page-transition__wrapper">
+    {%- if logo != blank -%}
+      <img src="{{ logo | image_url: width: logo.width }}"
+           width="{{ logo.width }}"
+           height="{{ logo.height }}"
+           loading="eager"
+           class="dbtfy-page-transition__logo pulse slow infinite"
+           alt="{{ shop.name }}"/>
+    {%- endif -%}
+  </div>
+</div>
