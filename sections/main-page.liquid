@@ -1,0 +1,63 @@
+{%- liquid
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+-%}
+
+<div class="section section--{{ section_style }}">
+  <div class="{{ container_size }}">
+    {%- render 'section-header', heading: page.title, enlarge: true -%}
+
+    {%- if page.content != blank -%}
+      <div class="row">
+        <div class="rte">
+          {{ page.content }}
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+
+{% schema %}
+{
+  "name": "t:sections.main_page.name",
+  "settings": [
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

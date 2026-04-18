@@ -1,0 +1,99 @@
+{%- liquid
+  assign page_title = 'customer.register.title' | t
+-%}
+
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 offset-lg-4">
+        <div class="mb-4 text-center">
+          <div class="row gy-3">
+            <div>
+              <h2 class="h2 page-title">{{ page_title | escape }}</h2>
+            </div>
+          </div>
+        </div>
+
+        {%- form 'create_customer', class: 'form form--vertical' -%}
+          {%- if form.errors -%}
+            <div>
+              {{ form.errors | default_errors }}
+            </div>
+          {%- endif -%}
+
+          <label for="FirstName" class="mb-1">{{ 'customer.register.first_name' | t }}</label>
+          <input type="text"
+                 name="customer[first_name]"
+                 id="FirstName"
+                 class="input input--full"
+                 placeholder="{{ 'customer.register.first_name' | t }}"
+              {%- if form.first_name -%}
+                value="{{ form.first_name }}"
+              {%- endif -%}
+                 autocapitalize="words"
+                 autofocus="autofocus">
+
+          <label for="LastName" class="mb-1">{{ 'customer.register.last_name' | t }}</label>
+          <input type="text"
+                 name="customer[last_name]"
+                 id="LastName"
+                 class="input input--full"
+                 placeholder="{{ 'customer.register.last_name' | t }}"
+              {%- if form.last_name -%}
+                value="{{ form.last_name }}"
+              {%- endif -%}
+                 autocapitalize="words">
+
+          <label for="Email" class="mb-1">{{ 'customer.register.email' | t }} *</label>
+          <input type="email"
+                 name="customer[email]"
+                 id="Email"
+                 class="input input--full{%- if form.errors contains 'email' -%} input--error{%- endif -%}"
+                 placeholder="{{ 'customer.register.email' | t }}"
+                 {%- if form.email -%}
+                 value="{{ form.email }}"
+                 {%- endif -%}
+                 autocorrect="off"
+                 autocapitalize="off"
+                 pattern="^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
+                 required="required"
+                 {%- if form.errors contains 'email' -%}
+                 aria-invalid="true"
+                 {%- endif -%}>
+
+          <label for="CreatePassword" class="mb-1">{{ 'customer.register.password' | t }}</label>
+          <input type="password"
+                 name="customer[password]"
+                 id="CreatePassword"
+                 class="input input--full{%- if form.errors contains 'password' -%} input--error{%- endif -%}"
+                 placeholder="{{ 'customer.register.password' | t }}"
+                 {%- if form.errors contains 'password' -%}
+                 aria-invalid="true"
+                 {%- endif -%}>
+
+          <input type="hidden" name="customer[accepts_marketing]" value=""/>
+
+          <div class="checkbox">
+            <input id="registerOptin"
+                   type="checkbox"
+                   class="checkbox"
+                   name="customer[accepts_marketing]"
+                   checked="checked"/>
+            <label for="registerOptin" class="text-sm">{{ 'shopify.checkout.marketing.accept_marketing_checkbox_label' | t }}</label>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--full">
+            <span class="btn__text">
+              {{ 'customer.register.submit' | t }}
+            </span>
+          </button>
+        {%- endform -%}
+
+        <div class="row gy-3 text-center mt-0">
+          <p><a href="{{ routes.account_login_url }}"><span class="{{ settings.icon }}" translate="no" aria-hidden="true">exit_to_app</span> {{ 'layout.customer.log_in' | t }}</a></p>
+          <p><a href="{{ routes.root_url }}"><span class="{{ settings.icon }}" translate="no" aria-hidden="true">storefront</span> {{ 'customer.login.cancel' | t }}</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

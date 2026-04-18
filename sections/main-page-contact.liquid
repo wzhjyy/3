@@ -1,0 +1,135 @@
+{%- liquid
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+-%}
+
+<div class="section section--{{ section_style }}">
+  <div class="{{ container_size }}">
+    <div class="row">
+      <div class="col-md-8 offset-md-2">
+        <div class="text-center">
+          <h2 class="h2 page-title mb-3">{{ page.title | escape }}</h2>
+        </div>
+
+        {%- if page.content != blank -%}
+          <div class="rte">
+            {{ page.content }}
+          </div>
+        {%- endif -%}
+
+        <div class="mt-3 mt-md-5">
+          {%- form 'contact', class: 'form form--vertical' -%}
+            {%- if form.posted_successfully? -%}
+              <p class="note form form--success">
+                {{ 'contact.form.post_success' | t }}
+              </p>
+            {%- endif -%}
+
+            {%- if form.errors -%}
+              {{ form.errors | default_errors }}
+            {%- endif -%}
+
+            <div class="row row--sm">
+              <div class="col-md-6">
+                <label for="ContactFormName" class="mb-1">{{ 'contact.form.name' | t }}</label>
+                <input type="text"
+                       id="ContactFormName"
+                       name="contact[{{ 'contact.form.name' | t }}]"
+                       placeholder="{{ 'contact.form.name' | t }}"
+                       autocapitalize="words"
+                       autofocus="autofocus"
+                       class="input input--full"
+                       value="{%- if form.name -%}{{ form.name }}{%- elsif customer -%}{{ customer.name }}{%- endif -%}">
+              </div>
+
+              <div class="col-md-6">
+                <label for="ContactFormEmail" class="mb-1">{{ 'contact.form.email' | t }} <span aria-hidden="true">*</span></label>
+                <input type="email" id="ContactFormEmail"
+                       class="input input--full{%- if form.errors contains 'email' -%} input--error{%- endif -%}"
+                       name="contact[email]"
+                       placeholder="{{ 'contact.form.email' | t }}"
+                       autocorrect="off"
+                       autocapitalize="off"
+                       pattern="^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
+                       required="required"
+                       aria-required="true"
+                       value="{%- if form.email -%}{{ form.email }}{%- elsif customer -%}{{ customer.email }}{%- endif -%}"
+                       {%- if form.errors contains 'email' -%}
+                       aria-invalid="true"
+                       {%- endif -%}>
+              </div>
+            </div>
+
+            <label for="ContactFormPhone" class="mb-1">{{ 'contact.form.phone' | t }}</label>
+            <input type="tel"
+                   id="ContactFormPhone"
+                   name="contact[{{ 'contact.form.phone' | t }}]"
+                   placeholder="{{ 'contact.form.phone' | t }}"
+                   pattern="[0-9\-]*"
+                   value="{%- if form.phone -%}{{ form.phone }}{%- elsif customer -%}{{ customer.phone }}{%- endif -%}">
+
+            <label for="ContactFormMessage" class="mb-1">{{ 'contact.form.message' | t }}</label>
+            <textarea rows="3"
+                      id="ContactFormMessage"
+                      name="contact[body]"
+                      class="mb-0"
+                      placeholder="{{ 'contact.form.message' | t }}">
+              {%- if form.body -%}{{ form.body }}{%- endif -%}
+            </textarea>
+
+            <button type="submit" class="btn btn--primary btn--full w-md-auto mt-2">
+              <span class="btn__text">
+                {{ 'contact.form.send' | t }}
+                <span class="{{ settings.icon }} icon icon--width" translate="no" aria-hidden="true">arrow_forward</span>
+              </span>
+            </button>
+          {%- endform -%}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main_page_contact.name",
+  "settings": [
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,101 @@
+{%- liquid
+  assign page_title = 'customer.account.title' | t
+-%}
+
+<div class="section">
+  <div class="container">
+    {%- paginate customer.orders by 20 -%}
+      <div class="mb-4 text-center">
+        <div class="row gy-3">
+          <div>
+            <h2 class="h2 page-title">{{ page_title | escape }}</h2>
+          </div>
+
+          <div>
+            <a href="{{ routes.account_logout_url }}">
+              <span class="{{ settings.icon }}" translate="no">exit_to_app</span>
+              {{ 'layout.customer.log_out' | t }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="row gy-3 js-pagination-items">
+        <div class="col-md-3 sticky sticky--lg sticky-check-header">
+          <h2 class="h2 mb-3">{{ 'customer.account.details' | t }}</h2>
+
+          <div class="card h-auto">
+            <div class="card__body">
+              <div class="row gy-3">
+                {%- if customer.addresses_count != 0 -%}
+                  <span class="text-capitalize">{{ customer.default_address | format_address }}</span>
+
+                  <div>
+                    <a href="{{ routes.account_addresses_url }}" class="btn btn--outline-primary btn--sm btn--full">{{ 'customer.account.view_addresses' | t }} ({{ customer.addresses_count }})</a>
+                  </div>
+                {%- else -%}
+                  <div>
+                    <a href="{{ routes.account_addresses_url }}" class="btn btn--primary btn--sm btn--full">{{ 'customer.addresses.add' | t }}</a>
+                  </div>
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-9">
+          <h2 class="h2 mb-3">{{ 'customer.orders.title' | t }}</h2>
+
+          {%- if customer.orders.size != 0 -%}
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ 'customer.orders.order_number' | t }}</th>
+                    <th>{{ 'customer.orders.date' | t }}</th>
+                    <th>{{ 'customer.orders.payment_status' | t }}</th>
+                    <th>{{ 'customer.orders.fulfillment_status' | t }}</th>
+                    <th>{{ 'customer.orders.total' | t }}</th>
+                  </tr>
+                </thead>
+
+                <tbody class="text-whitespace-nowrap">
+                  {%- for order in customer.orders -%}
+                    <tr>
+                      <td>
+                        <a href="{{ order.customer_url }}" class="btn {% unless forloop.first == true %}btn--outline-primary{% else %}btn--primary{% endunless %} btn--sm" title="{{ 'customer.orders.order_number' | t }} {{ order.name }}" aria-label="{{ 'customer.orders.order_number' | t }} {{ order.name }}">
+                          <span class="{{ settings.icon }}" translate="no">visibility</span>
+                          {{ order.name }}
+                        </a>
+                      </td>
+
+                      <td>{{ order.created_at | date: format: 'month_day_year' }}</td>
+
+                      <td>
+                        <span class="badge">{{ order.financial_status_label }}</span>
+                      </td>
+
+                      <td>
+                        <span class="badge">{{ order.fulfillment_status_label }}</span>
+                      </td>
+
+                      <td>
+                        <span class="text-accent">
+                          <span class="money">{{ order.total_price | money }}</span>
+                        </span>
+                      </td>
+                    </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+            </div>
+          {%- else -%}
+            <p>{{ 'customer.orders.none' | t }}</p>
+          {%- endif -%}
+        </div>
+      </div>
+
+      {%- render 'pagination', paginate: paginate -%}
+    {%- endpaginate -%}
+  </div>
+</div>

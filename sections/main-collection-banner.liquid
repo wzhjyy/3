@@ -1,0 +1,45 @@
+{%- liquid
+  assign section_height = settings.hero_section_height_desktop
+  assign section_height_mobile = settings.hero_section_height_mobile
+  assign image = collection.image
+  assign title = collection.title
+  assign description = collection.description
+-%}
+
+<div class="slideshow slideshow--{{ section_height }} slideshow--{{ section_height_mobile }}-mobile section section--no-top-spacing section--no-bottom-spacing">
+  <div class="slideshow__slider slideshow__slider--loaded">
+    <div class="slideshow__slide overlay media-wrapper media-wrapper--cover align-items-center">
+      {%- if settings.show_hero_image and image != blank -%}
+        {%- capture sizes -%}100vw{% endcapture %}
+
+        {{- image | image_url: width: image.width | image_tag: loading: 'eager', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+      {%- endif -%}
+
+      <div class="slideshow__inner media-wrapper__content media-wrapper__content--relative text-center">
+        <div class="container d-flex justify-content-center">
+          <div class="slideshow__content row gy-3">
+            {%- if title != blank -%}
+              <div>
+                <h1 class="page-title h1">{{ title | escape }}</h1>
+              </div>
+            {%- endif -%}
+
+            {%- if settings.show_collection_description and settings.collection_description_position == 'in-banner' and description != blank -%}
+              <div class="rte sm:text-lg">{{ description }}</div>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main_collection_banner.name",
+  "class": "hero-section",
+  "settings": [
+
+  ]
+}
+{% endschema %}

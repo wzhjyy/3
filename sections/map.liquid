@@ -1,0 +1,261 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign heading = section.settings.heading
+  assign text = section.settings.text
+  assign map_address = section.settings.map_address
+  assign button_label = section.settings.button_label
+  assign button_icon = section.settings.button_icon
+  assign button_style = section.settings.button_style
+  assign content_max_width = section.settings.content_max_width
+  assign api_key = section.settings.api_key
+  assign placeholder_image = section.settings.placeholder_image
+  assign image_alignment = section.settings.image_alignment
+  assign images_loading_type = section.settings.images_loading_type
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  if api_key != blank and map_address != blank
+    assign display_map = true
+  endif
+-%}
+
+<style>
+  @media screen and (min-width: 768px) {
+      .map-section[data-section-id='{{ section.id }}'] .map-section__content {
+          max-width: {{ content_max_width }}px;
+      }
+  }
+</style>
+
+<div class="map-section{% if display_map %} map-section--visible{% endif %} section section--default section--no-spacing {{ visibility_class }}" data-section-type="map" data-section-id="{{ section.id }}">
+  <div class="map-section__content-wrapper">
+    {%- if display_map -%}
+      <div class="map-section__map media-wrapper js-map"
+           data-address="{{ map_address | escape }}"
+           data-api-key="{{ api_key }}">
+      </div>
+    {%- else -%}
+      {%- if placeholder_image != blank -%}
+        {%- capture sizes -%}100vw{% endcapture %}
+
+        <div class="media-wrapper media-wrapper--{{ image_alignment }}" style="padding-top: {{ 1 | divided_by: placeholder_image.aspect_ratio | times: 100 }}%;">
+          {{- placeholder_image | image_url: width: placeholder_image.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+        </div>
+      {%- else -%}
+        {{ 'lifestyle-2' | placeholder_svg_tag: 'placeholder-svg' }}
+      {%- endif -%}
+    {%- endif -%}
+
+    <div class="map-section__content-container py-md-5 justify-content-start">
+      <div class="container">
+        <div class="row">
+          <div class="map-section__content">
+            <div class="card">
+              <div class="card__body card__body--xl text-center">
+                {%- if heading != blank -%}
+                  <h2 class="h2">{{ heading | escape }}</h2>
+                {%- endif -%}
+
+                {%- if text != blank -%}
+                  <div class="rte mt-4">{{ text }}</div>
+
+                  {%- if map_address != blank and button_label != blank -%}
+                    <div class="mt-4">
+                      <a href="https://maps.google.com?daddr={{ map_address | escape }}" class="btn {{ button_style }}" target="_blank">
+                        {%- if button_icon != blank -%}
+                          <span class="{{ settings.icon }}" translate="no" aria-hidden="true">
+                            {{ button_icon }}
+                          </span>
+                        {% endif %}
+
+                        {{ button_label }}
+                      </a>
+                    </div>
+                  {%- endif -%}
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.map.name",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Our store"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "t:general.settings.text.label",
+      "default": "<p>123 Fake St.<br>Toronto, Canada</p><p>Mon - Fri, 10am - 9pm<br>Saturday, 11am - 9pm<br>Sunday, 11am - 5pm</p>"
+    },
+    {
+      "type": "textarea",
+      "id": "map_address",
+      "label": "t:sections.map.settings.map_address.label",
+      "info": "t:sections.map.settings.map_address.info",
+      "default": "490 Rue De La Gauchetière O, Montréal"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:general.settings.button_label.label",
+      "default": "Get directions"
+    },
+    {
+      "type": "text",
+      "id": "button_icon",
+      "label": "t:sections.map.settings.button_icon.label",
+      "info": "t:general.settings.icon.info",
+      "default": "location_on"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:general.settings.button_style.label",
+      "default": "btn--primary",
+      "options": [
+        {
+          "value": "",
+          "label": "t:general.settings.button_style.options__1.label"
+        },
+        {
+          "value": "btn--primary",
+          "label": "t:general.settings.button_style.options__2.label"
+        },
+        {
+          "value": "btn--outline-primary",
+          "label": "t:general.settings.button_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "min": 200,
+      "max": 700,
+      "step": 10,
+      "unit": "px",
+      "label": "t:sections.map.settings.content_max_width.label",
+      "default": 400
+    },
+    {
+      "type": "header",
+      "content": "t:sections.map.settings.header__1.content"
+    },
+    {
+      "type": "text",
+      "id": "api_key",
+      "label": "t:sections.map.settings.api_key.label",
+      "info": "t:sections.map.settings.api_key.info"
+    },
+    {
+      "type": "image_picker",
+      "id": "placeholder_image",
+      "label": "t:sections.map.settings.placeholder_image.label",
+      "info": "t:sections.map.settings.placeholder_image.info"
+    },
+    {
+      "type": "select",
+      "id": "image_alignment",
+      "label": "t:sections.map.settings.image_alignment.label",
+      "default": "center-center",
+      "options": [
+        {
+          "label": "t:general.settings.position.options__1.label",
+          "value": "top-left"
+        },
+        {
+          "label": "t:general.settings.position.options__2.label",
+          "value": "top-center"
+        },
+        {
+          "label": "t:general.settings.position.options__3.label",
+          "value": "top-right"
+        },
+        {
+          "label": "t:general.settings.position.options__4.label",
+          "value": "center-left"
+        },
+        {
+          "label": "t:general.settings.position.options__5.label",
+          "value": "center-center"
+        },
+        {
+          "label": "t:general.settings.position.options__6.label",
+          "value": "center-right"
+        },
+        {
+          "label": "t:general.settings.position.options__7.label",
+          "value": "bottom-left"
+        },
+        {
+          "label": "t:general.settings.position.options__8.label",
+          "value": "bottom-center"
+        },
+        {
+          "label": "t:general.settings.position.options__9.label",
+          "value": "bottom-right"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.images_loading.header.content"
+    },
+    {
+      "type": "select",
+      "id": "images_loading_type",
+      "label": "t:general.settings.images_loading.images_loading_type.label",
+      "default": "lazy",
+      "options": [
+        {
+          "value": "lazy",
+          "label": "t:general.settings.images_loading.images_loading_type.options__1.label"
+        },
+        {
+          "value": "eager",
+          "label": "t:general.settings.images_loading.images_loading_type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.map.presets.name",
+      "category": "t:sections.map.presets.category"
+    }
+  ]
+}
+{% endschema %}

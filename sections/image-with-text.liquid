@@ -1,0 +1,315 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign image = section.settings.image
+  assign image_link = section.settings.image_link
+  assign image_position = section.settings.image_position
+  assign text_alignment = section.settings.text_alignment
+  assign images_loading_type = section.settings.images_loading_type
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+-%}
+
+<div class="section section--{{ section_style }}{% if container_size == 'container-full' %} section--no-spacing{% endif %} {{ visibility_class }}">
+  <div class="{{ container_size }}">
+    <div class="row gx-0 gy-3 gy-md-0{% if image_position == 'right' %} flex-row-reverse{% endif %}">
+      <div class="col-md-6 d-flex align-items-center">
+        {%- if image != blank -%}
+          {%- assign width_ratio = 100.0 | divided_by: 50 -%}
+          {%- assign maximum_image_width = settings.page_container_width | divided_by: width_ratio -%}
+
+          {%- capture sizes -%}(max-width: 768px) 100vw, min({{ maximum_image_width | ceil }}px, 50vw){% endcapture %}
+
+          <div class="media-wrapper" style="padding-top: {{ 1 | divided_by: image.aspect_ratio | times: 100 }}%;">
+            {%- if image_link != blank -%}
+              <a href="{{ image_link }}" aria-label="Click to open {{ image_link }} link">
+            {%- endif -%}
+
+            {{- image | image_url: width: image.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: 'media' -}}
+
+            {%- if image_link != blank -%}
+              </a>
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+        {%- endif -%}
+      </div>
+
+      <div class="col-md-6 d-flex flex-column justify-content-center {{ text_alignment }}">
+        <div class="row gx-0 gy-3 p-md-4 p-lg-5{% if container_size == 'container-full' %} px-3 pb-3{% endif %}">
+          {%- for block in section.blocks -%}
+            {%- case block.type -%}
+              {%- when 'heading' -%}
+                {%- liquid
+                  assign heading = block.settings.heading
+                -%}
+
+                {%- if heading != blank -%}
+                  <h2 class="h2">{{ heading | escape }}</h2>
+                {%- endif -%}
+
+              {%- when 'text' -%}
+                {%- liquid
+                  assign text = block.settings.text
+                  assign text_size = block.settings.text_size
+                -%}
+
+                {%- if text != blank -%}
+                  <div class="rte{% if text_size == 'large' %} sm:text-lg{% endif %}">{{ text }}</div>
+                {%- endif -%}
+
+              {%- when 'button' -%}
+                {%- liquid
+                  assign button_label = block.settings.button_label
+                  assign button_link = block.settings.button_link
+                  assign button_style = block.settings.button_style
+                -%}
+
+                {%- if button_label != blank and button_link != blank -%}
+                  <div>
+                    <a href="{{ button_link }}" class="btn {{ button_style }}">{{ button_label }}</a>
+                  </div>
+                {%- endif -%}
+
+            {%- endcase -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.image_with_text.name",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        },
+        {
+          "value": "container-full",
+          "label": "t:general.settings.container_size.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:general.settings.image.label"
+    },
+    {
+      "type": "url",
+      "id": "image_link",
+      "label": "t:general.settings.image_link.label"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "t:sections.image_with_text.settings.image_position.label",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:sections.image_with_text.settings.image_position.options__1.label"
+        },
+        {
+          "value": "right",
+          "label": "t:sections.image_with_text.settings.image_position.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "t:general.settings.text_alignment.label",
+      "default": "text-center",
+      "options": [
+        {
+          "value": "text-start",
+          "label": "t:general.settings.text_alignment.options__1.label"
+        },
+        {
+          "value": "text-center",
+          "label": "t:general.settings.text_alignment.options__2.label"
+        },
+        {
+          "value": "text-end",
+          "label": "t:general.settings.text_alignment.options__3.label"
+        },
+        {
+          "value": "text-justify",
+          "label": "t:general.settings.text_alignment.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.images_loading.header.content"
+    },
+    {
+      "type": "select",
+      "id": "images_loading_type",
+      "label": "t:general.settings.images_loading.images_loading_type.label",
+      "default": "lazy",
+      "options": [
+        {
+          "value": "lazy",
+          "label": "t:general.settings.images_loading.images_loading_type.options__1.label"
+        },
+        {
+          "value": "eager",
+          "label": "t:general.settings.images_loading.images_loading_type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "t:sections.image_with_text.blocks.heading.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.settings.heading.label",
+          "default": "Image with text"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "t:sections.image_with_text.blocks.text.name",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Pair large text with an image to give focus to your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>"
+        },
+        {
+          "type": "select",
+          "id": "text_size",
+          "label": "t:sections.image_with_text.blocks.text.settings.text_size.label",
+          "default": "large",
+          "options": [
+            {
+              "value": "medium",
+              "label": "t:sections.image_with_text.blocks.text.settings.text_size.options__1.label"
+            },
+            {
+              "value": "large",
+              "label": "t:sections.image_with_text.blocks.text.settings.text_size.options__2.label"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "t:sections.image_with_text.blocks.button.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "t:general.settings.button_label.label",
+          "default": "Button"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "t:general.settings.button_link.label"
+        },
+        {
+          "type": "select",
+          "id": "button_style",
+          "label": "t:general.settings.button_style.label",
+          "default": "btn--primary",
+          "options": [
+            {
+              "value": "",
+              "label": "t:general.settings.button_style.options__1.label"
+            },
+            {
+              "value": "btn--primary",
+              "label": "t:general.settings.button_style.options__2.label"
+            },
+            {
+              "value": "btn--outline-primary",
+              "label": "t:general.settings.button_style.options__3.label"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.image_with_text.presets.name",
+      "category": "t:sections.image_with_text.presets.category",
+      "blocks": [
+        {
+          "type": "heading"
+        },
+        {
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

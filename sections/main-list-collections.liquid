@@ -1,0 +1,228 @@
+{%- liquid
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign display_type = section.settings.display_type
+  assign display_type = section.settings.display_type
+  assign sort_type = section.settings.sort_type
+  assign collection_height = section.settings.collection_height
+  assign collections_per_page = section.settings.collections_per_page
+
+  assign section_title = 'collections.general.catalog_title' | t
+
+  if display_type == 'all'
+    case sort_type
+      when 'products_high' or 'products_low'
+        assign list_collections = collections | sort: 'all_products_count'
+      when 'date' or 'date_reversed'
+        assign list_collections = collections | sort: 'published_at'
+      else
+        assign list_collections = collections
+    endcase
+  endif
+-%}
+
+<div class="section section--{{ section_style }}">
+  <div class="{{ container_size }}">
+    {%- render 'section-header', heading: section_title, enlarge: true -%}
+
+    {%- if display_type == 'all' -%}
+      {%- paginate collections by collections_per_page -%}
+        <div class="row gy-4 js-pagination-items">
+          {%- liquid
+            if sort_type == 'products_low' or sort_type == 'date' or sort_type == 'alphabetical'
+              for collection in list_collections
+                if collection.handle == 'frontpage'
+                  continue
+                endif
+
+                capture current
+                  cycle 1, 2, 3, 4, 5, 6
+                endcapture
+
+                render 'collection-grid-item', collection: collection, section_height: collection_height, current: current, images_loading_type: 'lazy', container_size: container_size
+              endfor
+            else
+              for collection in list_collections reversed
+                if collection.handle == 'frontpage'
+                  continue
+                endif
+
+                capture current
+                  cycle 1, 2, 3, 4, 5, 6
+                endcapture
+
+                render 'collection-grid-item', collection: collection, section_height: collection_height, current: current, images_loading_type: 'lazy', container_size: container_size
+              endfor
+            endif
+          -%}
+        </div>
+
+        {%- render 'pagination', paginate: paginate -%}
+      {%- endpaginate -%}
+    {%- else -%}
+      <div class="row gy-4">
+        {%- liquid
+          for block in section.blocks
+            capture current
+              cycle 1, 2, 3, 4, 5, 6
+            endcapture
+
+            assign collection = collections[block.settings.collection]
+            render 'collection-grid-item', collection: collection, block: block, section_height: collection_height, current: current, images_loading_type: 'lazy', container_size: container_size
+          endfor
+        -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main_list_collections.name",
+  "settings": [
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "display_type",
+      "label": "t:sections.main_list_collections.settings.display_type.label",
+      "default": "all",
+      "info": "t:sections.main_list_collections.settings.display_type.info",
+      "options": [
+        {
+          "value": "all",
+          "label": "t:sections.main_list_collections.settings.display_type.options__1.label"
+        },
+        {
+          "value": "selected",
+          "label": "t:sections.main_list_collections.settings.display_type.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "sort_type",
+      "label": "t:sections.main_list_collections.settings.sort_type.label",
+      "info": "t:sections.main_list_collections.settings.sort_type.info",
+      "default": "alphabetical",
+      "options": [
+        {
+          "value": "products_high",
+          "label": "t:sections.main_list_collections.settings.sort_type.options__1.label"
+        },
+        {
+          "value": "products_low",
+          "label": "t:sections.main_list_collections.settings.sort_type.options__2.label"
+        },
+        {
+          "value": "alphabetical",
+          "label": "t:sections.main_list_collections.settings.sort_type.options__3.label"
+        },
+        {
+          "value": "alphabetical_reversed",
+          "label": "t:sections.main_list_collections.settings.sort_type.options__4.label"
+        },
+        {
+          "value": "date",
+          "label": "t:sections.main_list_collections.settings.sort_type.options__5.label"
+        },
+        {
+          "value": "date_reversed",
+          "label": "t:sections.main_list_collections.settings.sort_type.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "collection_height",
+      "label": "t:sections.main_list_collections.settings.collection_height.label",
+      "default": "md",
+      "options": [
+        {
+          "label": "t:sections.main_list_collections.settings.collection_height.options__1.label",
+          "value": "xs"
+        },
+        {
+          "label": "t:sections.main_list_collections.settings.collection_height.options__2.label",
+          "value": "sm"
+        },
+        {
+          "label": "t:sections.main_list_collections.settings.collection_height.options__3.label",
+          "value": "md"
+        },
+        {
+          "label": "t:sections.main_list_collections.settings.collection_height.options__4.label",
+          "value": "lg"
+        },
+        {
+          "label": "t:sections.main_list_collections.settings.collection_height.options__5.label",
+          "value": "xl"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "collections_per_page",
+      "label": "t:sections.main_list_collections.settings.collections_per_page.label",
+      "min": 3,
+      "max": 100,
+      "step": 1,
+      "default": 12,
+      "info": "t:sections.main_list_collections.settings.collections_per_page.info"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "t:sections.main_list_collections.blocks.collection.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "label": "t:sections.main_list_collections.blocks.collection.settings.collection.label",
+          "id": "collection",
+          "type": "collection"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

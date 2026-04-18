@@ -1,0 +1,345 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign text_alignment = section.settings.text_alignment
+  assign text_alignment_mobile = section.settings.text_alignment_mobile
+  assign media_size = section.settings.media_size
+  assign images_loading_type = section.settings.images_loading_type
+  assign columns_per_row_mobile = section.settings.columns_per_row_mobile
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  capture mobile_column_width
+    if columns_per_row_mobile == 'one'
+      echo 'col-12'
+    else
+      echo 'col-6'
+    endif
+  endcapture
+
+  capture block_width
+    render 'section-block-width', section: section, type: 'block'
+  endcapture
+-%}
+
+{%- if section.blocks.size > 0 -%}
+  <div class="guarantee section section--{{ section_style }} {{ visibility_class }}">
+    <div class="{{ container_size }}">
+      <div class="row gy-4 {{ text_alignment }} {{ text_alignment_mobile }}">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign image = block.settings.image
+            assign image_link = block.settings.image_link
+            assign icon = block.settings.icon
+            assign heading = block.settings.heading
+            assign text = block.settings.text
+            assign button_label = block.settings.button_label
+            assign button_link = block.settings.button_link
+            assign button_style = block.settings.button_style
+          -%}
+
+          <div class="{{ mobile_column_width }} {{ block_width }}" {{ block.shopify_attributes }}>
+            <div class="row gy-3">
+              <div class="col-12">
+                {%- if image != blank -%}
+                  {%- capture sizes -%}100px{% endcapture %}
+                  {%- capture class -%}image image--{{ media_size }}{% endcapture %}
+
+                  <div class="d-inline-block mb-[-2]">
+                    {%- if image_link != blank -%}
+                      <a href="{{ image_link }}">
+                    {%- endif -%}
+
+                    {{- image | image_url: width: 100 | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: class -}}
+
+                    {%- if image_link != blank -%}
+                      </a>
+                    {%- endif -%}
+                  </div>
+                {%- elsif icon != blank -%}
+                  <span class="{{ settings.icon }} icon icon--{{ media_size }} text-secondary" translate="no" aria-hidden="true">{{ icon }}</span>
+                {%- else -%}
+                  {%- capture svg_class -%}placeholder-svg image image--{{ media_size }}{% endcapture %}
+
+                  {{ 'image' | placeholder_svg_tag: svg_class }}
+                {%- endif -%}
+              </div>
+
+              {%- if heading != blank -%}
+                <h3 class="h5">{{ heading | escape }}</h3>
+              {%- endif -%}
+
+              {%- if text != blank -%}
+                <div class="rte">{{ text }}</div>
+              {%- endif -%}
+
+              {%- if button_label != blank and button_link != blank -%}
+                <div>
+                  <a href="{{ button_link }}" class="btn {{ button_style }}">{{ button_label }}</a>
+                </div>
+              {%- endif -%}
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.guarantee.name",
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "t:general.settings.text_alignment_desktop.label",
+      "default": "sm:text-center",
+      "options": [
+        {
+          "value": "sm:text-start",
+          "label": "t:general.settings.text_alignment.options__1.label"
+        },
+        {
+          "value": "sm:text-center",
+          "label": "t:general.settings.text_alignment.options__2.label"
+        },
+        {
+          "value": "sm:text-end",
+          "label": "t:general.settings.text_alignment.options__3.label"
+        },
+        {
+          "value": "sm:text-justify",
+          "label": "t:general.settings.text_alignment.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_alignment_mobile",
+      "label": "t:general.settings.text_alignment_mobile.label",
+      "default": "text-center",
+      "options": [
+        {
+          "value": "text-start",
+          "label": "t:general.settings.text_alignment.options__1.label"
+        },
+        {
+          "value": "text-center",
+          "label": "t:general.settings.text_alignment.options__2.label"
+        },
+        {
+          "value": "text-end",
+          "label": "t:general.settings.text_alignment.options__3.label"
+        },
+        {
+          "value": "text-justify",
+          "label": "t:general.settings.text_alignment.options__4.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "media_size",
+      "label": "t:sections.guarantee.settings.media_size.label",
+      "default": "sm",
+      "options": [
+        {
+          "value": "xs",
+          "label": "t:sections.guarantee.settings.media_size.options__1.label"
+        },
+        {
+          "value": "sm",
+          "label": "t:sections.guarantee.settings.media_size.options__2.label"
+        },
+        {
+          "value": "md",
+          "label": "t:sections.guarantee.settings.media_size.options__3.label"
+        },
+        {
+          "value": "lg",
+          "label": "t:sections.guarantee.settings.media_size.options__4.label"
+        },
+        {
+          "value": "xl",
+          "label": "t:sections.guarantee.settings.media_size.options__5.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "columns_per_row_mobile",
+      "label": "Columns per row (mobile)",
+      "default": "two",
+      "options": [
+        {
+          "value": "one",
+          "label": "1"
+        },
+        {
+          "value": "two",
+          "label": "2"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.images_loading.header.content"
+    },
+    {
+      "type": "select",
+      "id": "images_loading_type",
+      "label": "t:general.settings.images_loading.images_loading_type.label",
+      "default": "lazy",
+      "options": [
+        {
+          "value": "lazy",
+          "label": "t:general.settings.images_loading.images_loading_type.options__1.label"
+        },
+        {
+          "value": "eager",
+          "label": "t:general.settings.images_loading.images_loading_type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "guarantee",
+      "name": "t:sections.guarantee.blocks.guarantee.name",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:general.settings.image.label"
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "t:general.settings.icon.label",
+          "info": "t:general.settings.icon.info"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.settings.heading.label",
+          "default": "Our guarantee"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:general.settings.text.label",
+          "default": "<p>Share your guarantees with your customers.</p>"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "t:general.settings.button_label.label"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "t:general.settings.button_link.label"
+        },
+        {
+          "type": "select",
+          "id": "button_style",
+          "label": "t:general.settings.button_style.label",
+          "default": "btn--primary",
+          "options": [
+            {
+              "value": "",
+              "label": "t:general.settings.button_style.options__1.label"
+            },
+            {
+              "value": "btn--primary",
+              "label": "t:general.settings.button_style.options__2.label"
+            },
+            {
+              "value": "btn--outline-primary",
+              "label": "t:general.settings.button_style.options__3.label"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.guarantee.presets.name",
+      "category": "t:sections.guarantee.presets.category",
+      "blocks": [
+        {
+          "type": "guarantee"
+        },
+        {
+          "type": "guarantee"
+        },
+        {
+          "type": "guarantee"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

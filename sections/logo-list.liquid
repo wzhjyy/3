@@ -1,0 +1,278 @@
+{%- liquid
+  assign show_on_desktop = section.settings.show_on_desktop
+  assign show_on_mobile = section.settings.show_on_mobile
+  assign section_style = section.settings.section_style
+  assign heading = section.settings.heading
+  assign logo_size = section.settings.logo_size
+  assign enable_gray_logos = section.settings.enable_gray_logos
+  assign enable_card = section.settings.enable_card
+  assign enable_slider = section.settings.enable_slider
+  assign show_dots = section.settings.show_dots
+  assign enable_autoplay = section.settings.enable_autoplay
+  assign autoplay_speed = section.settings.autoplay_speed | times: 1000
+  assign images_loading_type = section.settings.images_loading_type
+
+  capture visibility_class
+    render 'section-visibility-class', show_on_mobile: show_on_mobile, show_on_desktop: show_on_desktop
+  endcapture
+
+  capture block_width
+    render 'section-block-width', section: section, type: 'block'
+  endcapture
+-%}
+
+{%- capture section_settings -%}
+  {
+    "enableSlider": {{ enable_slider | json }},
+    "showDots": {{ show_dots | json }},
+    "enableAutoplay": {{ enable_autoplay | json }},
+    "autoplaySpeed": {{ autoplay_speed | json }}
+  }
+{%- endcapture -%}
+
+<style>
+    .logo-list[data-section-id='{{ section.id }}'] .logo-list__icon-wrapper,
+    .logo-list[data-section-id='{{ section.id }}'] .logo-list__icon-wrapper svg,
+    .logo-list[data-section-id='{{ section.id }}'] .logo-list__image-wrapper,
+    .logo-list[data-section-id='{{ section.id }}'] .logo-list__image-wrapper img {
+        width: auto;
+        height: {{ logo_size }}px;
+    }
+</style>
+
+{%- if section.blocks.size > 0 -%}
+  <div class="logo-list section section--{{ section_style }} {{ visibility_class }}" data-section-type="logo-list" data-section-id="{{ section.id }}" data-section-settings='{{ section_settings }}'>
+    <div class="logo-list__container container">
+      <div class="row row--sm row-cols-auto justify-content-center align-items-center">
+        {%- if heading != blank -%}
+          <h2 class="h2 mb-4">{{ heading | escape }}</h2>
+        {%- endif -%}
+
+        <div class="logo-list__slider row row--sm row-cols-md-auto justify-content-center{% if section.blocks.size > 1 and enable_slider %} slick js-slider{% endif %}" data-slides-count="{{ section.blocks.size }}">
+          {%- for block in section.blocks -%}
+            {%- liquid
+              assign image = block.settings.image
+              assign image_link = block.settings.image_link
+              assign open_link_in_new_tab = block.settings.open_link_in_new_tab
+
+              assign image_class = 'image'
+
+              if enable_gray_logos
+                assign image_class = image_class | append: ' image--gray'
+              endif
+            -%}
+
+            <div class="logo-list__logo mb-3" {{ block.shopify_attributes }}>
+              {%- if enable_card -%}
+                <div class="card">
+                  <div class="card__body card__body--xs">
+              {%- endif -%}
+
+                {%- if image_link != blank -%}
+                  <a href="{{ image_link }}" aria-label="Click to open {{ image_link }} link" {% if open_link_in_new_tab %}target="_blank"{% endif %}>
+                {%- endif -%}
+
+                  {%- if image != blank -%}
+                    {%- assign image_width = logo_size | times: image.aspect_ratio | times: 2 | floor -%}
+                    {%- capture sizes -%}{{ image_width }}px{% endcapture %}
+
+                    <div class="logo-list__image-wrapper media-wrapper media-wrapper--no-background">
+                      {{- image | image_url: width: image.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: image_class -}}
+                    </div>
+                  {%- else -%}
+                    <div class="logo-list__icon-wrapper mx-auto d-flex justify-content-center align-items-center">
+                      {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+                    </div>
+                  {%- endif -%}
+
+                {%- if image_link != blank -%}
+                  </a>
+                {%- endif -%}
+
+              {%- if enable_card -%}
+                  </div>
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.logo_list.name",
+  "max_blocks": 10,
+  "disabled_on": {
+    "groups": [
+      "custom.addons",
+      "custom.general",
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "t:general.settings.show_on_desktop.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_mobile",
+      "label": "t:general.settings.show_on_mobile.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:general.settings.heading.label",
+      "default": "Featured on"
+    },
+    {
+      "type": "range",
+      "id": "logo_size",
+      "label": "t:sections.logo_list.settings.logo_size.label",
+      "min": 20,
+      "max": 100,
+      "step": 2,
+      "unit": "px",
+      "default": 30
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_gray_logos",
+      "label": "t:sections.logo_list.settings.enable_gray_logos.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_card",
+      "label": "t:sections.logo_list.settings.enable_card.label",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.logo_list.settings.header__1.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "t:sections.logo_list.settings.enable_slider.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dots",
+      "label": "t:sections.logo_list.settings.show_dots.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_autoplay",
+      "label": "t:sections.logo_list.settings.enable_autoplay.label",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "min": 3,
+      "max": 10,
+      "label": "t:sections.logo_list.settings.autoplay_speed.label",
+      "default": 5,
+      "unit": "s"
+    },
+    {
+      "type": "header",
+      "content": "t:general.settings.images_loading.header.content"
+    },
+    {
+      "type": "select",
+      "id": "images_loading_type",
+      "label": "t:general.settings.images_loading.images_loading_type.label",
+      "default": "lazy",
+      "options": [
+        {
+          "value": "lazy",
+          "label": "t:general.settings.images_loading.images_loading_type.options__1.label"
+        },
+        {
+          "value": "eager",
+          "label": "t:general.settings.images_loading.images_loading_type.options__2.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "logo",
+      "name": "t:sections.logo_list.blocks.logo.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:general.sections.blocks.block_name.label",
+          "info": "t:general.sections.blocks.block_name.info"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:general.settings.image.label"
+        },
+        {
+          "type": "url",
+          "id": "image_link",
+          "label": "t:general.settings.image_link.label"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_link_in_new_tab",
+          "label": "t:sections.logo_list.blocks.logo.settings.open_link_in_new_tab.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.logo_list.presets.name",
+      "category": "t:sections.logo_list.presets.category",
+      "blocks": [
+        {
+          "type": "logo"
+        },
+        {
+          "type": "logo"
+        },
+        {
+          "type": "logo"
+        },
+        {
+          "type": "logo"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,17 @@
+{%- if collection and settings.show_back_to_collection -%}
+  <div class="product-back-to-collection">
+    <a href="{{ collection.url }}" class="btn btn--banner">
+      <span class="{{ settings.icon }}" translate="no" aria-hidden="true">arrow_back</span>
+      {{ 'products.general.collection_return' | t: collection: collection.title }}
+    </a>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.main_product_back_to_collection.name",
+  "settings": [
+
+  ]
+}
+{% endschema %}

@@ -1,0 +1,122 @@
+{%- liquid
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+-%}
+
+{%- paginate search.results by 12 -%}
+  <div class="section section--{{ section_style }}">
+    <div class="{{ container_size }}">
+      <div class="row mb-4">
+        <div class="col-md-8 offset-md-2">
+          <div class="row gy-4 text-center">
+            <div>
+              {%- if search.performed -%}
+                {%- if search.results_count == 0 -%}
+                  <h1 class="h1">{{ 'general.search.no_results_html' | t: terms: search.terms }}</h1>
+                {%- else -%}
+                  <h1 class="h1">{{ 'general.search.results_for_html' | t: terms: search.terms }}</h1>
+                {%- endif -%}
+              {%- else -%}
+                <h1 class="h2 page-title">{{ 'general.search.title' | t }}</h1>
+              {%- endif -%}
+            </div>
+
+            <div>
+              <predictive-search>
+                {%- render 'search-bar', form_tag: true, has_smart_search: true -%}
+              </predictive-search>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        {%- if search.performed -%}
+          {%- assign block_width = 'col-md-6 col-lg-4' -%}
+
+          <div>
+            <div class="row gy-4 mt-3 js-pagination-items">
+              {%- for item in search.results -%}
+                {%- capture current -%}{% cycle 1, 2, 3, 4, 5, 6 %}{%- endcapture -%}
+
+                {%- if item.object_type == 'product' -%}
+                  {%- assign product = item -%}
+
+                  {%- render 'product-grid-item', product: product, block_width: block_width, current: current -%}
+                {%- elsif item.object_type == 'article' -%}
+                  {%- assign article = item -%}
+
+                  {%- render 'article-grid-item', article: article, width: block_width -%}
+                {%- elsif item.object_type == 'page' -%}
+                  <div class="{{ block_width }}">
+                    <div class="card text-center">
+                      <a href="{{ item.url }}" class="d-flex h-100">
+                        <div class="card__body">
+                          <div class="row gy-3">
+                            <h4 class="h4 text-center">{{ item.title }}</h4>
+
+                            {%- if item.content != blank -%}
+                              <div>
+                                {{ item.content | strip_html | truncatewords: 60 }}
+                              </div>
+                            {%- endif -%}
+                          </div>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          </div>
+
+          {%- render 'pagination', paginate: paginate -%}
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+{%- endpaginate -%}
+
+{% schema %}
+{
+  "name": "t:sections.main_search.name",
+  "settings": [
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,472 @@
+{%- liquid
+  assign section_style = section.settings.section_style
+  assign container_size = section.settings.container_size
+  assign enable_tags_filtering = section.settings.enable_tags_filtering
+  assign show_tags_count = section.settings.show_tags_count
+  assign enable_multiple_tags_filtering = section.settings.enable_multiple_tags_filtering
+  assign enable_sorting = section.settings.enable_sorting
+  assign tag_type = section.settings.tag_type
+  assign layout = section.settings.layout
+  assign number_of_rows = section.settings.number_of_rows
+  assign products_per_row_desktop = section.settings.products_per_row_desktop
+  assign products_per_row_mobile = section.settings.products_per_row_mobile
+
+  assign collection_products_count = collection.products_count
+  assign gift_wrap_product = settings.dbtfy_gift_wrap_product
+
+  if collection.handle == 'all'
+    if gift_wrap_product != blank
+      assign collection_products_count = collection_products_count | minus: 1
+    endif
+  else
+    for product_collection in gift_wrap_product.collections
+      if product_collection.id == collection.id
+        assign collection_products_count = collection_products_count | minus: 1
+
+        break
+      endif
+    endfor
+  endif
+
+
+  assign show_header = false
+
+  if collection.handle == 'all' or collection.handle == 'frontpage'
+    assign show_header = true
+  else
+    unless settings.show_hero_image and collection.image != blank
+      assign show_header = true
+    endunless
+  endif
+
+
+  assign show_collection_sort = false
+
+  if enable_sorting and collection.products.size > 0
+    assign show_collection_sort = true
+  endif
+
+
+  assign tag_stack = false
+  assign tag_collection = collections[collection.handle]
+
+  if enable_multiple_tags_filtering and tag_type == 'button'
+    assign tag_stack = true
+    assign tag_collection = collection
+  endif
+
+
+  assign tag_count = false
+
+  if show_tags_count
+    assign tag_count = true
+  endif
+
+
+  assign show_actions_row = false
+
+  if enable_tags_filtering and collection.all_tags.size > 0
+    assign show_actions_row = true
+  endif
+
+  if show_collection_sort or layout == 'grid_list'
+    assign show_actions_row = true
+  endif
+
+
+  capture block_width
+    render 'section-block-width', section: section, type: 'product'
+  endcapture
+-%}
+
+{%- capture section_settings -%}
+  {
+    "layout": {{ layout | json }}
+  }
+{%- endcapture -%}
+
+<div class="collection-template section section--{{ section_style }}"
+     data-section-type="collection"
+     data-section-id="{{ section.id }}"
+     data-section-settings='{{ section_settings }}'>
+
+  <div class="{{ container_size }}">
+    {%- if show_header -%}
+      {%- render 'section-header', heading: collection.title, subheading: collection.description, enlarge: true -%}
+    {%- endif -%}
+
+    <div class="row gy-4 mb-5 collection-template__actions-row"
+    {% unless show_actions_row %} hidden{% endunless %}>
+
+      {%- if enable_tags_filtering and collection.all_tags.size > 0 -%}
+        {%- if tag_type == 'button' -%}
+          {%- liquid
+            assign tag_count_formatted = ''
+
+            if tag_count
+              assign tag_count_formatted = collection_products_count | prepend: ' (' | append: ')'
+            endif
+          -%}
+
+          <ul class="collection-template__filters inline-list justify-content-md-center">
+            <li class="d-flex align-items-center w-100 w-md-auto">
+              <span class="{{ settings.icon }} icon" translate="no" translate="no" aria-hidden="true">filter_alt</span>
+              {{ 'collections.sorting.title_tags' | t }}
+            </li>
+
+            <li>
+              <a class="btn btn--sm{% unless current_tags %} btn--primary{% endunless %}"
+                 href="{%- if collection.url == blank -%}{{ routes.all_products_collection_url }}{%- else -%}{{ collection.url }}{%- endif -%}">
+                {{ 'collections.general.all_of_collection' | t | append: tag_count_formatted }}
+              </a>
+            </li>
+
+            {%- for tag in collection.all_tags -%}
+              {%- liquid
+                if tag_count
+                  assign tag_count = 0
+
+                  for product in tag_collection.products
+                    if product.id == gift_wrap_product.id
+                      continue
+                    endif
+
+                    if product.tags contains tag
+                      capture tag_count
+                        echo tag_count | plus: 1
+                      endcapture
+                    endif
+                  endfor
+
+                  assign tag_count_formatted = tag_count | prepend: ' (' | append: ')'
+                else
+                  assign tag_count_formatted = ''
+                endif
+              -%}
+
+              {%- if current_tags contains tag -%}
+                {%- capture remove_icon -%}<span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">highlight_off</span>{%- endcapture -%}
+
+                <li>
+                  {{ tag | append: tag_count_formatted | prepend: remove_icon | link_to_remove_tag: tag | replace: '<a', '<a class="btn btn--primary btn--sm"' }}
+                </li>
+              {%- else -%}
+                {%- if tag_stack -%}
+                  {%- unless tag_count == 0 -%}
+                    <li>{{ tag | append: tag_count_formatted | link_to_add_tag: tag | replace: '<a', '<a class="btn btn--sm"' }}</li>
+                  {%- endunless -%}
+                {%- else -%}
+                  <li>{{ tag | append: tag_count_formatted | link_to_tag: tag | replace: '<a', '<a class="btn btn--sm"' }}</li>
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        {%- else -%}
+          {%- liquid
+            if tag_count
+              assign tag_count_formatted = collection.products_count | prepend: ' (' | append: ')'
+            else
+              assign tag_count_formatted = ''
+            endif
+          -%}
+
+          <div class="collection-template__filters">
+            <div class="row row--sm gy-2 justify-content-center">
+              <label class="d-flex align-items-center w-100 w-md-auto" for="filterBy">
+                <span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">filter_alt</span>
+                {{ 'collections.sorting.title_tags' | t }}
+              </label>
+
+              <div class="w-100 w-md-auto">
+                <select id="filterBy" class="select select--sm w-100 w-md-auto" name="filterBy" data-filter-by>
+                  <option value="{%- if collection.url == blank -%}{{ routes.all_products_collection_url }}{%- else -%}{{ collection.url }}{%- endif -%}">
+                    {{ 'collections.general.all_of_collection' | t | append: tag_count_formatted }}
+                  </option>
+
+                  {%- for tag in collection.all_tags -%}
+                    {%- liquid
+                      if tag_count
+                        assign tag_count = 0
+
+                        for product in tag_collection.products
+                          if product.tags contains tag
+                            capture tag_count
+                              echo tag_count | plus: 1
+                            endcapture
+                          endif
+                        endfor
+
+                        assign tag_count_formatted = tag_count | prepend: ' (' | append: ')'
+                      else
+                        assign tag_count_formatted = ''
+                      endif
+
+                      assign tag_url = tag | link_to_tag: tag | split: 'href="' | last | split: '"' | first
+                    -%}
+
+                    <option value="{{ tag_url }}" {% if current_tags contains tag %} selected="selected"{% endif %}>
+                      {{ tag | append: tag_count_formatted }}
+                    </option>
+                  {%- endfor -%}
+                </select>
+              </div>
+            </div>
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+
+      <div>
+        <div class="row row--sm gy-2 row-cols-auto justify-content-end flex-wrap flex-md-nowrap">
+          {%- render 'dbtfy-collection-filters', type: 'button' -%}
+
+          {%- if show_collection_sort -%}
+            <div class="flex-fill flex-md-grow-0">
+              <div class="row row--sm">
+                <label class="d-flex align-items-center w-100 w-md-auto mb-1 mb-md-0" for="sortBy">
+                  <span class="{{ settings.icon }} icon" translate="no" aria-hidden="true">sort</span>
+                  {{ 'collections.sorting.title' | t }}
+                  <span class="filter-dropdown__label--active"></span>
+                </label>
+
+                {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
+
+                <div class="w-100 w-md-auto">
+                  <select id="sortBy" class="select select--sm select--full" name="sort_by" aria-describedby="a11y-refresh-page-message" data-sort-by>
+                    {%- for option in collection.sort_options -%}
+                      <option value="{{ option.value }}"{% if sort_by == option.value %} selected="selected"{% endif %}>{{ option.name }}</option>
+                    {%- endfor -%}
+                  </select>
+                </div>
+              </div>
+            </div>
+          {%- endif -%}
+
+          {%- if layout == 'grid_list' -%}
+            <div class="d-flex align-items-end">
+              <div class="row row--sm row-cols-auto">
+                <div>
+                  <button class="btn btn--square-sm btn--primary d-flex justify-content-center align-items-center" aria-label="Grid view" data-layout-button-grid>
+                    <span class="{{ settings.icon }}" translate="no" aria-hidden="true">apps</span>
+                  </button>
+                </div>
+
+                <div>
+                  <button class="btn btn--square-sm d-flex justify-content-center align-items-center" aria-label="List view" data-layout-button-list>
+                    <span class="{{ settings.icon }}" translate="no" aria-hidden="true">format_list_bulleted</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+
+    {%- assign limit = products_per_row_desktop | times: number_of_rows -%}
+
+    <div class="row gy-4 collection-template__products{% if layout == 'list' %} collection-template__products--list{% endif %}{% if layout == 'grid_list' %} collection-template__products--grid-list{% endif %}">
+      {%- paginate collection.products by limit -%}
+        <div>
+          <div class="row gy-4 js-pagination-items">
+            {%- for product in collection.products -%}
+              {%- capture product_item -%}
+                {%- capture current -%}{% cycle 1, 2, 3, 4, 5, 6 %}{%- endcapture -%}
+
+                {%- liquid
+                  if layout == 'grid'
+                    render 'product-grid-item', product: product, block_width: block_width, current: current, products_per_row_desktop: products_per_row_desktop, products_per_row_mobile: products_per_row_mobile, images_loading_type: 'lazy'
+                  elsif layout == 'list'
+                    render 'product-list-item', product: product, current: current, visible: true
+                  elsif layout == 'grid_list'
+                    render 'product-grid-item', product: product, block_width: block_width, current: current, products_per_row_desktop: products_per_row_desktop, products_per_row_mobile: products_per_row_mobile, images_loading_type: 'lazy'
+                    render 'product-list-item', product: product, current: current
+                  endif
+                -%}
+              {%- endcapture -%}
+
+              {%- if product.id != gift_wrap_product.id -%}
+                {{ product_item }}
+              {%- endif -%}
+            {%- else -%}
+              <div class="text-center">
+                <p>{{ 'collections.general.no_matches' | t }}</p>
+                <a href="{{ settings.continue_browsing_link }}" class="btn btn--primary mt-3">{{ 'cart.general.continue_browsing_html' | t }}</a>
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+
+        <div>
+          {%- render 'pagination', paginate: paginate -%}
+        </div>
+
+        {%- if settings.show_collection_description and settings.collection_description_position == 'below-products' and collection.description != blank -%}
+          <div class="rte sm:text-lg text-center">{{ collection.description }}</div>
+        {%- endif -%}
+
+        {%- if settings.show_collection_description == false and collection.description != blank -%}
+          <div class="visually-hidden">{{ collection.description }}</div>
+        {%- endif -%}
+      {%- endpaginate -%}
+    </div>
+  </div>
+
+  {%- render 'dbtfy-collection-filters', type: 'drawer' -%}
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main_collection.name",
+  "settings": [
+    {
+      "type": "select",
+      "id": "section_style",
+      "label": "t:general.settings.section_style.label",
+      "default": "blank",
+      "options": [
+        {
+          "value": "blank",
+          "label": "t:general.settings.section_style.options__1.label"
+        },
+        {
+          "value": "default",
+          "label": "t:general.settings.section_style.options__2.label"
+        },
+        {
+          "value": "border",
+          "label": "t:general.settings.section_style.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "container_size",
+      "label": "t:general.settings.container_size.label",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:general.settings.container_size.options__2.label"
+        },
+        {
+          "value": "container-fluid",
+          "label": "t:general.settings.container_size.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_collection.settings.header__1.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_tags_filtering",
+      "label": "t:sections.main_collection.settings.enable_tags_filtering.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tags_count",
+      "label": "t:sections.main_collection.settings.show_tags_count.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_multiple_tags_filtering",
+      "label": "t:sections.main_collection.settings.enable_multiple_tags_filtering.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sorting",
+      "label": "t:sections.main_collection.settings.enable_sorting.label",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "tag_type",
+      "label": "t:sections.main_collection.settings.tag_type.label",
+      "default": "button",
+      "options": [
+        {
+          "value": "button",
+          "label": "t:sections.main_collection.settings.tag_type.options__1.label"
+        },
+        {
+          "value": "select",
+          "label": "t:sections.main_collection.settings.tag_type.options__2.label"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_collection.settings.header__2.content"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.main_collection.settings.layout.label",
+      "default": "grid",
+      "options": [
+        {
+          "value": "grid",
+          "label": "t:sections.main_collection.settings.layout.options__1.label"
+        },
+        {
+          "value": "list",
+          "label": "t:sections.main_collection.settings.layout.options__2.label"
+        },
+        {
+          "value": "grid_list",
+          "label": "t:sections.main_collection.settings.layout.options__3.label"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "number_of_rows",
+      "label": "t:sections.main_collection.settings.number_of_rows.label",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "select",
+      "id": "products_per_row_desktop",
+      "label": "t:sections.main_collection.settings.products_per_row_desktop.label",
+      "default": "4",
+      "options": [
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "products_per_row_mobile",
+      "label": "t:sections.main_collection.settings.products_per_row_mobile.label",
+      "default": "2",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
