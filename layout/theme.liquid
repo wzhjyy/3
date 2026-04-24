@@ -9,6 +9,8 @@
 
     <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
     <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+    <link rel="preconnect" href="https://connect.facebook.net" crossorigin>
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
 
     <title>
       {{ page_title }}{% if current_tags %}{%- assign meta_tags = current_tags | join: ", " -%} &ndash; {{ 'general.meta.tags' | t: tags: meta_tags }}{% endif %}{% if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif %}{% unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless %}
@@ -25,8 +27,6 @@
     {%- render 'css-variables' -%}
     {{- 'theme.css' | asset_url | stylesheet_tag: preload: true -}}
 
-    <link rel="preload" as="image" href="https://cdn.shopify.com/s/files/1/0893/9939/4611/files/21_c97855e4-8c12-4ec0-adb9-fc42cdfb1544_1.webp" media="(max-width: 768px)">
-    <link rel="preload" as="image" href="https://cdn.shopify.com/s/files/1/0893/9939/4611/files/45x_1500_1_1.webp" media="(min-width: 769px)">
     <link rel="preload" as="style" href="{{ 'theme.css' | asset_url }}">
     <link rel="preload" as="script" href="{{ 'theme.min.js' | asset_url }}">
 
@@ -34,23 +34,74 @@
     <link rel="preload" as="font" href="https://animetat.com/cdn/fonts/poppins/poppins_n4.0ba78fa5af9b0e1a374041b3ceaadf0a43b41362.woff2" type="font/woff2" crossorigin>
 
     <style>
-      img[src*="21_c97855e4"],
-      img[src*="45x_1500"] {
-         opacity: 1 !important;
-         visibility: visible !important;
+
+      /* ============================================================== */
+      /* 🚀 终极破壁：全局粉碎 Debutify 的懒加载透明度控制！       */
+      /* ============================================================== */
+
+      /* 1. 让所有带我们特权类名的图片瞬间现身 */
+      .lcp-hero-image,
+      .skip-lazy,
+      .no-lazy,
+      .lazyload-skip {
+        opacity: 1 !important;
+        visibility: visible !important;
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
       }
+
+      /* 2. 核心打击：防止 Debutify 的父级 wrapper 隐藏图片 */
+      .media-wrapper img,
+      .product-item__image-wrapper img,
+      .card__image img {
+          opacity: 1 !important;
+          visibility: visible !important;
+      }
+
+      /* 3. 强制覆盖 lazysizes.js 生成的隐藏类 */
+      .lazyload,
+      .lazyloading {
+          opacity: 1 !important;
+      }
+
+      /* 🚀 4. 全局物理破壁：强行禁止 Debutify 隐藏尚未加载的任何 data-src 图片 */
+      img[data-src] {
+          opacity: 1 !important;
+          visibility: visible !important;
+          transition: none !important;
+          animation: none !important;
+      }
+
+      /* 5. 保留原有的首图显示控制 */
       /* 💻 电脑端：绝对隐藏手机竖图 */
       @media (min-width: 769px) {
-         img[src*="21_c97855e4"] { display: none !important; }
+        .media--mobile.lcp-hero-image { display: none !important; }
       }
       /* 📱 手机端：绝对隐藏电脑横图 */
       @media (max-width: 768px) {
-         img[src*="45x_1500"] { display: none !important; }
+        .media--desktop.lcp-hero-image { display: none !important; }
+      }
+
+      /* ============================================================== */
+      /* 🚀 CLS 与字体渲染终极修复                                      */
+      /* ============================================================== */
+
+      /* 🚀 修复 CLS 抖动：强制所有图片根据自身尺寸预留物理占位，拒绝撑开页面 */
+      img {
+        aspect-ratio: attr(width) / attr(height);
+      }
+
+      /* 🚀 消除文字白屏：强迫所有文本使用系统字体瞬间渲染，不准等自定义字体 */
+      body, h1, h2, h3, h4, h5, h6, p, a, span, div {
+        font-display: swap !important;
       }
     </style>
+    
     <script>
+      // 1. 原有的首图保护脚本
       const imgObserver = new MutationObserver(() => {
-        document.querySelectorAll('img[src*="21_c97855e4"], img[src*="45x_1500"]').forEach(img => {
+        document.querySelectorAll('.lcp-hero-image').forEach(img => {
           img.setAttribute('loading', 'eager');
           img.setAttribute('fetchpriority', 'high');
           img.classList.remove('lazyload', 'lazyautosizes');
@@ -58,6 +109,40 @@
       });
       imgObserver.observe(document.documentElement, { childList: true, subtree: true });
       setTimeout(() => imgObserver.disconnect(), 3000); 
+
+      // 🚀 2. 全局图片实时唤醒引擎：在 DOM 解析时实时拦截并还原全站所有图片真实链接
+      const globalImgObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1) {
+              // 处理节点本身是图片的情况
+              if (node.tagName === 'IMG' && node.hasAttribute('data-src')) {
+                node.setAttribute('src', node.getAttribute('data-src'));
+                if (node.hasAttribute('data-srcset')) {
+                  node.setAttribute('srcset', node.getAttribute('data-srcset'));
+                }
+                node.classList.remove('lazyload', 'lazyloading');
+                if(!node.hasAttribute('loading')) node.setAttribute('loading', 'lazy');
+              }
+              // 处理节点内部包含多张图片的情况
+              if (node.querySelectorAll) {
+                node.querySelectorAll('img[data-src]').forEach(img => {
+                  img.setAttribute('src', img.getAttribute('data-src'));
+                  if (img.hasAttribute('data-srcset')) {
+                    img.setAttribute('srcset', img.getAttribute('data-srcset'));
+                  }
+                  img.classList.remove('lazyload', 'lazyloading');
+                  if(!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
+                });
+              }
+            }
+          });
+        });
+      });
+      // 开启全站最高级别监控
+      globalImgObserver.observe(document.documentElement, { childList: true, subtree: true });
+      // 页面主体加载完成后自动停止监听，释放浏览器内存
+      window.addEventListener('DOMContentLoaded', () => globalImgObserver.disconnect());
     </script>
 
     <style>
@@ -214,10 +299,25 @@
     {%- capture captured_header -%}
       {{ content_for_header }}
     {%- endcapture -%}
+    
+    {% comment %} 🚀 1. 精准拦截弹窗和评论插件，完全放行购物车等核心插件 {% endcomment %}
     {%- assign captured_header = captured_header | replace: 'src="https://app.ecomsend.com', 'type="text/lazyload" data-src="https://app.ecomsend.com' -%}
     {%- assign captured_header = captured_header | replace: 'src="https://cdn.ecomsend.com', 'type="text/lazyload" data-src="https://cdn.ecomsend.com' -%}
     {%- assign captured_header = captured_header | replace: 'src="https://cdn.shopify.com/extensions/019d95c7-9fc1-7fe5-86a4-6f3e94275a4f', 'type="text/lazyload" data-src="https://cdn.shopify.com/extensions/019d95c7-9fc1-7fe5-86a4-6f3e94275a4f' -%}
     {%- assign captured_header = captured_header | replace: 'src="https://cdn.judge.me', 'type="text/lazyload" data-src="https://cdn.judge.me' -%}
+    
+    {% comment %} 🚀 2. 强杀 Shopify 原生性能杀手 (Trekkie追踪, WPM像素, 内部测速包) {% endcomment %}
+    {%- assign captured_header = captured_header | replace: 'src="https://animetat.com/cdn/wpm/', 'type="text/lazyload" data-src="https://animetat.com/cdn/wpm/' -%}
+    {%- assign captured_header = captured_header | replace: 'src="//animetat.com/cdn/wpm/', 'type="text/lazyload" data-src="//animetat.com/cdn/wpm/' -%}
+    {%- assign captured_header = captured_header | replace: 'src="https://animetat.com/cdn/s/trekkie', 'type="text/lazyload" data-src="https://animetat.com/cdn/s/trekkie' -%}
+    {%- assign captured_header = captured_header | replace: 'src="//animetat.com/cdn/s/trekkie', 'type="text/lazyload" data-src="//animetat.com/cdn/s/trekkie' -%}
+    {%- assign captured_header = captured_header | replace: 'src="https://animetat.com/cdn/shopifycloud/perf-kit/', 'type="text/lazyload" data-src="https://animetat.com/cdn/shopifycloud/perf-kit/' -%}
+    {%- assign captured_header = captured_header | replace: 'src="//animetat.com/cdn/shopifycloud/perf-kit/', 'type="text/lazyload" data-src="//animetat.com/cdn/shopifycloud/perf-kit/' -%}
+
+    {% comment %} 🚀 3. 斩断 Shopify 官方在首页偷偷预加载结账页脚本，释放核心带宽 {% endcomment %}
+    {%- assign captured_header = captured_header | replace: 'rel="prefetch" as="script" href="https://cdn.shopify.com/shopifycloud/checkout-web/', 'rel="prefetch" as="script" data-href="https://cdn.shopify.com/shopifycloud/checkout-web/' -%}
+    {%- assign captured_header = captured_header | replace: 'rel="prefetch" href="/checkouts/internal/preloads.js', 'rel="prefetch" data-href="/checkouts/internal/preloads.js' -%}
+
     {{ captured_header }}
 
 </head>
