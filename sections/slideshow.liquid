@@ -154,21 +154,16 @@
               {%- capture sizes -%}100vw{% endcapture %}
 
               {%- liquid
-                assign image_classes = 'media media--desktop'
+                assign image_classes = 'media media--desktop skip-lazy no-lazy lazyload-skip'
                 if image_mobile != blank
                   assign image_classes = image_classes | append: ' d-none d-md-block'
                 endif
                 
-                # 🚀 核心优化 2：给第一张大图增加免疫类名，防止被全局懒加载脚本拦截
+                # 🚀 核心优化 2：彻底清除电脑端 data-src
                 if is_first_slide
-                  assign first_image_classes = image_classes | append: ' skip-lazy no-lazy lazyload-skip'
-                  echo image | image_url: width: image.width | image_tag: loading: 'eager', fetchpriority: 'high', decoding: 'sync', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: first_image_classes
+                  echo image | image_url: width: image.width | image_tag: loading: 'eager', fetchpriority: 'high', decoding: 'sync', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: image_classes, style: 'opacity: 1 !important; visibility: visible !important;'
                 else
-                  if slides_count > 1
-                    echo image | image_url: width: image.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: image_classes | replace: 'src=', 'data-src=' | replace: 'srcset=', 'data-srcset='
-                  else
-                    echo image | image_url: width: image.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: image_classes
-                  endif
+                  echo image | image_url: width: image.width | image_tag: loading: 'lazy', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: image_classes, style: 'opacity: 1 !important; visibility: visible !important;'
                 endif
               -%}
             {%- endif -%}
@@ -177,21 +172,16 @@
               {%- capture sizes -%}100vw{% endcapture %}
 
               {%- liquid
-                assign image_mobile_classes = 'media media--mobile'
+                assign image_mobile_classes = 'media media--mobile skip-lazy no-lazy lazyload-skip'
                 if image != blank
                   assign image_mobile_classes = image_mobile_classes | append: ' d-md-none'
                 endif
 
-                # 🚀 核心优化 3：移动端首图同步解码，确保 0延时 渲染
+# 🚀 核心优化 3：彻底清除手机端 data-src，并锁死最高 800px，杜绝双重下载和视网膜溢出
                 if is_first_slide
-                  assign first_image_mobile_classes = image_mobile_classes | append: ' skip-lazy no-lazy lazyload-skip'
-                  echo image_mobile | image_url: width: image_mobile.width | image_tag: loading: 'eager', fetchpriority: 'high', decoding: 'sync', sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: first_image_mobile_classes
+                  echo image_mobile | image_url: width: 800 | image_tag: loading: 'eager', fetchpriority: 'high', decoding: 'sync', class: image_mobile_classes, style: 'opacity: 1 !important; visibility: visible !important;'
                 else
-                  if slides_count > 1
-                    echo image_mobile | image_url: width: image_mobile.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: image_mobile_classes | replace: 'src=', 'data-src=' | replace: 'srcset=', 'data-srcset='
-                  else
-                    echo image_mobile | image_url: width: image_mobile.width | image_tag: loading: images_loading_type, sizes: sizes, widths: '300,400,500,600,700,800,1000,1200,1400,1600,1800,2000,2200,2400,2600', class: image_mobile_classes
-                  endif
+                  echo image_mobile | image_url: width: 800 | image_tag: loading: 'lazy', class: image_mobile_classes, style: 'opacity: 1 !important; visibility: visible !important;'
                 endif
               -%}
             {%- endif -%}
@@ -591,7 +581,7 @@
           "type": "richtext",
           "id": "text",
           "label": "t:general.settings.text.label",
-          "default": "<p>Use overlay text to give your customers insight into your brand. Select imagery and text that relates to your story.</p>"
+          "default": "<p>Use overlay text to give your customers insight into your brand.\nSelect imagery and text that relates to your story.</p>"
         },
         {
           "type": "select",
